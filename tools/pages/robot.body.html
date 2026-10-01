@@ -1,0 +1,100 @@
+<div class="page">
+  <main id="main">
+    <div class="page-head">
+      <p class="eyebrow">ROBOT</p>
+      <h1>기체 소개</h1>
+      <p class="lead">turtlebot3 waffle pi 위에 OpenMANIPULATOR-X 를 얹은 이동형 manipulator 입니다. 부품을 누르면 설명이 나와요.</p>
+    </div>
+
+    <div class="robot-layout">
+      <section class="card" aria-labelledby="t-robot3d">
+        <div class="card-head">
+          <h2 id="t-robot3d">3D 기체</h2>
+          <div class="robot-tools" role="group" aria-label="3D 보기 도구">
+            <button type="button" class="btn" id="btnExplode" aria-pressed="false">분해 보기</button>
+            <button type="button" class="btn" id="btnHome">기본 자세</button>
+            <button type="button" class="btn" id="btnReach">앞으로 뻗기</button>
+          </div>
+        </div>
+        <div class="robot-stage">
+          <canvas id="robotCanvas" aria-hidden="true"></canvas>
+          <span class="v-hint">부품을 누르면 설명 · 끌어서 회전 · 휠로 확대 · 키보드로 관절 조종</span>
+          <span class="part-tag" id="partTag" hidden></span>
+          <div class="v-msg" id="robotMsg">3D 기체를 불러오는 중</div>
+        </div>
+      </section>
+
+      <aside class="card part-panel" aria-labelledby="t-parts">
+        <div class="card-head"><h2 id="t-parts">부품</h2></div>
+        <ul class="part-list" id="partList">
+          <li><button type="button" data-part="base">본체</button></li>
+          <li><button type="button" data-part="wheels">바퀴 · 구동 모터</button></li>
+          <li><button type="button" data-part="lidar">LiDAR</button></li>
+          <li><button type="button" data-part="camera">카메라</button></li>
+          <li><button type="button" data-part="link1">팔 받침</button></li>
+          <li><button type="button" data-part="joint1">joint1 · 허리</button></li>
+          <li><button type="button" data-part="joint2">joint2 · 어깨</button></li>
+          <li><button type="button" data-part="joint3">joint3 · 팔꿈치</button></li>
+          <li><button type="button" data-part="joint4">joint4 · 손목</button></li>
+          <li><button type="button" data-part="gripper">그리퍼</button></li>
+        </ul>
+        <div class="part-detail" id="partDetail" aria-live="polite">
+          <h3>부품을 골라 보세요</h3>
+          <p>목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.</p>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card spec-card" aria-labelledby="t-spec">
+      <div class="card-head"><h2 id="t-spec">사양</h2></div>
+      <div class="spec-grid">
+        <table>
+          <caption>turtlebot3 waffle pi</caption>
+          <tbody>
+            <tr><th scope="row">최대 속도</th><td>0.26 m/s</td></tr>
+            <tr><th scope="row">최대 회전 속도</th><td>1.82 rad/s (104.27°/s)</td></tr>
+            <tr><th scope="row">최대 적재</th><td>30 kg</td></tr>
+            <tr><th scope="row">크기 (L × W × H)</th><td>281 × 306 × 141 mm</td></tr>
+            <tr><th scope="row">무게</th><td>1.8 kg (SBC · 배터리 · 센서 포함)</td></tr>
+            <tr><th scope="row">SBC</th><td>Raspberry Pi 4</td></tr>
+            <tr><th scope="row">구동 모터</th><td>DYNAMIXEL XM430-W210</td></tr>
+            <tr><th scope="row">LiDAR</th><td>360° Laser Distance Sensor LDS-02</td></tr>
+            <tr><th scope="row">카메라</th><td>Raspberry Pi Camera Module v2.1</td></tr>
+            <tr><th scope="row">배터리</th><td>리튬 폴리머 11.1 V 1800 mAh</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>OpenMANIPULATOR-X</caption>
+          <tbody>
+            <tr><th scope="row">자유도</th><td>5 (관절 4 + 그리퍼 1)</td></tr>
+            <tr><th scope="row">들 수 있는 무게</th><td>500 g</td></tr>
+            <tr><th scope="row">반복 정밀도</th><td>0.2 mm 미만</td></tr>
+            <tr><th scope="row">무게</th><td>0.70 kg</td></tr>
+            <tr><th scope="row">팔 길이 (reach)</th><td>380 mm</td></tr>
+            <tr><th scope="row">그리퍼 벌림</th><td>20 – 75 mm</td></tr>
+            <tr><th scope="row">관절 모터</th><td>DYNAMIXEL XM430-W350-T</td></tr>
+            <tr><th scope="row">관절 속도</th><td>46 RPM</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="spec-src">출처: ROBOTIS e-Manual (TurtleBot3 Features, OpenMANIPULATOR-X Specification), 관절 범위는 turtlebot3_manipulation_description URDF.</p>
+    </section>
+
+    <section class="card" aria-labelledby="t-joints">
+      <div class="card-head"><h2 id="t-joints">관절 범위와 teleop 키</h2></div>
+      <div class="table-wrap">
+        <table class="joint-table">
+          <thead><tr><th scope="col">관절</th><th scope="col">회전축</th><th scope="col">범위</th><th scope="col">teleop 키</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">joint1 · 허리</th><td>z (세로)</td><td>−162° ~ +162°</td><td><kbd>1</kbd> <kbd>q</kbd></td></tr>
+            <tr><th scope="row">joint2 · 어깨</th><td>y (가로)</td><td>−102.6° ~ +90°</td><td><kbd>2</kbd> <kbd>w</kbd></td></tr>
+            <tr><th scope="row">joint3 · 팔꿈치</th><td>y (가로)</td><td>−54° ~ +79.2°</td><td><kbd>3</kbd> <kbd>e</kbd></td></tr>
+            <tr><th scope="row">joint4 · 손목</th><td>y (가로)</td><td>−102.6° ~ +117°</td><td><kbd>4</kbd> <kbd>r</kbd></td></tr>
+            <tr><th scope="row">그리퍼</th><td>직선 이동</td><td>손가락마다 −10 ~ +19 mm</td><td><kbd>o</kbd> <kbd>p</kbd></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+

@@ -1,0 +1,49 @@
+/* ---------- 기체 소개 페이지 (통합 · 기업 스타일 공통 변수만 사용) ---------- */
+.robot-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+@media (min-width: 1000px) { .robot-layout { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); align-items: start; } }
+.robot-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.robot-tools .btn { min-width: 0; }
+.robot-tools .btn[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
+.robot-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.robot-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.robot-stage .v-hint {
+  position: absolute; left: 12px; top: 12px; right: 12px; width: fit-content; padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55); color: #E8ECF1; font-size: 13px; pointer-events: none;
+}
+.robot-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.part-tag {
+  position: absolute; transform: translate(-50%, calc(-100% - 14px)); padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+  background: #FFFFFF; color: #0E1726; font-size: 13px; font-weight: 700; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.part-tag::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
+  background: #FFFFFF; transform: rotate(45deg);
+}
+.part-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.part-list button {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+}
+.part-list button:hover { border-color: var(--text-2); }
+.part-list button[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); font-weight: 700; }
+.part-detail { border-top: 1px solid var(--line); padding-top: 16px; }
+.part-detail h3 { margin: 0 0 6px; font-size: 18px; }
+.part-detail p { margin: 0 0 10px; color: var(--text-2); font-size: 15px; }
+.part-detail dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 14px; }
+.part-detail dt { color: var(--text-2); }
+.part-detail dd { margin: 0; font-weight: 600; }
+.spec-card { margin-bottom: 16px; }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 32px; }
+.spec-grid table, .joint-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.spec-grid caption { text-align: left; font-weight: 700; padding: 0 0 8px; }
+.spec-grid th, .spec-grid td, .joint-table th, .joint-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.spec-grid th[scope="row"] { width: 42%; color: var(--text-2); font-weight: 500; }
+.joint-table thead th { color: var(--text-2); font-size: 13px; font-weight: 700; }
+.table-wrap { overflow-x: auto; }
+.spec-src { margin: 12px 0 0; font-size: 13px; color: var(--text-2); }
+kbd {
+  display: inline-block; min-width: 26px; padding: 2px 7px; border-radius: 6px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace; font-size: 13px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; color: var(--text);
+}
+.robot-stage .v-msg[hidden], .part-tag[hidden] { display: none; }

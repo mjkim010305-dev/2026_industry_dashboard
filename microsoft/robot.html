@@ -3,18 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>설문</title>
-<!-- 마이크로소프트 스타일: design-refs/microsoft.md 참고. 기능 스크립트는 원본(original/survey.html)과 같다. -->
-<!--
-임시 적용 목록 (사람 미확정)
-- 확대 창을 열고 닫을 때 효과: 없음. 즉시 나타나고 즉시 사라진다. (사람 미확정)
-- 확대된 카드(QR)를 눌렀을 때: 닫히지 않는다. 닫기 방법은 어두운 배경 · Esc · 닫기 버튼뿐. (사람 미확정)
-- 닫기 버튼 위치·글자 크기: 어두운 배경 오른쪽 위, 클릭 영역 44px 이상. (사람 미확정)
-- 파일이 없을 때 안내 문구("스캔해 주세요"): 그대로 유지한다. (사람 미확정)
-- 빈 상태 파일 경로 글자 크기: 본문보다 작게. (사람 미확정)
-- 운영체제 '동작 줄이기' 설정: 대응하지 않는다. 이 화면에는 움직임이 없다. (사람 미확정)
-- 요구 없는 항목(설문 URL 글자 표시, 테마 전환 버튼, 인쇄용 모양): 만들지 않는다. (사람 미확정)
--->
+<title>기체 소개 - ROS 2 + turtlebot3_manipulation</title>
+<!-- 마이크로소프트 스타일: design-refs/microsoft.md 참고. 만든 방법: tools/build_styles.py (tools/pages/robot.*) -->
 <style>
 /* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
 * { box-sizing: border-box; }
@@ -306,85 +296,256 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .main-wrap.card, .conn.card { border-radius: 24px; }
 .cell .name::before { border-color: transparent transparent transparent var(--accent); }
 .pass-wrap input { box-shadow: none; }
+
+/* ---------- 기체 소개 페이지 (통합 · 기업 스타일 공통 변수만 사용) ---------- */
+.robot-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+@media (min-width: 1000px) { .robot-layout { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); align-items: start; } }
+.robot-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.robot-tools .btn { min-width: 0; }
+.robot-tools .btn[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
+.robot-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.robot-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.robot-stage .v-hint {
+  position: absolute; left: 12px; top: 12px; right: 12px; width: fit-content; padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55); color: #E8ECF1; font-size: 13px; pointer-events: none;
+}
+.robot-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.part-tag {
+  position: absolute; transform: translate(-50%, calc(-100% - 14px)); padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+  background: #FFFFFF; color: #0E1726; font-size: 13px; font-weight: 700; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.part-tag::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
+  background: #FFFFFF; transform: rotate(45deg);
+}
+.part-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.part-list button {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+}
+.part-list button:hover { border-color: var(--text-2); }
+.part-list button[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); font-weight: 700; }
+.part-detail { border-top: 1px solid var(--line); padding-top: 16px; }
+.part-detail h3 { margin: 0 0 6px; font-size: 18px; }
+.part-detail p { margin: 0 0 10px; color: var(--text-2); font-size: 15px; }
+.part-detail dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 14px; }
+.part-detail dt { color: var(--text-2); }
+.part-detail dd { margin: 0; font-weight: 600; }
+.spec-card { margin-bottom: 16px; }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 32px; }
+.spec-grid table, .joint-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.spec-grid caption { text-align: left; font-weight: 700; padding: 0 0 8px; }
+.spec-grid th, .spec-grid td, .joint-table th, .joint-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.spec-grid th[scope="row"] { width: 42%; color: var(--text-2); font-weight: 500; }
+.joint-table thead th { color: var(--text-2); font-size: 13px; font-weight: 700; }
+.table-wrap { overflow-x: auto; }
+.spec-src { margin: 12px 0 0; font-size: 13px; color: var(--text-2); }
+kbd {
+  display: inline-block; min-width: 26px; padding: 2px 7px; border-radius: 6px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace; font-size: 13px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; color: var(--text);
+}
+.robot-stage .v-msg[hidden], .part-tag[hidden] { display: none; }
+
+:root { --robot-accent: #0067B8; }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">본문 바로가기</a>
-<header class="mshead"><div class="in"><span class="wordmark">turtlebot3</span><span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="teleop.html">teleop</a></li><li><a href="survey.html" aria-current="page">설문<span class="vh"> (현재 탭)</span></a></li></ul></nav></div></header>
+<header class="mshead"><div class="in"><span class="wordmark">turtlebot3</span><span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html" aria-current="page">기체<span class="vh"> (현재 탭)</span></a></li><li><a href="teleop.html">teleop</a></li><li><a href="survey.html">설문</a></li></ul></nav></div></header>
 
 <div class="page">
-  <main id="main" class="survey-card">
-    <p class="eyebrow">SURVEY</p>
-    <h1>설문</h1>
-    <p class="guide">QR 코드를 스캔해 설문에 참여해 주세요</p>
-    <div class="slot">
-      <div class="qrcard" id="qrCard" hidden>
-        <img id="qrImg" alt="설문 참여용 QR 코드" role="button" tabindex="0" aria-label="설문 QR 확대 보기" aria-haspopup="dialog">
-      </div>
-      <div class="empty" id="empty" hidden>
-        <p style="margin:0">설문을 준비하고 있습니다. 준비되면 이 자리에 QR 이 표시됩니다.</p>
-        <p class="path">data/qrcode.png</p>
-      </div>
+  <main id="main">
+    <div class="page-head">
+      <p class="eyebrow">ROBOT</p>
+      <h1>기체 소개</h1>
+      <p class="lead">turtlebot3 waffle pi 위에 OpenMANIPULATOR-X 를 얹은 이동형 manipulator 입니다. 부품을 누르면 설명이 나와요.</p>
     </div>
-    <p class="zoom-hint" aria-hidden="true">QR 을 누르면 크게 볼 수 있어요</p>
+
+    <div class="robot-layout">
+      <section class="card" aria-labelledby="t-robot3d">
+        <div class="card-head">
+          <h2 id="t-robot3d">3D 기체</h2>
+          <div class="robot-tools" role="group" aria-label="3D 보기 도구">
+            <button type="button" class="btn" id="btnExplode" aria-pressed="false">분해 보기</button>
+            <button type="button" class="btn" id="btnHome">기본 자세</button>
+            <button type="button" class="btn" id="btnReach">앞으로 뻗기</button>
+          </div>
+        </div>
+        <div class="robot-stage">
+          <canvas id="robotCanvas" aria-hidden="true"></canvas>
+          <span class="v-hint">부품을 누르면 설명 · 끌어서 회전 · 휠로 확대 · 키보드로 관절 조종</span>
+          <span class="part-tag" id="partTag" hidden></span>
+          <div class="v-msg" id="robotMsg">3D 기체를 불러오는 중</div>
+        </div>
+      </section>
+
+      <aside class="card part-panel" aria-labelledby="t-parts">
+        <div class="card-head"><h2 id="t-parts">부품</h2></div>
+        <ul class="part-list" id="partList">
+          <li><button type="button" data-part="base">본체</button></li>
+          <li><button type="button" data-part="wheels">바퀴 · 구동 모터</button></li>
+          <li><button type="button" data-part="lidar">LiDAR</button></li>
+          <li><button type="button" data-part="camera">카메라</button></li>
+          <li><button type="button" data-part="link1">팔 받침</button></li>
+          <li><button type="button" data-part="joint1">joint1 · 허리</button></li>
+          <li><button type="button" data-part="joint2">joint2 · 어깨</button></li>
+          <li><button type="button" data-part="joint3">joint3 · 팔꿈치</button></li>
+          <li><button type="button" data-part="joint4">joint4 · 손목</button></li>
+          <li><button type="button" data-part="gripper">그리퍼</button></li>
+        </ul>
+        <div class="part-detail" id="partDetail" aria-live="polite">
+          <h3>부품을 골라 보세요</h3>
+          <p>목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.</p>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card spec-card" aria-labelledby="t-spec">
+      <div class="card-head"><h2 id="t-spec">사양</h2></div>
+      <div class="spec-grid">
+        <table>
+          <caption>turtlebot3 waffle pi</caption>
+          <tbody>
+            <tr><th scope="row">최대 속도</th><td>0.26 m/s</td></tr>
+            <tr><th scope="row">최대 회전 속도</th><td>1.82 rad/s (104.27°/s)</td></tr>
+            <tr><th scope="row">최대 적재</th><td>30 kg</td></tr>
+            <tr><th scope="row">크기 (L × W × H)</th><td>281 × 306 × 141 mm</td></tr>
+            <tr><th scope="row">무게</th><td>1.8 kg (SBC · 배터리 · 센서 포함)</td></tr>
+            <tr><th scope="row">SBC</th><td>Raspberry Pi 4</td></tr>
+            <tr><th scope="row">구동 모터</th><td>DYNAMIXEL XM430-W210</td></tr>
+            <tr><th scope="row">LiDAR</th><td>360° Laser Distance Sensor LDS-02</td></tr>
+            <tr><th scope="row">카메라</th><td>Raspberry Pi Camera Module v2.1</td></tr>
+            <tr><th scope="row">배터리</th><td>리튬 폴리머 11.1 V 1800 mAh</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>OpenMANIPULATOR-X</caption>
+          <tbody>
+            <tr><th scope="row">자유도</th><td>5 (관절 4 + 그리퍼 1)</td></tr>
+            <tr><th scope="row">들 수 있는 무게</th><td>500 g</td></tr>
+            <tr><th scope="row">반복 정밀도</th><td>0.2 mm 미만</td></tr>
+            <tr><th scope="row">무게</th><td>0.70 kg</td></tr>
+            <tr><th scope="row">팔 길이 (reach)</th><td>380 mm</td></tr>
+            <tr><th scope="row">그리퍼 벌림</th><td>20 – 75 mm</td></tr>
+            <tr><th scope="row">관절 모터</th><td>DYNAMIXEL XM430-W350-T</td></tr>
+            <tr><th scope="row">관절 속도</th><td>46 RPM</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="spec-src">출처: ROBOTIS e-Manual (TurtleBot3 Features, OpenMANIPULATOR-X Specification), 관절 범위는 turtlebot3_manipulation_description URDF.</p>
+    </section>
+
+    <section class="card" aria-labelledby="t-joints">
+      <div class="card-head"><h2 id="t-joints">관절 범위와 teleop 키</h2></div>
+      <div class="table-wrap">
+        <table class="joint-table">
+          <thead><tr><th scope="col">관절</th><th scope="col">회전축</th><th scope="col">범위</th><th scope="col">teleop 키</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">joint1 · 허리</th><td>z (세로)</td><td>−162° ~ +162°</td><td><kbd>1</kbd> <kbd>q</kbd></td></tr>
+            <tr><th scope="row">joint2 · 어깨</th><td>y (가로)</td><td>−102.6° ~ +90°</td><td><kbd>2</kbd> <kbd>w</kbd></td></tr>
+            <tr><th scope="row">joint3 · 팔꿈치</th><td>y (가로)</td><td>−54° ~ +79.2°</td><td><kbd>3</kbd> <kbd>e</kbd></td></tr>
+            <tr><th scope="row">joint4 · 손목</th><td>y (가로)</td><td>−102.6° ~ +117°</td><td><kbd>4</kbd> <kbd>r</kbd></td></tr>
+            <tr><th scope="row">그리퍼</th><td>직선 이동</td><td>손가락마다 −10 ~ +19 mm</td><td><kbd>o</kbd> <kbd>p</kbd></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
 </div>
 
-<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="설문 QR 확대 보기" hidden>
-  <button type="button" class="closebtn" id="closeBtn">닫기</button>
-  <div class="zoomcard"><img id="zoomImg" alt="설문 참여용 QR 코드"></div>
-</div>
-
-<!-- 기본값 지정 가능: QR 파일 이름 (현재 qrcode.png). 파일을 바꾸면 아래 한 줄만 고친다 -->
+<script src="../assets/three.r128.min.js"></script>
+<script src="../assets/tb3_viewer.js"></script>
+<script src="../assets/robot/tb3_meshes.js"></script>
 <script>
-const QR_FILE = "qrcode.png";
+// 기체 소개: 3D 기체 + 부품 설명. 값은 ROBOTIS e-Manual 과 turtlebot3_manipulation_description URDF 에서 가져왔다.
 (function () {
-  var src = "../data/" + QR_FILE;
-  var card = document.getElementById("qrCard");
-  var empty = document.getElementById("empty");
-  var img = document.getElementById("qrImg");
-  var zoomImg = document.getElementById("zoomImg");
-  var overlay = document.getElementById("overlay");
-  var closeBtn = document.getElementById("closeBtn");
-
-  function openZoom() {
-    zoomImg.src = src;
-    overlay.hidden = false;
-    closeBtn.focus();
-  }
-  function closeZoom() {
-    if (overlay.hidden) return;
-    overlay.hidden = true;
-    img.focus();
-  }
-
-  var probe = new Image();
-  probe.onload = function () {
-    img.src = src;
-    card.hidden = false;
+  var PARTS = {
+    base: { name: "본체 (waffle pi)", desc: "판을 층층이 쌓은 몸체 안에 제어 보드와 컴퓨터, 배터리가 들어 있어요.",
+      spec: [["SBC", "Raspberry Pi 4"], ["MCU", "32-bit ARM Cortex-M7 (216 MHz)"], ["배터리", "리튬 폴리머 11.1 V 1800 mAh"], ["크기", "281 × 306 × 141 mm"]] },
+    wheels: { name: "바퀴 · 구동 모터", desc: "양쪽 바퀴의 속도 차이로 앞뒤로 가고 제자리에서 돌아요 (차동 구동).",
+      spec: [["모터", "DYNAMIXEL XM430-W210 × 2"], ["최대 속도", "0.26 m/s"], ["최대 회전", "1.82 rad/s"], ["teleop 키", "i · j · k · l · space"]] },
+    lidar: { name: "LiDAR", desc: "레이저로 주변 360° 거리를 재요. 지도를 만들고(SLAM) 경로를 찾을 때 써요.",
+      spec: [["모델", "360° Laser Distance Sensor LDS-02"], ["위치", "본체 위 (base_link 기준 높이 0.122 m)"]] },
+    camera: { name: "카메라", desc: "앞쪽을 비추는 카메라예요. teleop 화면에서 연결하면 이 영상이 보여요.",
+      spec: [["모델", "Raspberry Pi Camera Module v2.1"], ["teleop", "camera topic 으로 받아 표시"]] },
+    link1: { name: "팔 받침", desc: "OpenMANIPULATOR-X 를 본체 위에 고정하는 첫 마디예요.",
+      spec: [["고정 위치", "base_link 기준 x −0.092 m, z +0.091 m"], ["팔 길이", "380 mm (reach)"], ["팔 무게", "0.70 kg"]] },
+    joint1: { name: "joint1 · 허리", desc: "팔 전체를 세로축으로 좌우 회전해요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−162° ~ +162°"], ["teleop 키", "1 · q"]] },
+    joint2: { name: "joint2 · 어깨", desc: "팔을 앞뒤로 숙이고 세워요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−102.6° ~ +90°"], ["teleop 키", "2 · w"]] },
+    joint3: { name: "joint3 · 팔꿈치", desc: "아래팔을 접고 펴요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−54° ~ +79.2°"], ["teleop 키", "3 · e"]] },
+    joint4: { name: "joint4 · 손목", desc: "그리퍼의 기울기를 맞춰요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−102.6° ~ +117°"], ["teleop 키", "4 · r"]] },
+    gripper: { name: "그리퍼", desc: "두 손가락이 평행하게 벌어지고 닫혀서 물건을 집어요.",
+      spec: [["벌림", "20 – 75 mm"], ["손가락 이동", "−10 ~ +19 mm (URDF)"], ["들 수 있는 무게", "500 g"], ["teleop 키", "o · p"]] }
   };
-  probe.onerror = function () {
-    empty.hidden = false;
-  };
-  probe.src = src;
+  var HOME = [0, -1.05, 0.35, 0.70], REACH = [0, 0.8, -0.6, 0];
 
-  img.addEventListener("click", openZoom);
-  img.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") { e.preventDefault(); openZoom(); }
-    else if (e.key === " ") { e.preventDefault(); }
+  var canvas = document.getElementById("robotCanvas"), msg = document.getElementById("robotMsg");
+  var tag = document.getElementById("partTag"), detail = document.getElementById("partDetail");
+  var buttons = Array.prototype.slice.call(document.querySelectorAll("#partList button"));
+  if (!window.THREE || !window.TB3_MESHES || !window.createTB3Viewer) { msg.textContent = "3D 기체를 불러오지 못했습니다"; return; }
+
+  var selected = null, viewer;
+  function show(part) {
+    selected = part;
+    viewer.select(part);
+    buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.part === part)); });
+    detail.textContent = "";
+    var h = document.createElement("h3"), p = document.createElement("p");
+    if (!part) {
+      h.textContent = "부품을 골라 보세요";
+      p.textContent = "목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.";
+      detail.append(h, p); tag.hidden = true; return;
+    }
+    var d = PARTS[part];
+    h.textContent = d.name; p.textContent = d.desc;
+    var dl = document.createElement("dl");
+    d.spec.forEach(function (s) {
+      var dt = document.createElement("dt"), dd = document.createElement("dd");
+      dt.textContent = s[0]; dd.textContent = s[1]; dl.append(dt, dd);
+    });
+    detail.append(h, p, dl);
+    tag.textContent = d.name;
+  }
+
+  viewer = createTB3Viewer(THREE, canvas, TB3_MESHES, {
+    accent: getComputedStyle(document.documentElement).getPropertyValue("--robot-accent").trim() || "#0067B8",
+    body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8",
+    ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666,
+    arena: false, view: "showcase",
+    onPick: function (part) { show(part === selected ? null : part); },
+    onFrame: function () {
+      if (!selected) return;
+      var p = viewer.project(selected);
+      tag.hidden = !p || !p.visible;
+      if (p) { tag.style.left = p.x + "px"; tag.style.top = p.y + "px"; }
+    }
   });
-  img.addEventListener("keyup", function (e) {
-    if (e.key === " ") { e.preventDefault(); openZoom(); }
+  msg.hidden = true;
+
+  buttons.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.part === selected ? null : b.dataset.part); }); });
+  var ex = document.getElementById("btnExplode");
+  ex.addEventListener("click", function () {
+    var on = ex.getAttribute("aria-pressed") !== "true";
+    ex.setAttribute("aria-pressed", String(on)); viewer.setExplode(on);
   });
-  closeBtn.addEventListener("click", closeZoom);
-  overlay.addEventListener("click", function (e) {
-    if (e.target === overlay) closeZoom();
-  });
+  document.getElementById("btnHome").addEventListener("click", function () { viewer.setPose(HOME, 0.01); });
+  document.getElementById("btnReach").addEventListener("click", function () { viewer.setPose(REACH, 0.019); });
+
+  // 키보드로 관절 조종 (teleop 과 같은 키, 이 페이지에서는 주행 키는 쓰지 않는다)
+  var KEYS = ["1", "2", "3", "4", "q", "w", "e", "r", "o", "p"];
+  function isField(t) { return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA"); }
   document.addEventListener("keydown", function (e) {
-    if (overlay.hidden) return;
-    if (e.key === "Escape") { e.preventDefault(); closeZoom(); }
-    else if (e.key === "Tab") { e.preventDefault(); closeBtn.focus(); }
+    if (isField(e.target) || e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+    var k = e.key.toLowerCase();
+    if (KEYS.indexOf(k) >= 0) viewer.press(k);
   });
+  document.addEventListener("keyup", function (e) { var k = e.key.toLowerCase(); if (KEYS.indexOf(k) >= 0) viewer.release(k); });
+  window.addEventListener("blur", function () { KEYS.forEach(function (k) { viewer.release(k); }); });
 })();
 </script>
 </body>

@@ -17,6 +17,9 @@ SAMPLE = {
     "armKeys": KEYS([(k, f"joint{n} {d} 회전", "") for d, ks in [("왼쪽", "1234"), ("오른쪽", "qwer")] for n, k in enumerate(ks, 1)]),
     "gripKeys": KEYS([("o", "그리퍼 열기", ""), ("p", "그리퍼 닫기", "")]),
     "readouts": [{"k": k, "v": v, "cls": "ro"} for k, v in [("joint1", "0°"), ("joint2", "-60°"), ("joint3", "20°"), ("joint4", "40°"), ("gripper", "10.0 mm"), ("v", "0.00 m/s"), ("ω", "0.00 rad/s")]],
+    "parts": [{"label": l, "pressed": str(l.startswith("joint2")).lower(), "pick": ""} for l in ["본체", "바퀴 · 구동 모터", "LiDAR", "카메라", "팔 받침", "joint1 · 허리", "joint2 · 어깨", "joint3 · 팔꿈치", "joint4 · 손목", "그리퍼"]],
+    "hasSel": True, "noSel": False, "tagShow": False, "explodePressed": "false",
+    "detail": {"name": "joint2 · 어깨", "desc": "팔을 앞뒤로 숙이고 세워요.", "spec": [{"k": "모터", "v": "DYNAMIXEL XM430-W350-T"}, {"k": "범위", "v": "−102.6° ~ +90°"}]},
     "zoom": False, "robot": {"tx": "-1.000", "ty": "-0.750", "deg": "0.0", "color": "#FF5500"},
 }
 
@@ -51,7 +54,11 @@ def main():
             .replace('src="/_blob/5070642424a65999a686a493839c89b3"', 'src="../../data/qrcode.png"') \
             .replace('src="/_blob/a4b370a6566ed13b9c27b62c0a132a06"', 'src="../../assets/poster.jpg"')
         extra = ""
-        if "Teleop" in f.name:
+        if "Robot" in f.name:
+            extra = ('<script src="../../assets/three.r128.min.js"></script><script src="../../tools/tb3_viewer.js"></script>'
+                     '<script>fetch("../../assets/robot/tb3_meshes.json").then(r=>r.json()).then(d=>{const v=createTB3Viewer(THREE,document.querySelector(".robot-stage canvas"),d,'
+                     '{accent:"#FF5500",body:"#3A3F47",arm:"#D9DCE1",tire:"#222428",grip:"#9AA0A8",ground:0x223344,grid:0x2A3442,gridMajor:0x4A5666,arena:false,view:"showcase"});v.select("joint2")})</script>')
+        elif "Teleop" in f.name:
             extra = ('<script src="../../assets/three.r128.min.js"></script><script src="../../tools/tb3_viewer.js"></script>'
                      '<script>fetch("../../assets/robot/tb3_meshes.json").then(r=>r.json()).then(d=>{const v=createTB3Viewer(THREE,document.querySelector(".viewer canvas"),d,'
                      '{accent:"#FF5500",body:"#3A3F47",arm:"#D9DCE1",tire:"#222428",grip:"#9AA0A8",ground:0x223344,grid:0x2A3442,gridMajor:0x4A5666});v.press("2");v.press("o")})</script>')

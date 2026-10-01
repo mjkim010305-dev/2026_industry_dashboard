@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기체 소개 - ROS 2 + turtlebot3_manipulation</title>
+<!-- 통합 스타일. 만든 방법: tools/build_styles.py (tools/pages/robot.*) -->
+<style>
+
+/* ---------- 공통 토큰 ---------- */
+:root {
+  --bg: #F3F5F7; --surface: #FFFFFF; --surface-2: #F7F8FA;
+  --text: #0E1726; --text-2: #5B6472; --line: #DEE1E5;
+  --accent: #0066CC; --accent-fill: #0071E3; --on-accent: #FFFFFF;
+  --appbar: rgba(14, 23, 38, 0.92); --appbar-text: #F2F4F7; --appbar-focus: #7FB8FF;
+  --stage: #0B0F14; --stage-text: #E8ECF1;
+  --ok: #1F7A45; --ok-bg: #E6F4EC; --danger: #C62828; --danger-bg: #FDECEC;
+  --shadow: 0 0 1px rgba(14, 23, 38, 0.20), 0 2px 8px rgba(14, 23, 38, 0.06);
+  --card-border: transparent;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0B0F14; --surface: #151A21; --surface-2: #1C222B;
+    --text: #F2F4F7; --text-2: #A9B1BD; --line: #2C3440;
+    --accent: #2997FF; --accent-fill: #0071E3;
+    --appbar: rgba(7, 10, 14, 0.88); --stage: #05070A;
+    --ok: #5FD08A; --ok-bg: rgba(95, 208, 138, 0.12); --danger: #FF6B6B; --danger-bg: rgba(255, 107, 107, 0.12);
+    --shadow: none; --card-border: #2C3440;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip {
+  position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px; border-radius: 999px;
+  background: var(--surface); color: var(--text); font-weight: 600; text-decoration: none; box-shadow: var(--shadow);
+}
+.skip:focus { top: 10px; }
+
+/* 상단 바 */
+.appbar {
+  position: sticky; top: 0; z-index: 20; background: var(--appbar); color: var(--appbar-text);
+  backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px);
+}
+.appbar-in { max-width: 1280px; margin: 0 auto; padding: 8px 24px; display: flex; align-items: center; gap: 16px; min-height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+.brand-mark { width: 22px; height: 22px; border-radius: 7px; background: #0071E3; }
+.appbar nav { margin-left: auto; min-width: 0; }
+.appbar nav ul {
+  list-style: none; margin: 0; padding: 4px; display: flex; gap: 2px;
+  background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow-x: auto;
+}
+.appbar nav a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px;
+  color: rgba(242, 244, 247, 0.80); text-decoration: none; font-size: 15px; font-weight: 500; white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+}
+.appbar nav a:hover { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; }
+.appbar nav a[aria-current="page"] { background: #FFFFFF; color: #0E1726; font-weight: 600; }
+.appbar nav a:focus-visible { outline: 3px solid var(--appbar-focus); outline-offset: 1px; }
+
+/* 페이지 · 머리 · 카드 */
+.page { max-width: 1280px; margin: 0 auto; padding: 32px 24px 56px; }
+.page-head { margin: 0 0 24px; }
+.eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--accent); }
+.page-head h1 { margin: 0 0 8px; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em; }
+.card {
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 24px;
+}
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.card-head h2 { margin: 0; font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -0.01em; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 96px; padding: 0 20px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: 15px; font-weight: 600;
+  color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  transition: background-color 0.2s, border-color 0.2s, transform 0.2s;
+}
+.btn:hover { border-color: var(--text-2); }
+.btn:active { transform: scale(0.98); }
+.btn.primary { color: var(--on-accent); background: var(--accent-fill); border-color: var(--accent-fill); }
+.btn.primary:hover { filter: brightness(1.08); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--text-2); font-size: 14px; font-weight: 500; border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .appbar-in { padding: 8px 16px; flex-wrap: wrap; }
+  .appbar nav { margin-left: 0; width: 100%; }
+  .page { padding: 24px 16px 40px; }
+  .page-head h1 { font-size: 26px; line-height: 34px; }
+  .card { padding: 16px; }
+}
+
+.lead { margin: 0; color: var(--text-2); font-size: 16px; }
+
+/* ---------- 기체 소개 페이지 (통합 · 기업 스타일 공통 변수만 사용) ---------- */
+.robot-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+@media (min-width: 1000px) { .robot-layout { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); align-items: start; } }
+.robot-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.robot-tools .btn { min-width: 0; }
+.robot-tools .btn[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
+.robot-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.robot-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.robot-stage .v-hint {
+  position: absolute; left: 12px; top: 12px; right: 12px; width: fit-content; padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55); color: #E8ECF1; font-size: 13px; pointer-events: none;
+}
+.robot-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.part-tag {
+  position: absolute; transform: translate(-50%, calc(-100% - 14px)); padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+  background: #FFFFFF; color: #0E1726; font-size: 13px; font-weight: 700; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.part-tag::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
+  background: #FFFFFF; transform: rotate(45deg);
+}
+.part-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.part-list button {
+  min-height: 40px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
+  background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+}
+.part-list button:hover { border-color: var(--text-2); }
+.part-list button[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); font-weight: 700; }
+.part-detail { border-top: 1px solid var(--line); padding-top: 16px; }
+.part-detail h3 { margin: 0 0 6px; font-size: 18px; }
+.part-detail p { margin: 0 0 10px; color: var(--text-2); font-size: 15px; }
+.part-detail dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 14px; }
+.part-detail dt { color: var(--text-2); }
+.part-detail dd { margin: 0; font-weight: 600; }
+.spec-card { margin-bottom: 16px; }
+.spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 32px; }
+.spec-grid table, .joint-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.spec-grid caption { text-align: left; font-weight: 700; padding: 0 0 8px; }
+.spec-grid th, .spec-grid td, .joint-table th, .joint-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.spec-grid th[scope="row"] { width: 42%; color: var(--text-2); font-weight: 500; }
+.joint-table thead th { color: var(--text-2); font-size: 13px; font-weight: 700; }
+.table-wrap { overflow-x: auto; }
+.spec-src { margin: 12px 0 0; font-size: 13px; color: var(--text-2); }
+kbd {
+  display: inline-block; min-width: 26px; padding: 2px 7px; border-radius: 6px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace; font-size: 13px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; color: var(--text);
+}
+.robot-stage .v-msg[hidden], .part-tag[hidden] { display: none; }
+
+:root { --robot-accent: #0071E3; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="appbar">
+  <div class="appbar-in">
+    <span class="brand"><span class="brand-mark" aria-hidden="true"></span>turtlebot3 · ROS 2</span>
+    <nav aria-label="화면 이동">
+      <ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html" aria-current="page">기체<span class="vh"> (현재 탭)</span></a></li><li><a href="teleop.html">teleop</a></li><li><a href="survey.html">설문</a></li></ul>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+  <main id="main">
+    <div class="page-head">
+      <p class="eyebrow">ROBOT</p>
+      <h1>기체 소개</h1>
+      <p class="lead">turtlebot3 waffle pi 위에 OpenMANIPULATOR-X 를 얹은 이동형 manipulator 입니다. 부품을 누르면 설명이 나와요.</p>
+    </div>
+
+    <div class="robot-layout">
+      <section class="card" aria-labelledby="t-robot3d">
+        <div class="card-head">
+          <h2 id="t-robot3d">3D 기체</h2>
+          <div class="robot-tools" role="group" aria-label="3D 보기 도구">
+            <button type="button" class="btn" id="btnExplode" aria-pressed="false">분해 보기</button>
+            <button type="button" class="btn" id="btnHome">기본 자세</button>
+            <button type="button" class="btn" id="btnReach">앞으로 뻗기</button>
+          </div>
+        </div>
+        <div class="robot-stage">
+          <canvas id="robotCanvas" aria-hidden="true"></canvas>
+          <span class="v-hint">부품을 누르면 설명 · 끌어서 회전 · 휠로 확대 · 키보드로 관절 조종</span>
+          <span class="part-tag" id="partTag" hidden></span>
+          <div class="v-msg" id="robotMsg">3D 기체를 불러오는 중</div>
+        </div>
+      </section>
+
+      <aside class="card part-panel" aria-labelledby="t-parts">
+        <div class="card-head"><h2 id="t-parts">부품</h2></div>
+        <ul class="part-list" id="partList">
+          <li><button type="button" data-part="base">본체</button></li>
+          <li><button type="button" data-part="wheels">바퀴 · 구동 모터</button></li>
+          <li><button type="button" data-part="lidar">LiDAR</button></li>
+          <li><button type="button" data-part="camera">카메라</button></li>
+          <li><button type="button" data-part="link1">팔 받침</button></li>
+          <li><button type="button" data-part="joint1">joint1 · 허리</button></li>
+          <li><button type="button" data-part="joint2">joint2 · 어깨</button></li>
+          <li><button type="button" data-part="joint3">joint3 · 팔꿈치</button></li>
+          <li><button type="button" data-part="joint4">joint4 · 손목</button></li>
+          <li><button type="button" data-part="gripper">그리퍼</button></li>
+        </ul>
+        <div class="part-detail" id="partDetail" aria-live="polite">
+          <h3>부품을 골라 보세요</h3>
+          <p>목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.</p>
+        </div>
+      </aside>
+    </div>
+
+    <section class="card spec-card" aria-labelledby="t-spec">
+      <div class="card-head"><h2 id="t-spec">사양</h2></div>
+      <div class="spec-grid">
+        <table>
+          <caption>turtlebot3 waffle pi</caption>
+          <tbody>
+            <tr><th scope="row">최대 속도</th><td>0.26 m/s</td></tr>
+            <tr><th scope="row">최대 회전 속도</th><td>1.82 rad/s (104.27°/s)</td></tr>
+            <tr><th scope="row">최대 적재</th><td>30 kg</td></tr>
+            <tr><th scope="row">크기 (L × W × H)</th><td>281 × 306 × 141 mm</td></tr>
+            <tr><th scope="row">무게</th><td>1.8 kg (SBC · 배터리 · 센서 포함)</td></tr>
+            <tr><th scope="row">SBC</th><td>Raspberry Pi 4</td></tr>
+            <tr><th scope="row">구동 모터</th><td>DYNAMIXEL XM430-W210</td></tr>
+            <tr><th scope="row">LiDAR</th><td>360° Laser Distance Sensor LDS-02</td></tr>
+            <tr><th scope="row">카메라</th><td>Raspberry Pi Camera Module v2.1</td></tr>
+            <tr><th scope="row">배터리</th><td>리튬 폴리머 11.1 V 1800 mAh</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>OpenMANIPULATOR-X</caption>
+          <tbody>
+            <tr><th scope="row">자유도</th><td>5 (관절 4 + 그리퍼 1)</td></tr>
+            <tr><th scope="row">들 수 있는 무게</th><td>500 g</td></tr>
+            <tr><th scope="row">반복 정밀도</th><td>0.2 mm 미만</td></tr>
+            <tr><th scope="row">무게</th><td>0.70 kg</td></tr>
+            <tr><th scope="row">팔 길이 (reach)</th><td>380 mm</td></tr>
+            <tr><th scope="row">그리퍼 벌림</th><td>20 – 75 mm</td></tr>
+            <tr><th scope="row">관절 모터</th><td>DYNAMIXEL XM430-W350-T</td></tr>
+            <tr><th scope="row">관절 속도</th><td>46 RPM</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="spec-src">출처: ROBOTIS e-Manual (TurtleBot3 Features, OpenMANIPULATOR-X Specification), 관절 범위는 turtlebot3_manipulation_description URDF.</p>
+    </section>
+
+    <section class="card" aria-labelledby="t-joints">
+      <div class="card-head"><h2 id="t-joints">관절 범위와 teleop 키</h2></div>
+      <div class="table-wrap">
+        <table class="joint-table">
+          <thead><tr><th scope="col">관절</th><th scope="col">회전축</th><th scope="col">범위</th><th scope="col">teleop 키</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">joint1 · 허리</th><td>z (세로)</td><td>−162° ~ +162°</td><td><kbd>1</kbd> <kbd>q</kbd></td></tr>
+            <tr><th scope="row">joint2 · 어깨</th><td>y (가로)</td><td>−102.6° ~ +90°</td><td><kbd>2</kbd> <kbd>w</kbd></td></tr>
+            <tr><th scope="row">joint3 · 팔꿈치</th><td>y (가로)</td><td>−54° ~ +79.2°</td><td><kbd>3</kbd> <kbd>e</kbd></td></tr>
+            <tr><th scope="row">joint4 · 손목</th><td>y (가로)</td><td>−102.6° ~ +117°</td><td><kbd>4</kbd> <kbd>r</kbd></td></tr>
+            <tr><th scope="row">그리퍼</th><td>직선 이동</td><td>손가락마다 −10 ~ +19 mm</td><td><kbd>o</kbd> <kbd>p</kbd></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/three.r128.min.js"></script>
+<script src="../assets/tb3_viewer.js"></script>
+<script src="../assets/robot/tb3_meshes.js"></script>
+<script>
+// 기체 소개: 3D 기체 + 부품 설명. 값은 ROBOTIS e-Manual 과 turtlebot3_manipulation_description URDF 에서 가져왔다.
+(function () {
+  var PARTS = {
+    base: { name: "본체 (waffle pi)", desc: "판을 층층이 쌓은 몸체 안에 제어 보드와 컴퓨터, 배터리가 들어 있어요.",
+      spec: [["SBC", "Raspberry Pi 4"], ["MCU", "32-bit ARM Cortex-M7 (216 MHz)"], ["배터리", "리튬 폴리머 11.1 V 1800 mAh"], ["크기", "281 × 306 × 141 mm"]] },
+    wheels: { name: "바퀴 · 구동 모터", desc: "양쪽 바퀴의 속도 차이로 앞뒤로 가고 제자리에서 돌아요 (차동 구동).",
+      spec: [["모터", "DYNAMIXEL XM430-W210 × 2"], ["최대 속도", "0.26 m/s"], ["최대 회전", "1.82 rad/s"], ["teleop 키", "i · j · k · l · space"]] },
+    lidar: { name: "LiDAR", desc: "레이저로 주변 360° 거리를 재요. 지도를 만들고(SLAM) 경로를 찾을 때 써요.",
+      spec: [["모델", "360° Laser Distance Sensor LDS-02"], ["위치", "본체 위 (base_link 기준 높이 0.122 m)"]] },
+    camera: { name: "카메라", desc: "앞쪽을 비추는 카메라예요. teleop 화면에서 연결하면 이 영상이 보여요.",
+      spec: [["모델", "Raspberry Pi Camera Module v2.1"], ["teleop", "camera topic 으로 받아 표시"]] },
+    link1: { name: "팔 받침", desc: "OpenMANIPULATOR-X 를 본체 위에 고정하는 첫 마디예요.",
+      spec: [["고정 위치", "base_link 기준 x −0.092 m, z +0.091 m"], ["팔 길이", "380 mm (reach)"], ["팔 무게", "0.70 kg"]] },
+    joint1: { name: "joint1 · 허리", desc: "팔 전체를 세로축으로 좌우 회전해요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−162° ~ +162°"], ["teleop 키", "1 · q"]] },
+    joint2: { name: "joint2 · 어깨", desc: "팔을 앞뒤로 숙이고 세워요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−102.6° ~ +90°"], ["teleop 키", "2 · w"]] },
+    joint3: { name: "joint3 · 팔꿈치", desc: "아래팔을 접고 펴요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−54° ~ +79.2°"], ["teleop 키", "3 · e"]] },
+    joint4: { name: "joint4 · 손목", desc: "그리퍼의 기울기를 맞춰요.",
+      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−102.6° ~ +117°"], ["teleop 키", "4 · r"]] },
+    gripper: { name: "그리퍼", desc: "두 손가락이 평행하게 벌어지고 닫혀서 물건을 집어요.",
+      spec: [["벌림", "20 – 75 mm"], ["손가락 이동", "−10 ~ +19 mm (URDF)"], ["들 수 있는 무게", "500 g"], ["teleop 키", "o · p"]] }
+  };
+  var HOME = [0, -1.05, 0.35, 0.70], REACH = [0, 0.8, -0.6, 0];
+
+  var canvas = document.getElementById("robotCanvas"), msg = document.getElementById("robotMsg");
+  var tag = document.getElementById("partTag"), detail = document.getElementById("partDetail");
+  var buttons = Array.prototype.slice.call(document.querySelectorAll("#partList button"));
+  if (!window.THREE || !window.TB3_MESHES || !window.createTB3Viewer) { msg.textContent = "3D 기체를 불러오지 못했습니다"; return; }
+
+  var selected = null, viewer;
+  function show(part) {
+    selected = part;
+    viewer.select(part);
+    buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.part === part)); });
+    detail.textContent = "";
+    var h = document.createElement("h3"), p = document.createElement("p");
+    if (!part) {
+      h.textContent = "부품을 골라 보세요";
+      p.textContent = "목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.";
+      detail.append(h, p); tag.hidden = true; return;
+    }
+    var d = PARTS[part];
+    h.textContent = d.name; p.textContent = d.desc;
+    var dl = document.createElement("dl");
+    d.spec.forEach(function (s) {
+      var dt = document.createElement("dt"), dd = document.createElement("dd");
+      dt.textContent = s[0]; dd.textContent = s[1]; dl.append(dt, dd);
+    });
+    detail.append(h, p, dl);
+    tag.textContent = d.name;
+  }
+
+  viewer = createTB3Viewer(THREE, canvas, TB3_MESHES, {
+    accent: getComputedStyle(document.documentElement).getPropertyValue("--robot-accent").trim() || "#0071E3",
+    body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8",
+    ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666,
+    arena: false, view: "showcase",
+    onPick: function (part) { show(part === selected ? null : part); },
+    onFrame: function () {
+      if (!selected) return;
+      var p = viewer.project(selected);
+      tag.hidden = !p || !p.visible;
+      if (p) { tag.style.left = p.x + "px"; tag.style.top = p.y + "px"; }
+    }
+  });
+  msg.hidden = true;
+
+  buttons.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.part === selected ? null : b.dataset.part); }); });
+  var ex = document.getElementById("btnExplode");
+  ex.addEventListener("click", function () {
+    var on = ex.getAttribute("aria-pressed") !== "true";
+    ex.setAttribute("aria-pressed", String(on)); viewer.setExplode(on);
+  });
+  document.getElementById("btnHome").addEventListener("click", function () { viewer.setPose(HOME, 0.01); });
+  document.getElementById("btnReach").addEventListener("click", function () { viewer.setPose(REACH, 0.019); });
+
+  // 키보드로 관절 조종 (teleop 과 같은 키, 이 페이지에서는 주행 키는 쓰지 않는다)
+  var KEYS = ["1", "2", "3", "4", "q", "w", "e", "r", "o", "p"];
+  function isField(t) { return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA"); }
+  document.addEventListener("keydown", function (e) {
+    if (isField(e.target) || e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+    var k = e.key.toLowerCase();
+    if (KEYS.indexOf(k) >= 0) viewer.press(k);
+  });
+  document.addEventListener("keyup", function (e) { var k = e.key.toLowerCase(); if (KEYS.indexOf(k) >= 0) viewer.release(k); });
+  window.addEventListener("blur", function () { KEYS.forEach(function (k) { viewer.release(k); }); });
+})();
+</script>
+</body>
+</html>

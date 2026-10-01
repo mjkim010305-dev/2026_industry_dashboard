@@ -91,8 +91,18 @@
    "expand": "fill",
    "is_interactive": true
   },
-  "SamsungTeleop.dc.html": {
+  "SamsungRobot.dc.html": {
    "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 2000,
+   "title": "삼성 스타일 · 기체 소개 (3D)",
+   "page": "samsung",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "SamsungTeleop.dc.html": {
+   "x": 4120,
    "y": 0,
    "w": 1440,
    "h": 1420,
@@ -102,7 +112,7 @@
    "is_interactive": true
   },
   "SamsungSurvey.dc.html": {
-   "x": 4120,
+   "x": 5640,
    "y": 0,
    "w": 1440,
    "h": 980,
@@ -129,8 +139,18 @@
    "expand": "fill",
    "is_interactive": true
   },
-  "LgTeleop.dc.html": {
+  "LgRobot.dc.html": {
    "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 2000,
+   "title": "LG 스타일 · 기체 소개 (3D)",
+   "page": "lg",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "LgTeleop.dc.html": {
+   "x": 4120,
    "y": 0,
    "w": 1440,
    "h": 1420,
@@ -140,7 +160,7 @@
    "is_interactive": true
   },
   "LgSurvey.dc.html": {
-   "x": 4120,
+   "x": 5640,
    "y": 0,
    "w": 1440,
    "h": 980,
@@ -167,8 +187,18 @@
    "expand": "fill",
    "is_interactive": true
   },
-  "AppleTeleop.dc.html": {
+  "AppleRobot.dc.html": {
    "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 2000,
+   "title": "애플 스타일 · 기체 소개 (3D)",
+   "page": "apple",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AppleTeleop.dc.html": {
+   "x": 4120,
    "y": 0,
    "w": 1440,
    "h": 1420,
@@ -178,7 +208,7 @@
    "is_interactive": true
   },
   "AppleSurvey.dc.html": {
-   "x": 4120,
+   "x": 5640,
    "y": 0,
    "w": 1440,
    "h": 980,
@@ -205,8 +235,18 @@
    "expand": "fill",
    "is_interactive": true
   },
-  "MicrosoftTeleop.dc.html": {
+  "MicrosoftRobot.dc.html": {
    "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 2000,
+   "title": "마이크로소프트 스타일 · 기체 소개 (3D)",
+   "page": "microsoft",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "MicrosoftTeleop.dc.html": {
+   "x": 4120,
    "y": 0,
    "w": 1440,
    "h": 1420,
@@ -216,7 +256,7 @@
    "is_interactive": true
   },
   "MicrosoftSurvey.dc.html": {
-   "x": 4120,
+   "x": 5640,
    "y": 0,
    "w": 1440,
    "h": 980,
@@ -243,8 +283,18 @@
    "expand": "fill",
    "is_interactive": true
   },
-  "AmazonTeleop.dc.html": {
+  "AmazonRobot.dc.html": {
    "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 2000,
+   "title": "아마존 스타일 · 기체 소개 (3D)",
+   "page": "amazon",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AmazonTeleop.dc.html": {
+   "x": 4120,
    "y": 0,
    "w": 1440,
    "h": 1420,
@@ -254,7 +304,7 @@
    "is_interactive": true
   },
   "AmazonSurvey.dc.html": {
-   "x": 4120,
+   "x": 5640,
    "y": 0,
    "w": 1440,
    "h": 980,
@@ -271,22 +321,27 @@
   "Guide.dc.html",
   "SamsungAnalysis.dc.html",
   "SamsungDemo.dc.html",
+  "SamsungRobot.dc.html",
   "SamsungTeleop.dc.html",
   "SamsungSurvey.dc.html",
   "LgAnalysis.dc.html",
   "LgDemo.dc.html",
+  "LgRobot.dc.html",
   "LgTeleop.dc.html",
   "LgSurvey.dc.html",
   "AppleAnalysis.dc.html",
   "AppleDemo.dc.html",
+  "AppleRobot.dc.html",
   "AppleTeleop.dc.html",
   "AppleSurvey.dc.html",
   "MicrosoftAnalysis.dc.html",
   "MicrosoftDemo.dc.html",
+  "MicrosoftRobot.dc.html",
   "MicrosoftTeleop.dc.html",
   "MicrosoftSurvey.dc.html",
   "AmazonAnalysis.dc.html",
   "AmazonDemo.dc.html",
+  "AmazonRobot.dc.html",
   "AmazonTeleop.dc.html",
   "AmazonSurvey.dc.html"
  ],
@@ -302,41 +357,41 @@
   "samsung-title": {
    "x": 0,
    "y": -300,
-   "text": "삼성 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "text": "삼성 스타일 — 분석글 · 시연 영상 · 기체 · teleop · 설문",
    "kind": "title1",
-   "maxW": 5560,
+   "maxW": 7080,
    "page": "samsung"
   },
   "lg-title": {
    "x": 0,
    "y": -300,
-   "text": "LG 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "text": "LG 스타일 — 분석글 · 시연 영상 · 기체 · teleop · 설문",
    "kind": "title1",
-   "maxW": 5560,
+   "maxW": 7080,
    "page": "lg"
   },
   "apple-title": {
    "x": 0,
    "y": -300,
-   "text": "애플 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "text": "애플 스타일 — 분석글 · 시연 영상 · 기체 · teleop · 설문",
    "kind": "title1",
-   "maxW": 5560,
+   "maxW": 7080,
    "page": "apple"
   },
   "microsoft-title": {
    "x": 0,
    "y": -300,
-   "text": "마이크로소프트 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "text": "마이크로소프트 스타일 — 분석글 · 시연 영상 · 기체 · teleop · 설문",
    "kind": "title1",
-   "maxW": 5560,
+   "maxW": 7080,
    "page": "microsoft"
   },
   "amazon-title": {
    "x": 0,
    "y": -300,
-   "text": "아마존 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "text": "아마존 스타일 — 분석글 · 시연 영상 · 기체 · teleop · 설문",
    "kind": "title1",
-   "maxW": 5560,
+   "maxW": 7080,
    "page": "amazon"
   }
  },

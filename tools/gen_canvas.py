@@ -4,6 +4,7 @@
 스타일은 themes/base.css + themes/{기업}.css + themes/enhance.css 를 <helmet><style> 에 넣는다(다크 모드 블록은 뺀다).
 """
 import html
+from gen_canvas_robot import robot_board
 import json
 import re
 import sys
@@ -59,7 +60,7 @@ def css_for(brand):
 
 
 def nav(prefix, current):
-    items = [("Demo", "시연 영상"), ("Teleop", "teleop"), ("Survey", "설문")]
+    items = [("Demo", "시연 영상"), ("Robot", "기체"), ("Teleop", "teleop"), ("Survey", "설문")]
     out = []
     for key, label in items:
         cur = ' aria-current="page"' if key == current else ""
@@ -431,6 +432,7 @@ def main():
     preview_dir = ROOT / ".shots" / "preview"; preview_dir.mkdir(parents=True, exist_ok=True)
     boards, order, notes, written = {}, [], {}, []
     viewer = viewer_method()
+    robot_markup, robot_script, robot_css = robot_board()
     for brand, P, label, accent, header in BRANDS:
         css = css_for(brand)
         md = (ROOT / "design-refs" / f"{brand}.md").read_text(encoding="utf-8")
@@ -442,6 +444,10 @@ def main():
             f"{P}Demo.dc.html": page(f"{label} 스타일 · 시연 영상", css, "",
                                      DEMO_BODY.replace("%HEADER%", header.replace("%NAV%", nav(P, "Demo"))).replace("%POSTER%", BLOB["poster"]),
                                      (DEMO_JS, {"$preview": {"width": 1440, "height": 1520}}), 1440, 1520),
+            f"{P}Robot.dc.html": page(f"{label} 스타일 · 기체 소개", css + "\n" + robot_css, f'<script src="{BLOB["three"]}"></script>\n',
+                                      robot_markup.replace("%HEADER%", header.replace("%NAV%", nav(P, "Robot"))),
+                                      (robot_script.replace("%MESH%", BLOB["mesh"]).replace("%ACCENT%", accent).replace("%VIEWER%", viewer),
+                                       {"accent": {"editor": "color", "default": accent}, "$preview": {"width": 1440, "height": 2000}}), 1440, 2000),
             f"{P}Teleop.dc.html": page(f"{label} 스타일 · teleop", css, f'<script src="{BLOB["three"]}"></script>\n',
                                        TELEOP_BODY.replace("%HEADER%", header.replace("%NAV%", nav(P, "Teleop"))).replace("%KEYCAP%", KEYCAP).replace("%MAP%", BLOB["map"]),
                                        (TELEOP_JS.replace("%MESH%", BLOB["mesh"]).replace("%ACCENT%", accent).replace("%VIEWER%", viewer),
@@ -459,6 +465,7 @@ def main():
             f'<script>document.title=String(document.querySelector(".doc").offsetHeight)</script></body></html>', encoding="utf-8")
         x = 0
         for kind, w, h, title in [("Analysis", 1000, ah, f"{label} · UI/UX 분석"), ("Demo", 1440, 1520, f"{label} 스타일 · 시연 영상"),
+                                  ("Robot", 1440, 2000, f"{label} 스타일 · 기체 소개 (3D)"),
                                   ("Teleop", 1440, 1420, f"{label} 스타일 · teleop (3D 기체)"), ("Survey", 1440, 980, f"{label} 스타일 · 설문")]:
             entry = {"x": x, "y": 0, "w": w, "h": h, "title": title, "page": brand}
             if kind != "Analysis":
@@ -466,7 +473,7 @@ def main():
             boards[f"{P}{kind}.dc.html"] = entry
             order.append(f"{P}{kind}.dc.html")
             x += w + 80
-        notes[f"{brand}-title"] = {"x": 0, "y": -300, "text": f"{label} 스타일 — 분석글 · 시연 영상 · teleop · 설문", "kind": "title1", "maxW": x - 80, "page": brand}
+        notes[f"{brand}-title"] = {"x": 0, "y": -300, "text": f"{label} 스타일 — 분석글 · 시연 영상 · 기체 · teleop · 설문", "kind": "title1", "maxW": x - 80, "page": brand}
     (OUT / "new_boards.json").write_text(json.dumps({"boards": boards, "order": order, "notes": notes, "files": written}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(len(written), "files")
 
