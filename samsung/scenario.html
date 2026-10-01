@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>시연 영상 - ROS 2 + turtlebot3_manipulation</title>
-<!-- 삼성 스타일: design-refs/samsung.md 참고. 기능 스크립트는 원본(original/demo-video.html)과 같다. -->
+<title>시나리오 시뮬레이터 - ROS 2 + turtlebot3_manipulation</title>
+<!-- 삼성 스타일: design-refs/samsung.md 참고. 만든 방법: tools/build_styles.py (tools/pages/scenario.*) -->
 <style>
 /* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
 * { box-sizing: border-box; }
@@ -296,178 +296,258 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .desc p { margin-left: auto; margin-right: auto; }
 .page-head .lead { font-size: 18px; }
 .card-head h2, .list-section h2 { font-size: 24px; }
+
+/* ---------- 시나리오 시뮬레이터 페이지 ---------- */
+.sc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1000px) { .sc-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
+.sc-side { display: grid; gap: 16px; }
+.robot-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.robot-tools .btn { min-width: 0; }
+.sc-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.sc-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.sc-stage .v-hint {
+  position: absolute; left: 12px; top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 13px; pointer-events: none;
+}
+.sc-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.sc-stage .v-msg[hidden] { display: none; }
+.sc-mini {
+  position: absolute; right: 12px; bottom: 12px; width: 28%; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+  background: #0B0F14; border: 2px solid rgba(255, 255, 255, 0.85); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.sc-mini svg { display: block; width: 100%; height: 100%; }
+.sc-keys { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 13px; color: var(--text-2); }
+.sc-keys span { display: inline-flex; align-items: center; gap: 4px; }
+kbd {
+  display: inline-block; min-width: 24px; padding: 1px 6px; border-radius: 6px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px; font-weight: 700;
+  background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; color: var(--text);
+}
+.mission { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mission li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.mission li > b {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--line); color: var(--text); font-size: 13px;
+}
+.mission li strong { display: block; font-size: 15px; }
+.mission li span { display: block; font-size: 13px; color: var(--text-2); }
+.mission li.done { border-color: #1F7A45; }
+.mission li.done > b { background: #1F7A45; color: #FFFFFF; }
+.mission li.done strong::after { content: " · 완료"; color: #1F7A45; font-size: 13px; }
+.sc-log { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; color: var(--text); min-height: 44px; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 13px; color: var(--text-2); }
+.lg::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.lg.movable::before { background: #F2B134; }
+.lg.heavy::before { background: #8E6CCF; }
+.lg.fixed::before { background: #6B7280; }
+.table-wrap { overflow-x: auto; }
+.obs-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.obs-table th, .obs-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.obs-table thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
+.obs-table input {
+  width: 76px; min-height: 36px; padding: 0 8px; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+}
+.obs-table input:disabled { opacity: 0.6; }
+.st-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #111111; white-space: nowrap; }
+.st-chip.movable { background: #F2B134; }
+.st-chip.heavy { background: #8E6CCF; color: #FFFFFF; }
+.st-chip.fixed { background: #6B7280; color: #FFFFFF; }
+.spec-src { margin: 10px 0 0; font-size: 12px; color: var(--text-2); }
+
+:root { --robot-accent: #1259C3; }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">본문 바로가기</a>
-<header class="gnb"><div class="gnb-in"><span class="wordmark">TURTLEBOT3</span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html" aria-current="page">시연 영상<span class="vh"> (현재 탭)</span></a></li><li><a href="robot.html">기체</a></li><li><a href="teleop.html">teleop</a></li><li><a href="scenario.html">시나리오</a></li><li><a href="survey.html">설문</a></li></ul></nav><span class="gnb-meta">ROS 2 · turtlebot3_manipulation</span></div></header>
+<header class="gnb"><div class="gnb-in"><span class="wordmark">TURTLEBOT3</span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="teleop.html">teleop</a></li><li><a href="scenario.html" aria-current="page">시나리오<span class="vh"> (현재 탭)</span></a></li><li><a href="survey.html">설문</a></li></ul></nav><span class="gnb-meta">ROS 2 · turtlebot3_manipulation</span></div></header>
 
 <div class="page">
   <main id="main">
-    <section class="desc page-head" aria-labelledby="t-desc">
-      <p class="eyebrow">DEMO</p>
-      <h1 id="t-desc">프로젝트 시연 영상</h1>
-      <p>움직일 수 있는 장애물이 경로를 막고 있으면, 움직일 수 있는 장애물을 치우고 경로를 수행한다.</p>
-      <p class="sub">ROS 2 와 turtlebot3_manipulation 을 사용한 프로젝트입니다.</p>
-    </section>
+    <div class="page-head">
+      <p class="eyebrow">SCENARIO</p>
+      <h1>시나리오 시뮬레이터</h1>
+      <p class="lead">경로를 막은 장애물을 치우고 목표 지점까지 가 보세요. 장애물의 질량을 바꾸면 밀리거나 집히는지가 달라져요.</p>
+    </div>
 
-    <section class="player" aria-labelledby="t-player">
-      <h2 id="t-player" class="vh">메인 플레이어</h2>
-      <div class="main-wrap card is-main" id="mainWrap">
-        <div class="frame" id="mainFrame"></div>
-        <div class="bar">
-          <button type="button" class="btn primary" id="toggle">일시정지</button>
-          <span class="state" id="state" role="status">상태: 재생 중</span>
-          <span class="now" id="nowName"></span>
-          <span class="live" id="live" aria-live="polite"></span>
+    <div class="sc-layout">
+      <section class="card" aria-labelledby="t-sc3d">
+        <div class="card-head">
+          <h2 id="t-sc3d">경기장 3 m × 3 m</h2>
+          <div class="robot-tools" role="group" aria-label="자세와 다시 시작">
+            <button type="button" class="btn" id="btnPick">집기 자세</button>
+            <button type="button" class="btn" id="btnHome">기본 자세</button>
+            <button type="button" class="btn" id="btnReset">처음부터</button>
+          </div>
         </div>
-      </div>
-    </section>
+        <div class="sc-stage">
+          <canvas id="scCanvas" aria-hidden="true"></canvas>
+          <span class="v-hint">키보드로 조종 · 끌어서 회전 · 휠로 확대</span>
+          <div class="v-msg" id="scMsg">3D 기체를 불러오는 중</div>
+          <div class="sc-mini">
+            <svg viewBox="-1.7 -1.7 3.4 3.4" role="img" aria-label="경기장 지도: 경로, 장애물, 목표 지점, 기체 위치">
+              <path d="M-1.5 0 L-1.5 -1.5 L1.5 -1.5 L1.5 1.5 L0 1.5 L0 0 Z" fill="#1A222C" stroke="#C9CED6" stroke-width="0.04"></path>
+              <polyline id="miniPath" fill="none" stroke="#9DB4CF" stroke-width="0.03" stroke-dasharray="0.08 0.06"></polyline>
+              <circle id="miniGoal" r="0.25" fill="none" stroke="#5FD08A" stroke-width="0.04"></circle>
+              <g id="miniObs"></g>
+              <g id="miniBot"><circle r="0.14" fill="#1259C3" stroke="#FFFFFF" stroke-width="0.04"></circle><path d="M0.1 -0.08 L0.26 0 L0.1 0.08 Z" fill="#FFFFFF"></path></g>
+            </svg>
+          </div>
+        </div>
+        <div class="sc-keys" aria-label="조종 키">
+          <span><kbd>i</kbd><kbd>k</kbd> 앞뒤</span><span><kbd>j</kbd><kbd>l</kbd> 회전</span><span><kbd>space</kbd> 정지</span>
+          <span><kbd>1</kbd>~<kbd>4</kbd> · <kbd>q</kbd>~<kbd>r</kbd> 관절</span><span><kbd>p</kbd> 집기</span><span><kbd>o</kbd> 놓기</span>
+        </div>
+      </section>
 
-    <section class="list-section" aria-labelledby="t-list">
-      <h2 id="t-list">영상 목록</h2>
-      <ul class="list" id="list"></ul>
-      <p class="empty" id="empty" hidden>재생할 시연 영상이 없습니다. 영상 파일을 추가하면 여기에 나타납니다.</p>
-    </section>
+      <div class="sc-side">
+        <section class="card" aria-labelledby="t-mission">
+          <div class="card-head"><h2 id="t-mission">미션</h2><span class="chip" id="missionChip">0 / 3</span></div>
+          <ol class="mission" id="mission">
+            <li data-step="0"><b>1</b><div><strong>장애물 확인</strong><span>움직일 수 있는 장애물에 0.5 m 안으로 다가가기</span></div></li>
+            <li data-step="1"><b>2</b><div><strong>장애물 치우기</strong><span>점선 경로 위의 장애물을 밀거나 집어서 옮기기</span></div></li>
+            <li data-step="2"><b>3</b><div><strong>경로 수행</strong><span>초록 원(목표 지점)까지 가기</span></div></li>
+          </ol>
+          <p class="sc-log" id="scLog" aria-live="polite">i 키로 출발해 보세요.</p>
+        </section>
+
+        <section class="card" aria-labelledby="t-obs">
+          <div class="card-head"><h2 id="t-obs">장애물</h2></div>
+          <div class="legend"><span class="lg movable">밀 수 있음</span><span class="lg heavy">무거움</span><span class="lg fixed">고정</span></div>
+          <div class="table-wrap">
+            <table class="obs-table">
+              <thead><tr><th scope="col">이름</th><th scope="col">질량 (kg)</th><th scope="col">필요한 힘</th><th scope="col">상태</th></tr></thead>
+              <tbody id="obsBody"></tbody>
+            </table>
+          </div>
+          <p class="spec-src" id="assume"></p>
+        </section>
+      </div>
+    </div>
   </main>
 </div>
 
+<script src="../assets/three.r128.min.js"></script>
+<script src="../assets/tb3_viewer.js"></script>
+<script src="../assets/robot/tb3_meshes.js"></script>
+<script src="../assets/tb3_scenario.js"></script>
 <script>
-// 영상 목록: 항목을 추가하거나 바꾸려면 이 배열만 고친다.
-const VIDEOS = [
-  { name: "intro", path: "../data/intro.mp4" },
-  { name: "data1", path: "../data/data1.mp4" },
-  { name: "data2", path: "../data/data2.mp4" },
-  { name: "data3", path: "../data/data3.mp4" },
-  { name: "data4", path: "../data/data4.mp4" }
-];
-const DURATION = 300; // 0.3초
+// 시나리오 시뮬레이터: 경기장(ㄱ자 3 m × 3 m) 위의 장애물 정의와 화면 연결.
+// 장애물 값은 예시다. 실제 장애물의 크기·질량·위치를 알면 이 목록만 고치면 된다.
+(function () {
+  var SCENARIO = {
+    start: { x: -1.1, y: 0.75, yaw: 0 },
+    goal: { x: 0.75, y: -1.1, r: 0.25 },
+    path: [[-1.1, 0.75], [0.75, 0.75], [0.75, -1.1]],
+    pushForce: 12,        // N — 가정: 기체가 바닥 장애물을 미는 최대 힘
+    payload: 0.5,         // kg — OpenMANIPULATOR-X 들 수 있는 무게(사양)
+    gripMax: 0.07,        // m — 이 폭 이하 상자만 그리퍼로 잡는다(가정)
+    obstacles: [
+      { id: "A", name: "가벼운 상자", shape: "box", sx: 0.06, sy: 0.06, h: 0.10, x: -0.35, y: 0.75, mass: 0.2, mu: 0.4, onPath: true },
+      { id: "B", name: "밀 수 있는 상자", shape: "box", sx: 0.25, sy: 0.25, h: 0.20, x: 0.75, y: -0.35, mass: 1.5, mu: 0.5, onPath: true },
+      { id: "C", name: "무거운 상자", shape: "box", sx: 0.30, sy: 0.30, h: 0.30, x: 0.30, y: 1.15, mass: 8, mu: 0.6 },
+      { id: "D", name: "고정 기둥", shape: "cyl", r: 0.08, h: 0.40, x: 1.20, y: 0.05, mass: 0, mu: 0, fixed: true }
+    ]
+  };
+  var HOME = [0, -1.05, 0.35, 0.70], PICK = [0, 1.118, -0.836, 0.921];   // PICK: 그리퍼 끝이 앞 0.21 m, 높이 0.06 m (URDF 정기구학)
 
-const mainFrame = document.getElementById('mainFrame');
-const listEl = document.getElementById('list');
-const toggle = document.getElementById('toggle');
-const stateEl = document.getElementById('state');
-const nowName = document.getElementById('nowName');
-const live = document.getElementById('live');
+  var canvas = document.getElementById("scCanvas"), msg = document.getElementById("scMsg");
+  var logEl = document.getElementById("scLog"), chip = document.getElementById("missionChip");
+  if (!window.THREE || !window.TB3_MESHES || !window.createTB3Viewer || !window.createTB3Scenario) { msg.textContent = "3D 기체를 불러오지 못했습니다"; return; }
 
-let mainItem = null;
-let slots = [];      // 목록 칸 순서: 각 칸이 가진 항목
-let busy = false;
-
-function makeTile(v) {
-  const tile = document.createElement('div');
-  tile.className = 'tile';
-  const video = document.createElement('video');
-  video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true;
-  video.preload = 'metadata'; video.tabIndex = -1;
-  video.setAttribute('aria-hidden', 'true');
-  video.src = v.path + '#t=0.001';
-  const fail = document.createElement('div');
-  fail.className = 'fail';
-  fail.innerHTML = '<strong>영상을 불러올 수 없습니다</strong><span></span>';
-  fail.lastChild.textContent = v.path;
-  video.addEventListener('error', () => { tile.classList.add('failed'); if (v === mainItem) setState(); });
-  tile.append(video, fail);
-  v.tile = tile; v.video = video;
-}
-
-function cellFor(v, index) {
-  const li = document.createElement('li');
-  const b = document.createElement('button');
-  b.type = 'button'; b.className = 'cell';
-  const fr = document.createElement('div'); fr.className = 'frame';
-  const nm = document.createElement('span'); nm.className = 'name';
-  b.append(fr, nm);
-  b.addEventListener('click', () => select(index));
-  li.appendChild(b);
-  return li;
-}
-
-function labelCells() {
-  [...listEl.children].forEach((li, i) => {
-    const b = li.firstChild, v = slots[i];
-    b.querySelector('.frame').appendChild(v.tile);
-    b.querySelector('.name').textContent = v.name;
-    b.setAttribute('aria-label', v.name + ' 재생');
+  var scen = null;
+  var viewer = createTB3Viewer(THREE, canvas, TB3_MESHES, {
+    accent: getComputedStyle(document.documentElement).getPropertyValue("--robot-accent").trim() || "#1259C3",
+    body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8",
+    ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666,
+    collide: function (nx, ny, x, y) { return scen ? scen.collide(nx, ny, x, y) : { x: x, y: y }; },
+    onFrame: function () { if (scen) scen.frame(); }
   });
-}
+  scen = createTB3Scenario(viewer, SCENARIO, {
+    log: function (t) { logEl.textContent = t; },
+    step: function (n) {
+      var names = ["장애물 확인", "장애물 치우기", "경로 수행"];
+      logEl.textContent = "미션 " + (n + 1) + " 완료: " + names[n] + (n === 2 ? " — 모든 미션을 끝냈어요!" : "");
+    }
+  });
+  scen.reset();
+  msg.hidden = true;
 
-function setState() {
-  const v = mainItem.video;
-  const failed = mainItem.tile.classList.contains('failed');
-  const playing = !failed && !v.paused;
-  stateEl.textContent = failed ? '상태: 영상을 불러올 수 없음' : '상태: ' + (playing ? '재생 중' : '정지');
-  toggle.textContent = playing ? '일시정지' : '재생';
-  toggle.setAttribute('aria-label', (playing ? '일시정지' : '재생') + ': ' + mainItem.name);
-  nowName.textContent = '현재 영상: ' + mainItem.name;
-}
+  // 미니맵 고정 요소
+  document.getElementById("miniPath").setAttribute("points", SCENARIO.path.map(function (p) { return p[0] + "," + (-p[1]); }).join(" "));
+  var goal = document.getElementById("miniGoal");
+  goal.setAttribute("cx", SCENARIO.goal.x); goal.setAttribute("cy", -SCENARIO.goal.y); goal.setAttribute("r", SCENARIO.goal.r);
+  document.getElementById("assume").textContent =
+    "가정: 기체가 미는 최대 힘 " + SCENARIO.pushForce + " N, 필요한 힘 = 마찰 계수 × 질량 × 9.81. 집기는 " +
+    Math.round(SCENARIO.payload * 1000) + " g 이하, 폭 " + Math.round(SCENARIO.gripMax * 100) + " cm 이하 상자만 (OpenMANIPULATOR-X 사양 기준). 장애물 값은 예시예요.";
 
-function playMain() {
-  const p = mainItem.video.play();
-  if (p && p.catch) p.catch(() => {});
-}
+  // 장애물 표
+  var tbody = document.getElementById("obsBody"), rows = {};
+  var KIND = { movable: "밀 수 있음", heavy: "무거움", fixed: "고정" };
+  scen.state().obstacles.forEach(function (o) {
+    var tr = document.createElement("tr");
+    var name = document.createElement("th"); name.scope = "row"; name.textContent = o.name;
+    var tdm = document.createElement("td"), inp = document.createElement("input");
+    inp.type = o.kind === "fixed" ? "text" : "number"; inp.min = "0.05"; inp.step = "0.1";
+    inp.value = o.kind === "fixed" ? "—" : o.mass; inp.disabled = o.kind === "fixed";
+    inp.setAttribute("aria-label", o.name + " 질량 (kg)");
+    inp.addEventListener("change", function () { var v = parseFloat(inp.value); if (v > 0) scen.setMass(o.id, v); });
+    tdm.appendChild(inp);
+    var tdf = document.createElement("td"), tds = document.createElement("td"), st = document.createElement("span");
+    tds.appendChild(st);
+    tr.append(name, tdm, tdf, tds); tbody.appendChild(tr);
+    rows[o.id] = { input: inp, force: tdf, status: st };
+  });
+  var miniObs = document.getElementById("miniObs"), miniEls = {};
+  var FILL = { movable: "#F2B134", heavy: "#8E6CCF", fixed: "#6B7280" };
+  scen.state().obstacles.forEach(function (o) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", o.shape === "cyl" ? "circle" : "rect");
+    if (o.shape === "cyl") el.setAttribute("r", o.r);
+    else { el.setAttribute("width", Math.max(o.sx, 0.07)); el.setAttribute("height", Math.max(o.sy, 0.07)); }
+    miniObs.appendChild(el); miniEls[o.id] = el;
+  });
 
-function select(index) {
-  if (busy) return;
-  const picked = slots[index];
-  const prev = mainItem;
-  const pickedRect = picked.tile.getBoundingClientRect();
-  const prevRect = prev.tile.getBoundingClientRect();
-
-  prev.video.pause();
-  slots[index] = prev;
-  mainItem = picked;
-  mainFrame.appendChild(picked.tile);
-  labelCells();
-
-  const nowPicked = picked.tile.getBoundingClientRect();
-  const nowPrev = prev.tile.getBoundingClientRect();
-  busy = true;
-  const anim = (tile, from, to) => tile.animate([
-    { transform: 'translate(' + (from.left - to.left) + 'px,' + (from.top - to.top) + 'px) scale(' + (from.width / to.width) + ',' + (from.height / to.height) + ')' },
-    { transform: 'none' }
-  ], { duration: DURATION, easing: 'ease-in-out' });
-  const a1 = anim(picked.tile, pickedRect, nowPicked);
-  const a2 = anim(prev.tile, prevRect, nowPrev);
-  picked.tile.style.zIndex = 2;
-  const done = () => { picked.tile.style.zIndex = ''; busy = false; };
-  Promise.all([a1.finished, a2.finished]).then(done, done);
-
-  picked.video.currentTime = 0;
-  picked.video.muted = true;
-  playMain();
-  prev.video.currentTime = 0.001;
-  setState();
-  live.textContent = '지금 재생 중: ' + picked.name;
-}
-
-toggle.addEventListener('click', () => {
-  const v = mainItem.video;
-  if (v.paused) playMain(); else v.pause();
-  setState();
-});
-
-function init() {
-  if (VIDEOS.length === 0) {
-    document.getElementById('empty').hidden = false;
-    document.querySelector('.player').hidden = true;
-    return;
+  function refresh() {
+    var s = scen.state(), r = viewer.readout();
+    s.obstacles.forEach(function (o) {
+      var row = rows[o.id];
+      row.force.textContent = o.force === null ? "—" : o.force.toFixed(1) + " N";
+      row.status.className = "st-chip " + o.kind;
+      row.status.textContent = o.held ? "집는 중" : KIND[o.kind] + (o.graspable ? " · 집기 가능" : "");
+      if (document.activeElement !== row.input && o.kind !== "fixed") row.input.value = o.mass;
+      var el = miniEls[o.id];
+      el.setAttribute("fill", FILL[o.kind]);
+      if (o.shape === "cyl") { el.setAttribute("cx", o.x); el.setAttribute("cy", -o.y); }
+      else { var w = Math.max(o.sx, 0.07), h = Math.max(o.sy, 0.07); el.setAttribute("x", o.x - w / 2); el.setAttribute("y", -o.y - h / 2); }
+    });
+    document.querySelectorAll("#mission li").forEach(function (li) { li.classList.toggle("done", s.steps[+li.dataset.step]); });
+    chip.textContent = s.steps.filter(Boolean).length + " / 3";
+    document.getElementById("miniBot").setAttribute("transform",
+      "translate(" + r.x.toFixed(3) + " " + (-r.y).toFixed(3) + ") rotate(" + (-r.yaw * 180 / Math.PI).toFixed(1) + ")");
   }
-  VIDEOS.forEach(makeTile);
-  mainItem = VIDEOS[0];
-  slots = VIDEOS.slice(1);
-  mainFrame.appendChild(mainItem.tile);
-  slots.forEach((v, i) => listEl.appendChild(cellFor(v, i)));
-  labelCells();
-  mainItem.video.preload = 'auto';
-  mainItem.video.autoplay = true;
-  mainItem.video.addEventListener('play', setState);
-  VIDEOS.forEach(v => { v.video.addEventListener('play', () => { if (v === mainItem) setState(); }); v.video.addEventListener('pause', () => { if (v === mainItem) setState(); }); });
-  live.textContent = '지금 재생 중: ' + mainItem.name;
-  playMain();
-  setState();
-}
-init();
+  setInterval(refresh, 120);
+  refresh();
+
+  document.getElementById("btnPick").addEventListener("click", function () { viewer.setPose(PICK, 0.019); });
+  document.getElementById("btnHome").addEventListener("click", function () { viewer.setPose(HOME); });
+  document.getElementById("btnReset").addEventListener("click", function () {
+    scen.reset(); viewer.setPose(HOME, 0.01); logEl.textContent = "처음부터 다시 시작해요. i 키로 출발해 보세요.";
+  });
+
+  // 키보드 조종 (teleop 과 같은 키)
+  var KEYS = ["i", "j", "k", "l", " ", "1", "2", "3", "4", "q", "w", "e", "r", "o", "p"];
+  function isField(t) { return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA"); }
+  document.addEventListener("keydown", function (e) {
+    if (isField(e.target) || e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+    var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (KEYS.indexOf(k) >= 0) { if (k === " ") e.preventDefault(); viewer.press(k); }
+  });
+  document.addEventListener("keyup", function (e) {
+    var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (KEYS.indexOf(k) >= 0) viewer.release(k);
+  });
+  window.addEventListener("blur", function () { KEYS.forEach(function (k) { viewer.release(k); }); });
+})();
 </script>
 </body>
 </html>

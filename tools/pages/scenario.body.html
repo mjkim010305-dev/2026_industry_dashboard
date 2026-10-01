@@ -1,0 +1,65 @@
+<div class="page">
+  <main id="main">
+    <div class="page-head">
+      <p class="eyebrow">SCENARIO</p>
+      <h1>시나리오 시뮬레이터</h1>
+      <p class="lead">경로를 막은 장애물을 치우고 목표 지점까지 가 보세요. 장애물의 질량을 바꾸면 밀리거나 집히는지가 달라져요.</p>
+    </div>
+
+    <div class="sc-layout">
+      <section class="card" aria-labelledby="t-sc3d">
+        <div class="card-head">
+          <h2 id="t-sc3d">경기장 3 m × 3 m</h2>
+          <div class="robot-tools" role="group" aria-label="자세와 다시 시작">
+            <button type="button" class="btn" id="btnPick">집기 자세</button>
+            <button type="button" class="btn" id="btnHome">기본 자세</button>
+            <button type="button" class="btn" id="btnReset">처음부터</button>
+          </div>
+        </div>
+        <div class="sc-stage">
+          <canvas id="scCanvas" aria-hidden="true"></canvas>
+          <span class="v-hint">키보드로 조종 · 끌어서 회전 · 휠로 확대</span>
+          <div class="v-msg" id="scMsg">3D 기체를 불러오는 중</div>
+          <div class="sc-mini">
+            <svg viewBox="-1.7 -1.7 3.4 3.4" role="img" aria-label="경기장 지도: 경로, 장애물, 목표 지점, 기체 위치">
+              <path d="M-1.5 0 L-1.5 -1.5 L1.5 -1.5 L1.5 1.5 L0 1.5 L0 0 Z" fill="#1A222C" stroke="#C9CED6" stroke-width="0.04"></path>
+              <polyline id="miniPath" fill="none" stroke="#9DB4CF" stroke-width="0.03" stroke-dasharray="0.08 0.06"></polyline>
+              <circle id="miniGoal" r="0.25" fill="none" stroke="#5FD08A" stroke-width="0.04"></circle>
+              <g id="miniObs"></g>
+              <g id="miniBot"><circle r="0.14" fill="%ACCENT%" stroke="#FFFFFF" stroke-width="0.04"></circle><path d="M0.1 -0.08 L0.26 0 L0.1 0.08 Z" fill="#FFFFFF"></path></g>
+            </svg>
+          </div>
+        </div>
+        <div class="sc-keys" aria-label="조종 키">
+          <span><kbd>i</kbd><kbd>k</kbd> 앞뒤</span><span><kbd>j</kbd><kbd>l</kbd> 회전</span><span><kbd>space</kbd> 정지</span>
+          <span><kbd>1</kbd>~<kbd>4</kbd> · <kbd>q</kbd>~<kbd>r</kbd> 관절</span><span><kbd>p</kbd> 집기</span><span><kbd>o</kbd> 놓기</span>
+        </div>
+      </section>
+
+      <div class="sc-side">
+        <section class="card" aria-labelledby="t-mission">
+          <div class="card-head"><h2 id="t-mission">미션</h2><span class="chip" id="missionChip">0 / 3</span></div>
+          <ol class="mission" id="mission">
+            <li data-step="0"><b>1</b><div><strong>장애물 확인</strong><span>움직일 수 있는 장애물에 0.5 m 안으로 다가가기</span></div></li>
+            <li data-step="1"><b>2</b><div><strong>장애물 치우기</strong><span>점선 경로 위의 장애물을 밀거나 집어서 옮기기</span></div></li>
+            <li data-step="2"><b>3</b><div><strong>경로 수행</strong><span>초록 원(목표 지점)까지 가기</span></div></li>
+          </ol>
+          <p class="sc-log" id="scLog" aria-live="polite">i 키로 출발해 보세요.</p>
+        </section>
+
+        <section class="card" aria-labelledby="t-obs">
+          <div class="card-head"><h2 id="t-obs">장애물</h2></div>
+          <div class="legend"><span class="lg movable">밀 수 있음</span><span class="lg heavy">무거움</span><span class="lg fixed">고정</span></div>
+          <div class="table-wrap">
+            <table class="obs-table">
+              <thead><tr><th scope="col">이름</th><th scope="col">질량 (kg)</th><th scope="col">필요한 힘</th><th scope="col">상태</th></tr></thead>
+              <tbody id="obsBody"></tbody>
+            </table>
+          </div>
+          <p class="spec-src" id="assume"></p>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+

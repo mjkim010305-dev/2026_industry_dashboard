@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>기체 소개 - ROS 2 + turtlebot3_manipulation</title>
-<!-- 아마존 스타일: design-refs/amazon.md 참고. 만든 방법: tools/build_styles.py (tools/pages/robot.*) -->
+<title>시나리오 시뮬레이터 - ROS 2 + turtlebot3_manipulation</title>
+<!-- 아마존 스타일: design-refs/amazon.md 참고. 만든 방법: tools/build_styles.py (tools/pages/scenario.*) -->
 <style>
 /* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
 * { box-sizing: border-box; }
@@ -304,254 +304,255 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .cell:hover .name { color: #C7511F; text-decoration: underline; }
 .btn.primary:hover { background: #F7CA00; filter: none; }
 
-/* ---------- 기체 소개 페이지 (통합 · 기업 스타일 공통 변수만 사용) ---------- */
-.robot-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
-@media (min-width: 1000px) { .robot-layout { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); align-items: start; } }
+/* ---------- 시나리오 시뮬레이터 페이지 ---------- */
+.sc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1000px) { .sc-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
+.sc-side { display: grid; gap: 16px; }
 .robot-tools { display: flex; flex-wrap: wrap; gap: 8px; }
 .robot-tools .btn { min-width: 0; }
-.robot-tools .btn[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); }
-.robot-stage { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
-.robot-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-.robot-stage .v-hint {
-  position: absolute; left: 12px; top: 12px; right: 12px; width: fit-content; padding: 6px 12px; border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55); color: #E8ECF1; font-size: 13px; pointer-events: none;
+.sc-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.sc-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.sc-stage .v-hint {
+  position: absolute; left: 12px; top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 13px; pointer-events: none;
 }
-.robot-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
-.part-tag {
-  position: absolute; transform: translate(-50%, calc(-100% - 14px)); padding: 6px 12px; border-radius: 999px; white-space: nowrap;
-  background: #FFFFFF; color: #0E1726; font-size: 13px; font-weight: 700; pointer-events: none; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+.sc-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.sc-stage .v-msg[hidden] { display: none; }
+.sc-mini {
+  position: absolute; right: 12px; bottom: 12px; width: 28%; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+  background: #0B0F14; border: 2px solid rgba(255, 255, 255, 0.85); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
-.part-tag::after {
-  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
-  background: #FFFFFF; transform: rotate(45deg);
-}
-.part-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
-.part-list button {
-  min-height: 40px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer;
-  background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
-}
-.part-list button:hover { border-color: var(--text-2); }
-.part-list button[aria-pressed="true"] { background: var(--text); color: var(--surface); border-color: var(--text); font-weight: 700; }
-.part-detail { border-top: 1px solid var(--line); padding-top: 16px; }
-.part-detail h3 { margin: 0 0 6px; font-size: 18px; }
-.part-detail p { margin: 0 0 10px; color: var(--text-2); font-size: 15px; }
-.part-detail dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; margin: 0; font-size: 14px; }
-.part-detail dt { color: var(--text-2); }
-.part-detail dd { margin: 0; font-weight: 600; }
-.spec-card { margin-bottom: 16px; }
-.spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 32px; }
-.spec-grid table, .joint-table { width: 100%; border-collapse: collapse; font-size: 15px; }
-.spec-grid caption { text-align: left; font-weight: 700; padding: 0 0 8px; }
-.spec-grid th, .spec-grid td, .joint-table th, .joint-table td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-.spec-grid th[scope="row"] { width: 42%; color: var(--text-2); font-weight: 500; }
-.joint-table thead th { color: var(--text-2); font-size: 13px; font-weight: 700; }
-.table-wrap { overflow-x: auto; }
-.spec-src { margin: 12px 0 0; font-size: 13px; color: var(--text-2); }
+.sc-mini svg { display: block; width: 100%; height: 100%; }
+.sc-keys { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 13px; color: var(--text-2); }
+.sc-keys span { display: inline-flex; align-items: center; gap: 4px; }
 kbd {
-  display: inline-block; min-width: 26px; padding: 2px 7px; border-radius: 6px; text-align: center;
-  font-family: ui-monospace, Consolas, monospace; font-size: 13px; font-weight: 700;
+  display: inline-block; min-width: 24px; padding: 1px 6px; border-radius: 6px; text-align: center;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12px; font-weight: 700;
   background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; color: var(--text);
 }
-.robot-stage .v-msg[hidden], .part-tag[hidden] { display: none; }
+.mission { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mission li { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.mission li > b {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--line); color: var(--text); font-size: 13px;
+}
+.mission li strong { display: block; font-size: 15px; }
+.mission li span { display: block; font-size: 13px; color: var(--text-2); }
+.mission li.done { border-color: #1F7A45; }
+.mission li.done > b { background: #1F7A45; color: #FFFFFF; }
+.mission li.done strong::after { content: " · 완료"; color: #1F7A45; font-size: 13px; }
+.sc-log { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 14px; color: var(--text); min-height: 44px; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 10px; font-size: 13px; color: var(--text-2); }
+.lg::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.lg.movable::before { background: #F2B134; }
+.lg.heavy::before { background: #8E6CCF; }
+.lg.fixed::before { background: #6B7280; }
+.table-wrap { overflow-x: auto; }
+.obs-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.obs-table th, .obs-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.obs-table thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
+.obs-table input {
+  width: 76px; min-height: 36px; padding: 0 8px; font: inherit; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+}
+.obs-table input:disabled { opacity: 0.6; }
+.st-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; color: #111111; white-space: nowrap; }
+.st-chip.movable { background: #F2B134; }
+.st-chip.heavy { background: #8E6CCF; color: #FFFFFF; }
+.st-chip.fixed { background: #6B7280; color: #FFFFFF; }
+.spec-src { margin: 10px 0 0; font-size: 12px; color: var(--text-2); }
 
 :root { --robot-accent: #FF9900; }
 </style>
 </head>
 <body>
 <a class="skip" href="#main">본문 바로가기</a>
-<header class="az"><div class="az-top"><div class="in"><span class="wordmark">turtlebot3</span><span class="az-msg">ROS 2 · turtlebot3_manipulation</span></div></div><nav class="az-sub" aria-label="화면 이동"><div class="in"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html" aria-current="page">기체<span class="vh"> (현재 탭)</span></a></li><li><a href="teleop.html">teleop</a></li><li><a href="scenario.html">시나리오</a></li><li><a href="survey.html">설문</a></li></ul></div></nav></header>
+<header class="az"><div class="az-top"><div class="in"><span class="wordmark">turtlebot3</span><span class="az-msg">ROS 2 · turtlebot3_manipulation</span></div></div><nav class="az-sub" aria-label="화면 이동"><div class="in"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="teleop.html">teleop</a></li><li><a href="scenario.html" aria-current="page">시나리오<span class="vh"> (현재 탭)</span></a></li><li><a href="survey.html">설문</a></li></ul></div></nav></header>
 
 <div class="page">
   <main id="main">
     <div class="page-head">
-      <p class="eyebrow">ROBOT</p>
-      <h1>기체 소개</h1>
-      <p class="lead">turtlebot3 waffle pi 위에 OpenMANIPULATOR-X 를 얹은 이동형 manipulator 입니다. 부품을 누르면 설명이 나와요.</p>
+      <p class="eyebrow">SCENARIO</p>
+      <h1>시나리오 시뮬레이터</h1>
+      <p class="lead">경로를 막은 장애물을 치우고 목표 지점까지 가 보세요. 장애물의 질량을 바꾸면 밀리거나 집히는지가 달라져요.</p>
     </div>
 
-    <div class="robot-layout">
-      <section class="card" aria-labelledby="t-robot3d">
+    <div class="sc-layout">
+      <section class="card" aria-labelledby="t-sc3d">
         <div class="card-head">
-          <h2 id="t-robot3d">3D 기체</h2>
-          <div class="robot-tools" role="group" aria-label="3D 보기 도구">
-            <button type="button" class="btn" id="btnExplode" aria-pressed="false">분해 보기</button>
+          <h2 id="t-sc3d">경기장 3 m × 3 m</h2>
+          <div class="robot-tools" role="group" aria-label="자세와 다시 시작">
+            <button type="button" class="btn" id="btnPick">집기 자세</button>
             <button type="button" class="btn" id="btnHome">기본 자세</button>
-            <button type="button" class="btn" id="btnReach">앞으로 뻗기</button>
+            <button type="button" class="btn" id="btnReset">처음부터</button>
           </div>
         </div>
-        <div class="robot-stage">
-          <canvas id="robotCanvas" aria-hidden="true"></canvas>
-          <span class="v-hint">부품을 누르면 설명 · 끌어서 회전 · 휠로 확대 · 키보드로 관절 조종</span>
-          <span class="part-tag" id="partTag" hidden></span>
-          <div class="v-msg" id="robotMsg">3D 기체를 불러오는 중</div>
+        <div class="sc-stage">
+          <canvas id="scCanvas" aria-hidden="true"></canvas>
+          <span class="v-hint">키보드로 조종 · 끌어서 회전 · 휠로 확대</span>
+          <div class="v-msg" id="scMsg">3D 기체를 불러오는 중</div>
+          <div class="sc-mini">
+            <svg viewBox="-1.7 -1.7 3.4 3.4" role="img" aria-label="경기장 지도: 경로, 장애물, 목표 지점, 기체 위치">
+              <path d="M-1.5 0 L-1.5 -1.5 L1.5 -1.5 L1.5 1.5 L0 1.5 L0 0 Z" fill="#1A222C" stroke="#C9CED6" stroke-width="0.04"></path>
+              <polyline id="miniPath" fill="none" stroke="#9DB4CF" stroke-width="0.03" stroke-dasharray="0.08 0.06"></polyline>
+              <circle id="miniGoal" r="0.25" fill="none" stroke="#5FD08A" stroke-width="0.04"></circle>
+              <g id="miniObs"></g>
+              <g id="miniBot"><circle r="0.14" fill="#FF9900" stroke="#FFFFFF" stroke-width="0.04"></circle><path d="M0.1 -0.08 L0.26 0 L0.1 0.08 Z" fill="#FFFFFF"></path></g>
+            </svg>
+          </div>
+        </div>
+        <div class="sc-keys" aria-label="조종 키">
+          <span><kbd>i</kbd><kbd>k</kbd> 앞뒤</span><span><kbd>j</kbd><kbd>l</kbd> 회전</span><span><kbd>space</kbd> 정지</span>
+          <span><kbd>1</kbd>~<kbd>4</kbd> · <kbd>q</kbd>~<kbd>r</kbd> 관절</span><span><kbd>p</kbd> 집기</span><span><kbd>o</kbd> 놓기</span>
         </div>
       </section>
 
-      <aside class="card part-panel" aria-labelledby="t-parts">
-        <div class="card-head"><h2 id="t-parts">부품</h2></div>
-        <ul class="part-list" id="partList">
-          <li><button type="button" data-part="base">본체</button></li>
-          <li><button type="button" data-part="wheels">바퀴 · 구동 모터</button></li>
-          <li><button type="button" data-part="lidar">LiDAR</button></li>
-          <li><button type="button" data-part="camera">카메라</button></li>
-          <li><button type="button" data-part="link1">팔 받침</button></li>
-          <li><button type="button" data-part="joint1">joint1 · 허리</button></li>
-          <li><button type="button" data-part="joint2">joint2 · 어깨</button></li>
-          <li><button type="button" data-part="joint3">joint3 · 팔꿈치</button></li>
-          <li><button type="button" data-part="joint4">joint4 · 손목</button></li>
-          <li><button type="button" data-part="gripper">그리퍼</button></li>
-        </ul>
-        <div class="part-detail" id="partDetail" aria-live="polite">
-          <h3>부품을 골라 보세요</h3>
-          <p>목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.</p>
-        </div>
-      </aside>
+      <div class="sc-side">
+        <section class="card" aria-labelledby="t-mission">
+          <div class="card-head"><h2 id="t-mission">미션</h2><span class="chip" id="missionChip">0 / 3</span></div>
+          <ol class="mission" id="mission">
+            <li data-step="0"><b>1</b><div><strong>장애물 확인</strong><span>움직일 수 있는 장애물에 0.5 m 안으로 다가가기</span></div></li>
+            <li data-step="1"><b>2</b><div><strong>장애물 치우기</strong><span>점선 경로 위의 장애물을 밀거나 집어서 옮기기</span></div></li>
+            <li data-step="2"><b>3</b><div><strong>경로 수행</strong><span>초록 원(목표 지점)까지 가기</span></div></li>
+          </ol>
+          <p class="sc-log" id="scLog" aria-live="polite">i 키로 출발해 보세요.</p>
+        </section>
+
+        <section class="card" aria-labelledby="t-obs">
+          <div class="card-head"><h2 id="t-obs">장애물</h2></div>
+          <div class="legend"><span class="lg movable">밀 수 있음</span><span class="lg heavy">무거움</span><span class="lg fixed">고정</span></div>
+          <div class="table-wrap">
+            <table class="obs-table">
+              <thead><tr><th scope="col">이름</th><th scope="col">질량 (kg)</th><th scope="col">필요한 힘</th><th scope="col">상태</th></tr></thead>
+              <tbody id="obsBody"></tbody>
+            </table>
+          </div>
+          <p class="spec-src" id="assume"></p>
+        </section>
+      </div>
     </div>
-
-    <section class="card spec-card" aria-labelledby="t-spec">
-      <div class="card-head"><h2 id="t-spec">사양</h2></div>
-      <div class="spec-grid">
-        <table>
-          <caption>turtlebot3 waffle pi</caption>
-          <tbody>
-            <tr><th scope="row">최대 속도</th><td>0.26 m/s</td></tr>
-            <tr><th scope="row">최대 회전 속도</th><td>1.82 rad/s (104.27°/s)</td></tr>
-            <tr><th scope="row">최대 적재</th><td>30 kg</td></tr>
-            <tr><th scope="row">크기 (L × W × H)</th><td>281 × 306 × 141 mm</td></tr>
-            <tr><th scope="row">무게</th><td>1.8 kg (SBC · 배터리 · 센서 포함)</td></tr>
-            <tr><th scope="row">SBC</th><td>Raspberry Pi 4</td></tr>
-            <tr><th scope="row">구동 모터</th><td>DYNAMIXEL XM430-W210</td></tr>
-            <tr><th scope="row">LiDAR</th><td>360° Laser Distance Sensor LDS-02</td></tr>
-            <tr><th scope="row">카메라</th><td>Raspberry Pi Camera Module v2.1</td></tr>
-            <tr><th scope="row">배터리</th><td>리튬 폴리머 11.1 V 1800 mAh</td></tr>
-          </tbody>
-        </table>
-        <table>
-          <caption>OpenMANIPULATOR-X</caption>
-          <tbody>
-            <tr><th scope="row">자유도</th><td>5 (관절 4 + 그리퍼 1)</td></tr>
-            <tr><th scope="row">들 수 있는 무게</th><td>500 g</td></tr>
-            <tr><th scope="row">반복 정밀도</th><td>0.2 mm 미만</td></tr>
-            <tr><th scope="row">무게</th><td>0.70 kg</td></tr>
-            <tr><th scope="row">팔 길이 (reach)</th><td>380 mm</td></tr>
-            <tr><th scope="row">그리퍼 벌림</th><td>20 – 75 mm</td></tr>
-            <tr><th scope="row">관절 모터</th><td>DYNAMIXEL XM430-W350-T</td></tr>
-            <tr><th scope="row">관절 속도</th><td>46 RPM</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="spec-src">출처: ROBOTIS e-Manual (TurtleBot3 Features, OpenMANIPULATOR-X Specification), 관절 범위는 turtlebot3_manipulation_description URDF.</p>
-    </section>
-
-    <section class="card" aria-labelledby="t-joints">
-      <div class="card-head"><h2 id="t-joints">관절 범위와 teleop 키</h2></div>
-      <div class="table-wrap">
-        <table class="joint-table">
-          <thead><tr><th scope="col">관절</th><th scope="col">회전축</th><th scope="col">범위</th><th scope="col">teleop 키</th></tr></thead>
-          <tbody>
-            <tr><th scope="row">joint1 · 허리</th><td>z (세로)</td><td>−162° ~ +162°</td><td><kbd>1</kbd> <kbd>q</kbd></td></tr>
-            <tr><th scope="row">joint2 · 어깨</th><td>y (가로)</td><td>−102.6° ~ +90°</td><td><kbd>2</kbd> <kbd>w</kbd></td></tr>
-            <tr><th scope="row">joint3 · 팔꿈치</th><td>y (가로)</td><td>−54° ~ +79.2°</td><td><kbd>3</kbd> <kbd>e</kbd></td></tr>
-            <tr><th scope="row">joint4 · 손목</th><td>y (가로)</td><td>−102.6° ~ +117°</td><td><kbd>4</kbd> <kbd>r</kbd></td></tr>
-            <tr><th scope="row">그리퍼</th><td>직선 이동</td><td>손가락마다 −10 ~ +19 mm</td><td><kbd>o</kbd> <kbd>p</kbd></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
   </main>
 </div>
 
 <script src="../assets/three.r128.min.js"></script>
 <script src="../assets/tb3_viewer.js"></script>
 <script src="../assets/robot/tb3_meshes.js"></script>
+<script src="../assets/tb3_scenario.js"></script>
 <script>
-// 기체 소개: 3D 기체 + 부품 설명. 값은 ROBOTIS e-Manual 과 turtlebot3_manipulation_description URDF 에서 가져왔다.
+// 시나리오 시뮬레이터: 경기장(ㄱ자 3 m × 3 m) 위의 장애물 정의와 화면 연결.
+// 장애물 값은 예시다. 실제 장애물의 크기·질량·위치를 알면 이 목록만 고치면 된다.
 (function () {
-  var PARTS = {
-    base: { name: "본체 (waffle pi)", desc: "판을 층층이 쌓은 몸체 안에 제어 보드와 컴퓨터, 배터리가 들어 있어요.",
-      spec: [["SBC", "Raspberry Pi 4"], ["MCU", "32-bit ARM Cortex-M7 (216 MHz)"], ["배터리", "리튬 폴리머 11.1 V 1800 mAh"], ["크기", "281 × 306 × 141 mm"]] },
-    wheels: { name: "바퀴 · 구동 모터", desc: "양쪽 바퀴의 속도 차이로 앞뒤로 가고 제자리에서 돌아요 (차동 구동).",
-      spec: [["모터", "DYNAMIXEL XM430-W210 × 2"], ["최대 속도", "0.26 m/s"], ["최대 회전", "1.82 rad/s"], ["teleop 키", "i · j · k · l · space"]] },
-    lidar: { name: "LiDAR", desc: "레이저로 주변 360° 거리를 재요. 지도를 만들고(SLAM) 경로를 찾을 때 써요.",
-      spec: [["모델", "360° Laser Distance Sensor LDS-02"], ["위치", "본체 위 (base_link 기준 높이 0.122 m)"]] },
-    camera: { name: "카메라", desc: "앞쪽을 비추는 카메라예요. teleop 화면에서 연결하면 이 영상이 보여요.",
-      spec: [["모델", "Raspberry Pi Camera Module v2.1"], ["teleop", "camera topic 으로 받아 표시"]] },
-    link1: { name: "팔 받침", desc: "OpenMANIPULATOR-X 를 본체 위에 고정하는 첫 마디예요.",
-      spec: [["고정 위치", "base_link 기준 x −0.092 m, z +0.091 m"], ["팔 길이", "380 mm (reach)"], ["팔 무게", "0.70 kg"]] },
-    joint1: { name: "joint1 · 허리", desc: "팔 전체를 세로축으로 좌우 회전해요.",
-      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−162° ~ +162°"], ["teleop 키", "1 · q"]] },
-    joint2: { name: "joint2 · 어깨", desc: "팔을 앞뒤로 숙이고 세워요.",
-      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−102.6° ~ +90°"], ["teleop 키", "2 · w"]] },
-    joint3: { name: "joint3 · 팔꿈치", desc: "아래팔을 접고 펴요.",
-      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−54° ~ +79.2°"], ["teleop 키", "3 · e"]] },
-    joint4: { name: "joint4 · 손목", desc: "그리퍼의 기울기를 맞춰요.",
-      spec: [["모터", "DYNAMIXEL XM430-W350-T"], ["범위", "−102.6° ~ +117°"], ["teleop 키", "4 · r"]] },
-    gripper: { name: "그리퍼", desc: "두 손가락이 평행하게 벌어지고 닫혀서 물건을 집어요.",
-      spec: [["벌림", "20 – 75 mm"], ["손가락 이동", "−10 ~ +19 mm (URDF)"], ["들 수 있는 무게", "500 g"], ["teleop 키", "o · p"]] }
+  var SCENARIO = {
+    start: { x: -1.1, y: 0.75, yaw: 0 },
+    goal: { x: 0.75, y: -1.1, r: 0.25 },
+    path: [[-1.1, 0.75], [0.75, 0.75], [0.75, -1.1]],
+    pushForce: 12,        // N — 가정: 기체가 바닥 장애물을 미는 최대 힘
+    payload: 0.5,         // kg — OpenMANIPULATOR-X 들 수 있는 무게(사양)
+    gripMax: 0.07,        // m — 이 폭 이하 상자만 그리퍼로 잡는다(가정)
+    obstacles: [
+      { id: "A", name: "가벼운 상자", shape: "box", sx: 0.06, sy: 0.06, h: 0.10, x: -0.35, y: 0.75, mass: 0.2, mu: 0.4, onPath: true },
+      { id: "B", name: "밀 수 있는 상자", shape: "box", sx: 0.25, sy: 0.25, h: 0.20, x: 0.75, y: -0.35, mass: 1.5, mu: 0.5, onPath: true },
+      { id: "C", name: "무거운 상자", shape: "box", sx: 0.30, sy: 0.30, h: 0.30, x: 0.30, y: 1.15, mass: 8, mu: 0.6 },
+      { id: "D", name: "고정 기둥", shape: "cyl", r: 0.08, h: 0.40, x: 1.20, y: 0.05, mass: 0, mu: 0, fixed: true }
+    ]
   };
-  var HOME = [0, -1.05, 0.35, 0.70], REACH = [0, 0.8, -0.6, 0];
+  var HOME = [0, -1.05, 0.35, 0.70], PICK = [0, 1.118, -0.836, 0.921];   // PICK: 그리퍼 끝이 앞 0.21 m, 높이 0.06 m (URDF 정기구학)
 
-  var canvas = document.getElementById("robotCanvas"), msg = document.getElementById("robotMsg");
-  var tag = document.getElementById("partTag"), detail = document.getElementById("partDetail");
-  var buttons = Array.prototype.slice.call(document.querySelectorAll("#partList button"));
-  if (!window.THREE || !window.TB3_MESHES || !window.createTB3Viewer) { msg.textContent = "3D 기체를 불러오지 못했습니다"; return; }
+  var canvas = document.getElementById("scCanvas"), msg = document.getElementById("scMsg");
+  var logEl = document.getElementById("scLog"), chip = document.getElementById("missionChip");
+  if (!window.THREE || !window.TB3_MESHES || !window.createTB3Viewer || !window.createTB3Scenario) { msg.textContent = "3D 기체를 불러오지 못했습니다"; return; }
 
-  var selected = null, viewer;
-  function show(part) {
-    selected = part;
-    viewer.select(part);
-    buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.part === part)); });
-    detail.textContent = "";
-    var h = document.createElement("h3"), p = document.createElement("p");
-    if (!part) {
-      h.textContent = "부품을 골라 보세요";
-      p.textContent = "목록이나 3D 화면에서 부품을 누르면 역할과 사양이 여기에 나타나요.";
-      detail.append(h, p); tag.hidden = true; return;
-    }
-    var d = PARTS[part];
-    h.textContent = d.name; p.textContent = d.desc;
-    var dl = document.createElement("dl");
-    d.spec.forEach(function (s) {
-      var dt = document.createElement("dt"), dd = document.createElement("dd");
-      dt.textContent = s[0]; dd.textContent = s[1]; dl.append(dt, dd);
-    });
-    detail.append(h, p, dl);
-    tag.textContent = d.name;
-  }
-
-  viewer = createTB3Viewer(THREE, canvas, TB3_MESHES, {
+  var scen = null;
+  var viewer = createTB3Viewer(THREE, canvas, TB3_MESHES, {
     accent: getComputedStyle(document.documentElement).getPropertyValue("--robot-accent").trim() || "#FF9900",
     body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8",
     ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666,
-    arena: false, view: "showcase",
-    onPick: function (part) { show(part === selected ? null : part); },
-    onFrame: function () {
-      if (!selected) return;
-      var p = viewer.project(selected);
-      tag.hidden = !p || !p.visible;
-      if (p) { tag.style.left = p.x + "px"; tag.style.top = p.y + "px"; }
+    collide: function (nx, ny, x, y) { return scen ? scen.collide(nx, ny, x, y) : { x: x, y: y }; },
+    onFrame: function () { if (scen) scen.frame(); }
+  });
+  scen = createTB3Scenario(viewer, SCENARIO, {
+    log: function (t) { logEl.textContent = t; },
+    step: function (n) {
+      var names = ["장애물 확인", "장애물 치우기", "경로 수행"];
+      logEl.textContent = "미션 " + (n + 1) + " 완료: " + names[n] + (n === 2 ? " — 모든 미션을 끝냈어요!" : "");
     }
   });
+  scen.reset();
   msg.hidden = true;
 
-  buttons.forEach(function (b) { b.addEventListener("click", function () { show(b.dataset.part === selected ? null : b.dataset.part); }); });
-  var ex = document.getElementById("btnExplode");
-  ex.addEventListener("click", function () {
-    var on = ex.getAttribute("aria-pressed") !== "true";
-    ex.setAttribute("aria-pressed", String(on)); viewer.setExplode(on);
-  });
-  document.getElementById("btnHome").addEventListener("click", function () { viewer.setPose(HOME, 0.01); });
-  document.getElementById("btnReach").addEventListener("click", function () { viewer.setPose(REACH, 0.019); });
+  // 미니맵 고정 요소
+  document.getElementById("miniPath").setAttribute("points", SCENARIO.path.map(function (p) { return p[0] + "," + (-p[1]); }).join(" "));
+  var goal = document.getElementById("miniGoal");
+  goal.setAttribute("cx", SCENARIO.goal.x); goal.setAttribute("cy", -SCENARIO.goal.y); goal.setAttribute("r", SCENARIO.goal.r);
+  document.getElementById("assume").textContent =
+    "가정: 기체가 미는 최대 힘 " + SCENARIO.pushForce + " N, 필요한 힘 = 마찰 계수 × 질량 × 9.81. 집기는 " +
+    Math.round(SCENARIO.payload * 1000) + " g 이하, 폭 " + Math.round(SCENARIO.gripMax * 100) + " cm 이하 상자만 (OpenMANIPULATOR-X 사양 기준). 장애물 값은 예시예요.";
 
-  // 키보드로 관절 조종 (teleop 과 같은 키, 이 페이지에서는 주행 키는 쓰지 않는다)
-  var KEYS = ["1", "2", "3", "4", "q", "w", "e", "r", "o", "p"];
+  // 장애물 표
+  var tbody = document.getElementById("obsBody"), rows = {};
+  var KIND = { movable: "밀 수 있음", heavy: "무거움", fixed: "고정" };
+  scen.state().obstacles.forEach(function (o) {
+    var tr = document.createElement("tr");
+    var name = document.createElement("th"); name.scope = "row"; name.textContent = o.name;
+    var tdm = document.createElement("td"), inp = document.createElement("input");
+    inp.type = o.kind === "fixed" ? "text" : "number"; inp.min = "0.05"; inp.step = "0.1";
+    inp.value = o.kind === "fixed" ? "—" : o.mass; inp.disabled = o.kind === "fixed";
+    inp.setAttribute("aria-label", o.name + " 질량 (kg)");
+    inp.addEventListener("change", function () { var v = parseFloat(inp.value); if (v > 0) scen.setMass(o.id, v); });
+    tdm.appendChild(inp);
+    var tdf = document.createElement("td"), tds = document.createElement("td"), st = document.createElement("span");
+    tds.appendChild(st);
+    tr.append(name, tdm, tdf, tds); tbody.appendChild(tr);
+    rows[o.id] = { input: inp, force: tdf, status: st };
+  });
+  var miniObs = document.getElementById("miniObs"), miniEls = {};
+  var FILL = { movable: "#F2B134", heavy: "#8E6CCF", fixed: "#6B7280" };
+  scen.state().obstacles.forEach(function (o) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", o.shape === "cyl" ? "circle" : "rect");
+    if (o.shape === "cyl") el.setAttribute("r", o.r);
+    else { el.setAttribute("width", Math.max(o.sx, 0.07)); el.setAttribute("height", Math.max(o.sy, 0.07)); }
+    miniObs.appendChild(el); miniEls[o.id] = el;
+  });
+
+  function refresh() {
+    var s = scen.state(), r = viewer.readout();
+    s.obstacles.forEach(function (o) {
+      var row = rows[o.id];
+      row.force.textContent = o.force === null ? "—" : o.force.toFixed(1) + " N";
+      row.status.className = "st-chip " + o.kind;
+      row.status.textContent = o.held ? "집는 중" : KIND[o.kind] + (o.graspable ? " · 집기 가능" : "");
+      if (document.activeElement !== row.input && o.kind !== "fixed") row.input.value = o.mass;
+      var el = miniEls[o.id];
+      el.setAttribute("fill", FILL[o.kind]);
+      if (o.shape === "cyl") { el.setAttribute("cx", o.x); el.setAttribute("cy", -o.y); }
+      else { var w = Math.max(o.sx, 0.07), h = Math.max(o.sy, 0.07); el.setAttribute("x", o.x - w / 2); el.setAttribute("y", -o.y - h / 2); }
+    });
+    document.querySelectorAll("#mission li").forEach(function (li) { li.classList.toggle("done", s.steps[+li.dataset.step]); });
+    chip.textContent = s.steps.filter(Boolean).length + " / 3";
+    document.getElementById("miniBot").setAttribute("transform",
+      "translate(" + r.x.toFixed(3) + " " + (-r.y).toFixed(3) + ") rotate(" + (-r.yaw * 180 / Math.PI).toFixed(1) + ")");
+  }
+  setInterval(refresh, 120);
+  refresh();
+
+  document.getElementById("btnPick").addEventListener("click", function () { viewer.setPose(PICK, 0.019); });
+  document.getElementById("btnHome").addEventListener("click", function () { viewer.setPose(HOME); });
+  document.getElementById("btnReset").addEventListener("click", function () {
+    scen.reset(); viewer.setPose(HOME, 0.01); logEl.textContent = "처음부터 다시 시작해요. i 키로 출발해 보세요.";
+  });
+
+  // 키보드 조종 (teleop 과 같은 키)
+  var KEYS = ["i", "j", "k", "l", " ", "1", "2", "3", "4", "q", "w", "e", "r", "o", "p"];
   function isField(t) { return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA"); }
   document.addEventListener("keydown", function (e) {
     if (isField(e.target) || e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
-    var k = e.key.toLowerCase();
-    if (KEYS.indexOf(k) >= 0) viewer.press(k);
+    var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (KEYS.indexOf(k) >= 0) { if (k === " ") e.preventDefault(); viewer.press(k); }
   });
-  document.addEventListener("keyup", function (e) { var k = e.key.toLowerCase(); if (KEYS.indexOf(k) >= 0) viewer.release(k); });
+  document.addEventListener("keyup", function (e) {
+    var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (KEYS.indexOf(k) >= 0) viewer.release(k);
+  });
   window.addEventListener("blur", function () { KEYS.forEach(function (k) { viewer.release(k); }); });
 })();
 </script>

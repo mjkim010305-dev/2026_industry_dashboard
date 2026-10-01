@@ -14,8 +14,11 @@ ROOT = Path(__file__).resolve().parent.parent
 THEMES = ROOT / "tools" / "themes"
 PAGES = ["demo-video", "teleop", "survey"]
 ACCENT = {"samsung": "#1259C3", "lg": "#D0021B", "apple": "#0071E3", "microsoft": "#0067B8", "amazon": "#FF9900"}  # 3D 강조색
-NAV = [("demo-video.html", "시연 영상"), ("robot.html", "기체"), ("teleop.html", "teleop"), ("survey.html", "설문")]
-NEW_PAGES = {"robot": "기체 소개 - ROS 2 + turtlebot3_manipulation"}
+NAV = [("demo-video.html", "시연 영상"), ("robot.html", "기체"), ("teleop.html", "teleop"), ("scenario.html", "시나리오"), ("survey.html", "설문")]
+NEW_PAGES = {  # 이름: (제목, 추가 스크립트)
+    "robot": ("기체 소개 - ROS 2 + turtlebot3_manipulation", []),
+    "scenario": ("시나리오 시뮬레이터 - ROS 2 + turtlebot3_manipulation", ["../assets/tb3_scenario.js"]),
+}
 NL = "\n"
 SCRIPTS_3D = ('<script src="../assets/three.r128.min.js"></script>' + NL
               + '<script src="../assets/tb3_viewer.js"></script>' + NL
@@ -61,13 +64,14 @@ def page_parts(name):
     return tuple((d / f"{name}.{ext}").read_text(encoding="utf-8") for ext in ("body.html", "css", "js"))
 
 
-def new_page(name, title, label, css, header, page_css, body, js, accent):
+def new_page(name, title, label, css, header, page_css, body, js, accent, extra=()):
+    scripts = SCRIPTS_3D + "".join(f'<script src="{src}"></script>' + NL for src in extra)
     return NL.join([
         "<!DOCTYPE html>", '<html lang="ko">', "<head>", '<meta charset="UTF-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1.0">', f"<title>{title}</title>",
         f"<!-- {label}. 만든 방법: tools/build_styles.py (tools/pages/{name}.*) -->",
         "<style>", css, page_css, f":root {{ --robot-accent: {accent}; }}", "</style>", "</head>", "<body>",
-        '<a class="skip" href="#main">본문 바로가기</a>', header, "", body + SCRIPTS_3D + "<script>",
+        '<a class="skip" href="#main">본문 바로가기</a>', header, "", body.replace("%ACCENT%", accent) + scripts + "<script>",
         js.replace("%ACCENT%", accent) + "</script>", "</body>", "</html>", ""])
 
 
@@ -88,16 +92,17 @@ def build_integrated_pages():
     common = demo[demo.index("<style>") + len("<style>"):demo.index("/* ---------- 이 페이지 ---------- */")]
     common += ".lead { margin: 0; color: var(--text-2); font-size: 16px; }" + NL
     header = demo[demo.index('<header class="appbar">'):demo.index("</header>") + len("</header>")]
-    for name, title in NEW_PAGES.items():
+    for name, (title, extra) in NEW_PAGES.items():
         body, page_css, js = page_parts(name)
         hdr = re.sub(r"<ul>.*?</ul>", lambda m: "<ul>" + nav_html(name) + "</ul>", header, flags=re.S)
-        html = new_page(name, title, "통합 스타일", common, hdr, page_css, body, js, "#0071E3")
+        html = new_page(name, title, "통합 스타일", common, hdr, page_css, body, js, "#0071E3", extra)
         (ROOT / "redesign" / f"{name}.html").write_text(html, encoding="utf-8")
         print("redesign", name, len(html))
 
 
 def main():
-    (ROOT / "assets" / "tb3_viewer.js").write_text((ROOT / "tools" / "tb3_viewer.js").read_text(encoding="utf-8"), encoding="utf-8")
+    for lib in ("tb3_viewer.js", "tb3_scenario.js"):
+        (ROOT / "assets" / lib).write_text((ROOT / "tools" / lib).read_text(encoding="utf-8"), encoding="utf-8")
     update_integrated_nav()
     build_integrated_pages()
     base = (THEMES / "base.css").read_text(encoding="utf-8")
@@ -118,10 +123,10 @@ def main():
                 html = inject_3d(html, ACCENT[brand])
             (out_dir / f"{page}.html").write_text(html, encoding="utf-8")
             print(brand, page, len(html))
-        for name, title in NEW_PAGES.items():
+        for name, (title, extra) in NEW_PAGES.items():
             body, page_css, js = page_parts(name)
             html = new_page(name, title, f"{label} 스타일: design-refs/{brand}.md 참고", base + NL + skin,
-                            header.format(nav=nav_html(name)), page_css, body, js, ACCENT[brand])
+                            header.format(nav=nav_html(name)), page_css, body, js, ACCENT[brand], extra)
             (out_dir / f"{name}.html").write_text(html, encoding="utf-8")
             print(brand, name, len(html))
 

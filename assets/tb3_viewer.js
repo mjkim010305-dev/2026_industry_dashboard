@@ -281,6 +281,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     },
     // 그리퍼 끝(end_effector_link, link5 에서 0.126 m 앞)의 ROS 좌표
     tip: function () {
+      world.updateMatrixWorld(true);                                 // 렌더 전에도 최신 관절 값으로 계산
       var v = new THREE.Vector3(0.126, 0, 0); j4.localToWorld(v); world.worldToLocal(v);
       return { x: v.x, y: v.y, z: v.z };
     },
