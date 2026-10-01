@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>애플 스타일 · teleop</title>
+<script src="./support.js"></script>
+<script src="/_blob/fe33b41a4ab23f3f61d3eaa26f2a7bc0"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+/* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
+* { box-sizing: border-box; }
+.dc-root {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--body-size); line-height: 1.5; -webkit-font-smoothing: antialiased; word-break: keep-all;
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+a { color: var(--accent); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip {
+  position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px; border-radius: 8px;
+  background: var(--surface); color: var(--text); font-weight: 700; text-decoration: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.skip:focus { top: 10px; }
+
+/* 페이지 · 머리 · 카드 */
+.page { max-width: var(--page-max); margin: 0 auto; padding: 32px 24px 56px; }
+.page-head { margin: 0 0 24px; }
+.eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--eyebrow); }
+.page-head h1, .survey-card h1 {
+  margin: 0 0 8px; font-size: var(--h1-size); line-height: var(--h1-lh); font-weight: var(--h1-weight); letter-spacing: var(--h1-ls);
+}
+.lead { margin: 0; color: var(--text-2); font-size: var(--lead-size); }
+.card {
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card);
+  box-shadow: var(--shadow); padding: var(--card-pad);
+}
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.card-head h2, .list-section h2 {
+  margin: 0; font-size: var(--h2-size); line-height: 1.4; font-weight: var(--h2-weight); letter-spacing: var(--h2-ls);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 7.5em; padding: 0 22px; border-radius: var(--r-btn); cursor: pointer;
+  font: inherit; font-size: var(--btn-size); font-weight: var(--btn-weight);
+  color: var(--btn2-fg); background: var(--btn2-bg); border: 1px solid var(--btn2-border); box-shadow: var(--btn2-shadow);
+  transition: background-color 0.2s, border-color 0.2s, filter 0.2s;
+}
+.btn:hover { filter: brightness(0.96); }
+.btn.primary { color: var(--btn-fg); background: var(--btn-bg); border-color: var(--btn-border); box-shadow: var(--btn-shadow); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--chip-bg); color: var(--text-2); font-size: 14px; font-weight: 500; border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .page { padding: 24px 16px 40px; }
+  .page-head h1, .survey-card h1 { font-size: calc(var(--h1-size) * 0.72); line-height: 1.25; }
+  .card { padding: 16px; }
+}
+
+/* ---------- 시연 영상 ---------- */
+.desc p { margin: 0; font-size: var(--lead-size); max-width: 72ch; }
+.desc p.sub { margin-top: 4px; color: var(--text-2); font-size: 15px; }
+.player { margin-top: 8px; }
+.main-wrap { padding: 12px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--stage); border-radius: var(--r-stage); }
+.tile { position: absolute; inset: 0; background: #000; overflow: hidden; will-change: transform; transform-origin: top left; border-radius: var(--r-stage); }
+.tile video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tile .fail {
+  display: none; position: absolute; inset: 0; background: var(--stage); color: var(--stage-text);
+  align-items: center; justify-content: center; flex-direction: column; gap: 4px; text-align: center; padding: 12px;
+  font-size: 14px; overflow-wrap: anywhere;
+}
+.tile .fail span { color: var(--stage-text-2); font-size: 13px; }
+.tile.failed video { visibility: hidden; }
+.tile.failed .fail { display: flex; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 8px 4px; }
+.bar .state {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--chip-bg); border: 1px solid var(--line); color: var(--text-2); font-size: 14px; font-weight: 500;
+}
+.bar .state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-2); }
+.now { font-weight: 700; }
+.live { color: var(--text-2); font-size: 14px; margin-left: auto; }
+.list-section { margin-top: 32px; }
+.list-section h2 { margin-bottom: 12px; }
+.list { list-style: none; margin: 0; padding: 4px 4px 16px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; }
+.list li { flex: 0 0 240px; scroll-snap-align: start; }
+.cell {
+  display: block; width: 100%; padding: 8px; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.cell:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--focus), var(--shadow); }
+.cell .frame, .cell .tile { border-radius: var(--r-thumb); }
+.cell .frame { pointer-events: none; }
+.cell .name { display: flex; align-items: center; gap: 8px; padding: 10px 4px 4px; font-weight: 700; font-size: 15px; }
+.cell .name::before {
+  content: ""; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent var(--accent);
+}
+.empty { color: var(--text-2); }
+p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24px; box-shadow: var(--shadow); }
+
+/* ---------- teleop ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1100px) {
+  .layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; }
+  .layout .conn { grid-column: 1 / -1; }
+}
+.conn form {
+  display: grid; gap: 16px; align-items: end;
+  grid-template-columns: minmax(0, 2fr) minmax(76px, 0.7fr) minmax(0, 1.5fr) minmax(0, 2.2fr);
+}
+.f-cmd { grid-column: span 2; }
+@media (max-width: 900px) {
+  .conn form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .f-cmd { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .conn form { grid-template-columns: minmax(0, 1fr); }
+  .f-cmd { grid-column: auto; }
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 14px; font-weight: var(--label-weight); color: var(--label-color); }
+.field input {
+  min-height: 44px; padding: 0 14px; font: inherit; color: var(--text);
+  background: var(--field-bg); border: 1px solid var(--field-border); border-radius: var(--r-field); width: 100%;
+  box-shadow: var(--field-shadow);
+}
+.field input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
+.pass-wrap {
+  display: flex; align-items: stretch; background: var(--field-bg);
+  border: 1px solid var(--field-border); border-radius: var(--r-field); overflow: hidden; box-shadow: var(--field-shadow);
+}
+.pass-wrap:focus-within { border-color: var(--focus); }
+.pass-wrap input { border: 0; border-radius: 0; background: transparent; box-shadow: none; flex: 1 1 auto; min-width: 0; width: auto; }
+.pass-wrap input:focus-visible { outline-offset: -3px; }
+.eye {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 7.6em;
+  padding: 0 12px; font: inherit; font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent;
+  border: 0; border-left: 1px solid var(--field-border); cursor: pointer; white-space: nowrap;
+}
+.eye svg { flex: 0 0 auto; }
+.end { display: flex; align-items: center; }
+.end .btn { width: 100%; }
+.statusbox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.st, .reason {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 14px 4px 8px;
+  border-radius: 999px; font-size: 14px; font-weight: 700;
+  background: var(--chip-bg); color: var(--text-2); border: 1px solid var(--line);
+}
+.st:empty { display: none; }
+.st[data-sig="connected"] { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+.st[data-sig="connecting"] { background: var(--busy-bg); color: var(--busy); border-color: transparent; }
+.st svg, .reason svg { flex: 0 0 auto; }
+.ico-ok { color: var(--ok); }
+.ico-off { color: var(--text-2); }
+.ico-busy { color: var(--busy); animation: spin 1.5s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.reason { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+.reason .ico-off { color: var(--danger); }
+.reason[hidden] { display: none; }
+#frame { overflow: hidden; }
+.frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#camCanvas { object-fit: contain; }
+.center-msg {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  text-align: center; padding: 12px; background: var(--stage); color: var(--stage-text); overflow-wrap: anywhere;
+}
+.center-msg[hidden], canvas[hidden] { display: none; }
+.center-msg .path { color: var(--stage-text-2); font-size: 14px; }
+#loading::before {
+  content: ""; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25); border-top-color: var(--stage-accent); animation: spin 1s linear infinite;
+}
+#viewLabel::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.hint-row {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: var(--r-field);
+  background: var(--hint-bg); color: var(--hint-fg); font-size: 14px; border: 1px solid var(--hint-border);
+}
+.hint-row[hidden] { display: none; }
+.kbd { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: "move grip" "arm arm"; }
+.kbd > .group:nth-child(1) { grid-area: move; }
+.kbd > .group:nth-child(2) { grid-area: arm; }
+.kbd > .group:nth-child(3) { grid-area: grip; }
+@media (max-width: 420px) { .kbd { grid-template-columns: minmax(0, 1fr); grid-template-areas: "move" "arm" "grip"; } }
+.group { background: var(--group-bg); border: 1px solid var(--group-border); border-radius: var(--r-group); padding: 14px; }
+.group h3 { margin: 0 0 10px; font-size: 14px; color: var(--text-2); font-weight: 700; }
+.keys { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.keys.move { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 300px; }
+.keys.arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.keys.grip { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 200px; }
+.key {
+  min-height: 60px; min-width: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 6px 4px; background: var(--key-bg); color: var(--text);
+  border: 1px solid var(--key-border); border-bottom-width: var(--key-depth); border-radius: var(--r-key); line-height: 1.2;
+}
+.key .k { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.key .n { margin-top: 4px; font-size: 12px; color: var(--text-2); }
+.key.on { background: var(--key-on-bg); color: var(--key-on-fg); border-color: var(--key-on-bg); border-bottom-width: 1px; transform: translateY(2px); }
+.key.on .n { color: var(--key-on-fg); }
+.keys.move .k-i { grid-column: 2; }
+.keys.move .k-i + .key { grid-column: 1; }
+.keys.move .k-space { grid-column: 1 / span 3; }
+
+/* ---------- 설문 ---------- */
+.survey-card {
+  max-width: 640px; margin: 0 auto; padding: 32px 24px 36px; text-align: center;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow);
+}
+.guide { margin: 0 0 24px; font-size: var(--lead-size); color: var(--text-2); }
+.slot { width: var(--qr); height: var(--qr); margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.qrcard {
+  width: 100%; height: 100%; background: #FFFFFF; border: 1px solid #DEE1E5; border-radius: var(--r-qr);
+  padding: 5%; display: flex; align-items: center; justify-content: center; transition: box-shadow 0.2s;
+}
+.qrcard:hover { box-shadow: 0 0 0 2px var(--focus); }
+.qrcard img, .zoomcard img { width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
+#qrImg { cursor: zoom-in; }
+.zoom-hint { margin: 16px 0 0; font-size: 14px; color: var(--text-2); }
+.slot:has(#qrCard[hidden]) + .zoom-hint { display: none; }
+.slot .empty {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 16px; overflow-wrap: anywhere;
+  background: var(--surface-2); border: 2px dashed var(--line); border-radius: var(--r-qr);
+}
+.empty .path { font-size: 13px; margin: 8px 0 0; font-family: var(--mono); }
+[hidden] { display: none !important; }
+.overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); display: flex; align-items: center; justify-content: center; z-index: 30;
+}
+.zoomcard {
+  width: min(88vh, calc(100vw - 24px)); height: min(88vh, calc(100vw - 24px));
+  background: #FFFFFF; border-radius: var(--r-qr); padding: 5%;
+}
+.closebtn {
+  position: absolute; top: 12px; right: 12px; z-index: 31; min-width: 44px; min-height: 44px; padding: 0 20px;
+  font: inherit; font-weight: 700; color: #111111; background: #FFFFFF; border: 0; border-radius: var(--r-btn); cursor: pointer;
+}
+.closebtn:focus-visible { outline: 3px solid #8AB4FF; outline-offset: 2px; }
+
+/* ---------- 애플 스타일: 얇은 반투명 고정 내비, 가운데 큰 제목, 회색 타일, 검정 무대, 파랑 알약 (design-refs/apple.md) ---------- */
+:root {
+  --font: -apple-system, "SF Pro KR", "SF Pro Text", "Apple SD Gothic Neo", "Malgun Gothic", "Helvetica Neue", "Noto Sans KR", sans-serif;
+  --mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #FFFFFF; --surface: #F5F5F7; --surface-2: #FFFFFF; --chip-bg: #FFFFFF;
+  --text: #1D1D1F; --text-2: #6E6E73; --line: #D2D2D7; --card-border: transparent; --shadow: none;
+  --accent: #0066CC; --focus: #0071E3; --eyebrow: #B64400;
+  --btn-bg: #0071E3; --btn-fg: #FFFFFF; --btn-border: #0071E3; --btn-shadow: none;
+  --btn2-bg: transparent; --btn2-fg: #0066CC; --btn2-border: #0066CC; --btn2-shadow: none;
+  --btn-size: 17px; --btn-weight: 400;
+  --r-card: 18px; --r-btn: 980px; --r-field: 12px; --r-stage: 12px; --r-thumb: 12px; --r-key: 12px; --r-group: 18px; --r-qr: 18px;
+  --card-pad: 28px; --page-max: 1120px;
+  --h1-size: 56px; --h1-lh: 60px; --h1-weight: 600; --h1-ls: -0.005em;
+  --h2-size: 24px; --h2-weight: 600; --h2-ls: 0.009em;
+  --body-size: 17px; --lead-size: 21px; --label-weight: 400; --label-color: #6E6E73;
+  --field-bg: #FFFFFF; --field-border: #D2D2D7; --field-shadow: none;
+  --stage: #000000; --stage-text: #F5F5F7; --stage-text-2: #A1A1A6; --stage-accent: #2997FF;
+  --ok: #1D7A35; --ok-bg: #E9F6EC; --busy: #0066CC; --busy-bg: #E8F2FC; --danger: #D70015; --danger-bg: #FDECEE;
+  --hint-bg: #FFFFFF; --hint-fg: #6E6E73; --hint-border: transparent;
+  --group-bg: #FFFFFF; --group-border: transparent;
+  --key-bg: #F5F5F7; --key-border: #F5F5F7; --key-depth: 1px; --key-on-bg: #1D1D1F; --key-on-fg: #FFFFFF;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+
+
+/* 머리: 44px 반투명 + 흐림, 가운데 정렬 글자 메뉴 */
+.gnav {
+  position: sticky; top: 0; z-index: 20; background: rgba(245, 245, 247, 0.8);
+  backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.gnav-in { max-width: 1024px; margin: 0 auto; padding: 0 22px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 36px; }
+.wordmark { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.gnav nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 28px; }
+.gnav nav a {
+  display: flex; align-items: center; min-height: 44px; color: var(--text); opacity: 0.8; text-decoration: none; font-size: 13px;
+  transition: opacity 0.32s;
+}
+.gnav nav a:hover { opacity: 1; }
+.gnav nav a[aria-current="page"] { opacity: 1; font-weight: 600; box-shadow: inset 0 -2px 0 var(--text); }
+@media (max-width: 640px) { .gnav-in { justify-content: space-between; gap: 12px; } .gnav nav ul { gap: 16px; } }
+
+/* 가운데 정렬 큰 제목, 주황 'New' 라벨 */
+.page { padding-top: 56px; }
+.page-head { text-align: center; margin-bottom: 40px; }
+.page-head .eyebrow { font-size: 17px; font-weight: 600; letter-spacing: 0; }
+.desc p { margin-left: auto; margin-right: auto; }
+.desc p.sub { font-size: 17px; }
+
+/* 영상 플레이어는 검정 섹션 */
+.player .main-wrap { background: #000000; color: #F5F5F7; }
+.player .bar .state { background: rgba(255, 255, 255, 0.1); border-color: transparent; color: #D2D2D7; }
+.player .bar .state::before { background: #D2D2D7; }
+.player .live { color: #A1A1A6; }
+.cell { padding: 0; overflow: hidden; }
+.cell .frame, .cell .tile { border-radius: 0; }
+.cell .name { padding: 12px 16px 14px; font-weight: 600; }
+.cell .name::before { display: none; }
+
+/* ---------- Claude Design 캔버스 전용 꾸밈 (기업 변수 그대로 사용) ---------- */
+.dc-root { background: var(--bg); color: var(--text); font-family: var(--font); font-size: var(--body-size); line-height: 1.5; word-break: keep-all; min-height: 100%; }
+.dc-root ul, .dc-root ol { margin: 0; }
+:root { --qr: 400px; }
+
+/* 시연 영상: 진행 3단계 */
+.story { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0 0 24px; }
+.story-step { background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 20px; display: flex; gap: 14px; align-items: flex-start; }
+.story-num {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--btn-bg); color: var(--btn-fg); font-weight: 700; font-family: var(--mono); font-size: 15px;
+}
+.story-step h3 { margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+.story-step p { margin: 0; font-size: 14px; color: var(--text-2); }
+.story-arrow { color: var(--text-2); }
+.poster { overflow: hidden; }
+.poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pl-badge {
+  position: absolute; left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+  border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #FFFFFF; font-size: 14px; font-weight: 700;
+}
+.pl-play {
+  position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18); border: 2px solid rgba(255, 255, 255, 0.7); display: flex; align-items: center; justify-content: center;
+}
+.cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.cells .cell .frame { overflow: hidden; }
+.cell.is-on { box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
+
+/* teleop: 3D 기체 무대 */
+.viewer {
+  position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--r-stage); overflow: hidden;
+  background: var(--viewer-bg, #0E131A); outline: none; cursor: grab;
+}
+.viewer:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
+.viewer canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.viewer-hint {
+  position: absolute; left: 12px; top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 13px; font-weight: 500; pointer-events: none;
+}
+.viewer-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.pip {
+  position: absolute; right: 12px; bottom: 12px; width: 30%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden;
+  background: #000000; border: 2px solid rgba(255, 255, 255, 0.85); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.pip img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pip-dot { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #1D4ED8; border: 2px solid #FFFFFF; }
+.pip-label { position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #FFFFFF; font-size: 11px; font-weight: 700; }
+.pip-cam { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #A9B1BD; font-size: 12px; text-align: center; padding: 8px; }
+.readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ro {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: var(--r-field);
+  background: var(--surface-2); border: 1px solid var(--line); font-family: var(--mono); font-size: 13px; color: var(--text);
+}
+.ro b { font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text-2); }
+.ro.is-on { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+button.key { font: inherit; cursor: pointer; width: 100%; -webkit-user-select: none; user-select: none; touch-action: none; }
+.dc-root .kbd { grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr); }
+.dc-root .keys.move, .dc-root .keys.grip { max-width: none; }
+
+/* 설문: 스캔 프레임 + 단계 */
+.qr-scan { position: relative; cursor: zoom-in; font: inherit; }
+.corner { position: absolute; width: 36px; height: 36px; border-color: var(--btn-bg); border-style: solid; border-width: 0; }
+.corner.tl { left: -10px; top: -10px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 12px; }
+.corner.tr { right: -10px; top: -10px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 12px; }
+.corner.bl { left: -10px; bottom: -10px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 12px; }
+.corner.br { right: -10px; bottom: -10px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 12px; }
+.scanline {
+  position: absolute; left: 6%; right: 6%; height: 3px; top: 10%; border-radius: 3px; background: var(--btn-bg); opacity: 0.55;
+  animation: scan 2.6s ease-in-out infinite alternate;
+}
+@keyframes scan { from { top: 8%; } to { top: 90%; } }
+.steps { list-style: none; padding: 0; margin: 28px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; text-align: left; }
+.steps li { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: var(--r-field); background: var(--surface-2); font-size: 14px; }
+.steps b {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--btn-bg); color: var(--btn-fg); font-size: 13px;
+}
+.dc-overlay { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.92); }
+.dc-overlay .zoomcard { width: 640px; height: 640px; }
+
+/* 분석 문서 */
+.doc { width: 1000px; box-sizing: border-box; padding: 56px 64px 64px; background: var(--surface); color: var(--text); font-family: var(--font); line-height: 1.65; word-break: keep-all; }
+.doc-band { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 0 24px; margin: 0 0 24px; border-bottom: 1px solid var(--line); }
+.doc-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--eyebrow); }
+.swatches { display: flex; gap: 6px; }
+.swatches span { width: 28px; height: 28px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
+.doc h1 { margin: 0 0 12px; font-size: 34px; line-height: 1.25; letter-spacing: -0.02em; }
+.doc h2 { margin: 36px 0 12px; font-size: 22px; letter-spacing: -0.01em; }
+.doc h3 { margin: 24px 0 8px; font-size: 17px; }
+.doc p, .doc li { font-size: 15px; }
+.doc p { margin: 0 0 12px; }
+.doc ul, .doc ol { margin: 0 0 12px; padding-left: 22px; }
+.doc li { margin: 4px 0; }
+.doc table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 14px; }
+.doc th, .doc td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc th { background: var(--surface-2); font-weight: 700; }
+.doc code { font-family: var(--mono); font-size: 0.9em; padding: 1px 6px; border-radius: 6px; background: var(--surface-2); }
+.doc blockquote { margin: 0 0 16px; padding: 12px 16px; border-radius: var(--r-field); background: var(--surface-2); color: var(--text-2); }
+.doc blockquote p { margin: 0; }
+.chipcolor { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.dc-root .zoom-hint { margin-top: 24px; }
+.pip.pip-arena { width: 24%; aspect-ratio: 1 / 1; background: #0B0F14; }
+.pip-arena svg { display: block; width: 100%; height: 100%; }
+
+</style>
+</helmet>
+<div class="dc-root">
+<header class="gnav"><div class="gnav-in"><span class="wordmark">turtlebot3</span><nav aria-label="화면 이동"><ul><li><a href="AppleDemo.dc.html">시연 영상</a></li><li><a href="AppleTeleop.dc.html" aria-current="page">teleop</a></li><li><a href="AppleSurvey.dc.html">설문</a></li></ul></nav></div></header>
+<div class="page">
+<main>
+<div class="page-head">
+<p class="eyebrow">REMOTE CONTROL</p>
+<h1>teleop</h1>
+<p class="lead">로봇에 연결한 뒤 키보드로 이동 · manipulator · 그리퍼를 조종합니다.</p>
+</div>
+<div class="layout">
+<section class="conn card" aria-labelledby="t-conn">
+<div class="card-head">
+<h2 id="t-conn">연결 설정</h2>
+<div class="statusbox">
+<div class="st" data-sig="{{sig}}" role="status">
+<sc-if value="{{connected}}" hint-placeholder-val="{{ false }}"><svg class="ico-ok" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"></circle><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></sc-if>
+<sc-if value="{{disconnected}}" hint-placeholder-val="{{ true }}"><svg class="ico-off" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M7.5 12h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg></sc-if>
+<span>{{statusLabel}}</span>
+</div>
+</div>
+</div>
+<form>
+<div class="field f-host"><label for="d-host">호스트</label><input id="d-host" type="text" placeholder="[로봇 IP]"></div>
+<div class="field f-port"><label for="d-port">포트</label><input id="d-port" type="text" value="22"></div>
+<div class="field f-user"><label for="d-user">계정</label><input id="d-user" type="text"></div>
+<div class="field f-pass"><label for="d-pass">비밀번호</label>
+<div class="pass-wrap"><input id="d-pass" type="password"><button type="button" class="eye"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>비밀번호 보기</span></button></div>
+</div>
+<div class="field f-cmd"><label for="d-cmd">teleop 실행 명령</label><input id="d-cmd" type="text" placeholder="[실행 명령]"></div>
+<div class="field f-topic"><label for="d-topic">camera topic</label><input id="d-topic" type="text" placeholder="[topic 이름]"></div>
+<div class="end"><button type="button" class="btn primary" onClick="{{toggle}}">{{btnLabel}}</button></div>
+</form>
+</section>
+
+<section class="card" aria-labelledby="t-view">
+<div class="card-head">
+<h2 id="t-view">기체 3D · 조종 화면</h2>
+<span class="chip">turtlebot3 waffle pi + OpenMANIPULATOR-X</span>
+</div>
+<div class="viewer" tabindex="0" aria-label="3D 기체. 누른 뒤 키보드로 조종, 끌어서 회전" onKeyDown="{{onKeyDown}}" onKeyUp="{{onKeyUp}}" onBlur="{{onBlur}}">
+<canvas ref="{{setCanvas}}" aria-hidden="true"></canvas>
+<span class="viewer-hint">누른 뒤 키보드로 조종 · 끌어서 회전 · 휠로 확대</span>
+<sc-if value="{{loading}}" hint-placeholder-val="{{ true }}"><div class="viewer-loading">3D 기체를 불러오는 중</div></sc-if>
+<sc-if value="{{failed}}" hint-placeholder-val="{{ false }}"><div class="viewer-loading">3D 기체를 불러오지 못했습니다</div></sc-if>
+<div class="pip pip-arena">
+<sc-if value="{{disconnected}}" hint-placeholder-val="{{ true }}"><svg viewBox="-1.7 -1.7 3.4 3.4" role="img" aria-label="경기장 3 m × 3 m 안의 기체 위치">
+<path d="M-1.5 0 L-1.5 -1.5 L1.5 -1.5 L1.5 1.5 L0 1.5 L0 0 Z" fill="#1A222C" stroke="#C9CED6" stroke-width="0.04"></path>
+<path d="M-1 -1.5 V0 M-0.5 -1.5 V0 M0 -1.5 V1.5 M0.5 -1.5 V1.5 M1 -1.5 V1.5 M-1.5 -1 H1.5 M-1.5 -0.5 H1.5 M0 0.5 H1.5 M0 1 H1.5" stroke="#2A3442" stroke-width="0.015" fill="none"></path>
+<g transform="translate({{robot.tx}} {{robot.ty}}) rotate({{robot.deg}})"><circle r="0.14" fill="{{robot.color}}" stroke="#FFFFFF" stroke-width="0.04"></circle><path d="M0.1 -0.08 L0.26 0 L0.1 0.08 Z" fill="#FFFFFF"></path></g>
+</svg></sc-if>
+<sc-if value="{{connected}}" hint-placeholder-val="{{ false }}"><div class="pip-cam">[camera topic 영상]</div></sc-if>
+<span class="pip-label">{{viewLabel}}</span>
+</div>
+</div>
+<div class="readout" aria-label="관절 · 주행 값">
+<sc-for list="{{readouts}}" as="r" hint-placeholder-count="7"><span class="{{r.cls}}"><b>{{r.k}}</b>{{r.v}}</span></sc-for>
+</div>
+</section>
+
+<section class="card" aria-labelledby="t-kbd">
+<div class="card-head"><h2 id="t-kbd">키보드 그림</h2></div>
+<div class="hint-row">연결 전에는 3D 기체로 미리 움직여 볼 수 있어요. 키 그림을 눌러도 됩니다.</div>
+<div class="kbd">
+<div class="group" role="group" aria-labelledby="g-move"><h3 id="g-move">이동 키</h3>
+<div class="keys move"><sc-for list="{{moveKeys}}" as="key" hint-placeholder-count="5"><button type="button" class="key {{key.cls}}" aria-label="{{key.label}}" onPointerDown="{{key.down}}" onPointerUp="{{key.up}}" onPointerLeave="{{key.up}}"><span class="k">{{key.k}}</span><span class="n">{{key.n}}</span></button></sc-for></div></div>
+<div class="group" role="group" aria-labelledby="g-arm"><h3 id="g-arm">manipulator 키</h3>
+<div class="keys arm"><sc-for list="{{armKeys}}" as="key" hint-placeholder-count="8"><button type="button" class="key {{key.cls}}" aria-label="{{key.label}}" onPointerDown="{{key.down}}" onPointerUp="{{key.up}}" onPointerLeave="{{key.up}}"><span class="k">{{key.k}}</span><span class="n">{{key.n}}</span></button></sc-for></div></div>
+<div class="group" role="group" aria-labelledby="g-grip"><h3 id="g-grip">그리퍼 키</h3>
+<div class="keys grip"><sc-for list="{{gripKeys}}" as="key" hint-placeholder-count="2"><button type="button" class="key {{key.cls}}" aria-label="{{key.label}}" onPointerDown="{{key.down}}" onPointerUp="{{key.up}}" onPointerLeave="{{key.up}}"><span class="k">{{key.k}}</span><span class="n">{{key.n}}</span></button></sc-for></div></div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent": {"editor": "color", "default": "#0071E3"}, "$preview": {"width": 1440, "height": 1420}}'>
+class Component extends DCLogic {
+  componentDidMount() {
+    this._alive = true;
+    const start = () => {
+      if (!this._alive) return;
+      if (!window.THREE || !this._canvas) { this._t = setTimeout(start, 120); return; }
+      fetch('/_blob/1fa7efd30b9214af9a8f827117bdc7bd').then((r) => r.json()).then((data) => {
+        if (!this._alive) return;
+        const accent = this.props.accent ?? '#0071E3';
+        this._viewer = this.createTB3Viewer(window.THREE, this._canvas, data, {
+          accent: accent, body: '#3A3F47', arm: '#D9DCE1', tire: '#222428', grip: '#9AA0A8',
+          ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666
+        });
+        this.setState({ loading: false, ro: this._viewer.readout() });
+        this._iv = setInterval(() => { if (this._viewer) this.setState({ ro: this._viewer.readout() }); }, 120);
+      }).catch(() => this.setState({ loading: false, failed: true }));
+    };
+    start();
+  }
+  componentWillUnmount() {
+    this._alive = false;
+    clearTimeout(this._t);
+    clearInterval(this._iv);
+    if (this._viewer) this._viewer.dispose();
+  }
+  _press(k) { if (this._viewer) { this._viewer.press(k); this.setState({ ro: this._viewer.readout() }); } }
+  _release(k) { if (this._viewer) { this._viewer.release(k); this.setState({ ro: this._viewer.readout() }); } }
+  renderVals() {
+    const s = this.state || {};
+    const KEYS = ['i', 'j', 'k', 'l', ' ', '1', '2', '3', '4', 'q', 'w', 'e', 'r', 'o', 'p'];
+    if (!this._setCanvas) this._setCanvas = (el) => { this._canvas = el; };
+    if (!this._kd) {
+      const norm = (e) => (e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key);
+      this._kd = (e) => { const k = norm(e); if (KEYS.indexOf(k) >= 0 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); if (!e.repeat) this._press(k); } };
+      this._ku = (e) => { const k = norm(e); if (KEYS.indexOf(k) >= 0) { e.preventDefault(); this._release(k); } };
+      this._bl = () => KEYS.forEach((k) => this._release(k));
+    }
+    const connected = !!s.connected;
+    const ro = s.ro || { joints: [0, -1.05, 0.35, 0.7], grip: 0.01, v: 0, w: 0, held: [] };
+    const held = ro.held || [];
+    const on = (ks) => ks.some((k) => held.indexOf(k) >= 0);
+    const mk = (k, n, extra) => ({
+      k: k === ' ' ? 'space' : k, n: n, label: (k === ' ' ? 'space' : k) + ' ' + n,
+      cls: (extra || '') + (on([k]) ? ' on' : ''),
+      down: (e) => { if (e && e.preventDefault) e.preventDefault(); this._press(k); },
+      up: () => this._release(k)
+    });
+    const deg = (r) => (r * 180 / Math.PI).toFixed(0) + '°';
+    const roItem = (k, v, ks) => ({ k: k, v: v, cls: 'ro' + (on(ks) ? ' is-on' : '') });
+    return {
+      sig: connected ? 'connected' : 'disconnected',
+      connected: connected, disconnected: !connected,
+      statusLabel: connected ? '연결됨 · 로봇 camera 영상' : '연결 안 됨 · map 이미지',
+      btnLabel: connected ? '연결 해제' : '연결',
+      viewLabel: connected ? 'camera 영상' : '경기장 3 m × 3 m',
+      robot: { tx: (ro.x ?? -1).toFixed(3), ty: (-(ro.y ?? 0.75)).toFixed(3), deg: (-(ro.yaw || 0) * 180 / Math.PI).toFixed(1), color: this.props.accent ?? '#0071E3' },
+      toggle: () => this.setState({ connected: !connected }),
+      loading: s.loading !== false && !s.failed, failed: !!s.failed,
+      setCanvas: this._setCanvas, onKeyDown: this._kd, onKeyUp: this._ku, onBlur: this._bl,
+      moveKeys: [mk('i', '전진', 'k-i'), mk('j', '왼쪽 회전'), mk('k', '후진'), mk('l', '오른쪽 회전'), mk(' ', '정지', 'k-space')],
+      armKeys: [mk('1', 'joint1 왼쪽 회전'), mk('2', 'joint2 왼쪽 회전'), mk('3', 'joint3 왼쪽 회전'), mk('4', 'joint4 왼쪽 회전'),
+        mk('q', 'joint1 오른쪽 회전'), mk('w', 'joint2 오른쪽 회전'), mk('e', 'joint3 오른쪽 회전'), mk('r', 'joint4 오른쪽 회전')],
+      gripKeys: [mk('o', '그리퍼 열기'), mk('p', '그리퍼 닫기')],
+      readouts: [
+        roItem('joint1', deg(ro.joints[0]), ['1', 'q']), roItem('joint2', deg(ro.joints[1]), ['2', 'w']),
+        roItem('joint3', deg(ro.joints[2]), ['3', 'e']), roItem('joint4', deg(ro.joints[3]), ['4', 'r']),
+        roItem('gripper', (ro.grip * 1000).toFixed(1) + ' mm', ['o', 'p']),
+        roItem('v', ro.v.toFixed(2) + ' m/s', ['i', 'k', ' ']), roItem('ω', ro.w.toFixed(2) + ' rad/s', ['j', 'l', ' ']),
+        roItem('위치', '(' + (ro.x ?? -1).toFixed(2) + ', ' + (ro.y ?? 0.75).toFixed(2) + ') m', [])
+      ]
+    };
+  }
+  createTB3Viewer(THREE, canvas, data, theme) {
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(35, 1, 0.01, 40);
+    scene.add(new THREE.HemisphereLight(0xffffff, theme.ground, 0.85));
+    var sun = new THREE.DirectionalLight(0xffffff, 0.9);
+    sun.position.set(1.2, 2.0, 1.0);
+    scene.add(sun);
+
+    var accent = new THREE.Color(theme.accent);
+    var mats = [];
+    function geom(name) {
+      var p = data.parts[name];
+      var vb = Uint8Array.from(atob(p.v), function (c) { return c.charCodeAt(0); });
+      var ib = Uint8Array.from(atob(p.i), function (c) { return c.charCodeAt(0); });
+      var v16 = new Int16Array(vb.buffer), pos = new Float32Array(v16.length);
+      for (var n = 0; n < v16.length; n++) pos[n] = v16[n] * 0.0001;
+      var g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      g.setIndex(new THREE.BufferAttribute(new Uint32Array(ib.buffer), 1));
+      g.computeVertexNormals();
+      return g;
+    }
+    function mesh(name, color) {
+      var m = new THREE.MeshStandardMaterial({ color: color, roughness: 0.55, metalness: 0.1, flatShading: true });
+      m.userData.base = new THREE.Color(color);
+      mats.push(m);
+      return new THREE.Mesh(geom(name), m);
+    }
+    function group(parent, x, y, z) { var g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); return g; }
+
+    // ROS(z 위) → three(y 위)
+    var world = new THREE.Group(); world.rotation.x = -Math.PI / 2; scene.add(world);
+
+    // 경기장: 3 m × 3 m 정사각형 안의 ㄱ자 통로(폭 1.5 m). 원점은 정사각형 가운데, 위 = +y, 오른쪽 = +x.
+    // 위쪽 띠 y ∈ [0, 1.5] (가로 3 m) + 오른쪽 띠 x ∈ [0, 1.5] (세로 3 m). 왼쪽 아래 1.5 m × 1.5 m 는 막혀 있다.
+    var H = 1.5, ROBOT_R = 0.2;
+    var ARENA = [[-H, 0], [-H, H], [H, H], [H, -H], [0, -H], [0, 0]];
+    function inArena(x, y) {
+      var m = ROBOT_R;
+      if (x < -H + m || x > H - m || y < -H + m || y > H - m) return false;
+      return y >= m || x >= m;
+    }
+    var shape = new THREE.Shape();
+    ARENA.forEach(function (p, n) { if (n) shape.lineTo(p[0], p[1]); else shape.moveTo(p[0], p[1]); });
+    var floor = new THREE.Mesh(new THREE.ShapeGeometry(shape),
+      new THREE.MeshStandardMaterial({ color: theme.floor || 0x1A222C, roughness: 0.95, metalness: 0 }));
+    world.add(floor);
+    var lines = [];
+    for (var g = -H; g <= H + 1e-6; g += 0.5) {
+      // 세로선 x = g, 가로선 y = g — ㄱ자 안쪽 구간만
+      if (g < 0) { lines.push(g, 0, 0.001, g, H, 0.001); } else { lines.push(g, -H, 0.001, g, H, 0.001); }
+      if (g < 0) { lines.push(0, g, 0.001, H, g, 0.001); } else { lines.push(-H, g, 0.001, H, g, 0.001); }
+    }
+    var lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(lines), 3));
+    world.add(new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ color: theme.grid })));
+    var wallMat = new THREE.MeshStandardMaterial({ color: theme.wall || 0xC9CED6, roughness: 0.7 });
+    ARENA.forEach(function (a, n) {
+      var b = ARENA[(n + 1) % ARENA.length];
+      var len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      var wall = new THREE.Mesh(new THREE.BoxGeometry(len + 0.03, 0.03, 0.12), wallMat);
+      wall.position.set((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, 0.06);
+      wall.rotation.z = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      world.add(wall);
+    });
+
+    var footprint = group(world, 0, 0, 0);
+    var baseLink = group(footprint, 0, 0, 0.010);
+    var baseMesh = mesh("base", theme.body); baseMesh.position.set(-0.064, 0, 0); baseLink.add(baseMesh);
+    function wheel(y, name) {
+      var j = group(baseLink, 0, y, 0.023); j.rotation.x = -1.57;
+      var spin = group(j, 0, 0, 0);
+      var m = mesh(name, theme.tire); m.rotation.x = 1.57; spin.add(m);
+      return { spin: spin, mesh: m };
+    }
+    var wl = wheel(0.144, "left_tire"), wr = wheel(-0.144, "right_tire");
+    var ladar = group(baseLink, -0.024, 0, 0.122); ladar.add(mesh("ladar", theme.tire));
+    var link1 = group(baseLink, -0.092, 0, 0.091); var l1 = mesh("link1", theme.arm); link1.add(l1);
+    var j1 = group(link1, 0.012, 0, 0.017); var l2 = mesh("link2", theme.arm); l2.position.z = 0.019; j1.add(l2);
+    var j2 = group(j1, 0, 0, 0.0595); var l3 = mesh("link3", theme.arm); j2.add(l3);
+    var j3 = group(j2, 0.024, 0, 0.128); var l4 = mesh("link4", theme.arm); j3.add(l4);
+    var j4 = group(j3, 0.124, 0, 0); var l5 = mesh("link5", theme.arm); j4.add(l5);
+    var gl = group(j4, 0.0817, 0.021, 0); var gL = mesh("gripper_left_palm", theme.grip); gl.add(gL);
+    var gr = group(j4, 0.0817, -0.021, 0); var gR = mesh("gripper_right_palm", theme.grip); gr.add(gR);
+
+    // 관절 상태 (OpenMANIPULATOR-X 기본 자세에서 시작) — 한도는 URDF 값
+    var PI = Math.PI;
+    var J = [
+      { g: j1, axis: "z", q: 0, lo: -PI * 0.9, hi: PI * 0.9, parts: [l2] },
+      { g: j2, axis: "y", q: -1.05, lo: -PI * 0.57, hi: PI * 0.5, parts: [l3] },
+      { g: j3, axis: "y", q: 0.35, lo: -PI * 0.3, hi: PI * 0.44, parts: [l4] },
+      { g: j4, axis: "y", q: 0.70, lo: -PI * 0.57, hi: PI * 0.65, parts: [l5] }
+    ];
+    var grip = { q: 0.01, lo: -0.010, hi: 0.019 };
+    var drive = { x: -1.0, y: 0.75, yaw: 0, v: 0, w: 0 };   // 시작: ㄱ자 왼쪽 끝, 오른쪽(+x) 방향
+    var KEYMAP = {
+      "1": { joint: 0, dir: 1 }, q: { joint: 0, dir: -1 }, "2": { joint: 1, dir: 1 }, w: { joint: 1, dir: -1 },
+      "3": { joint: 2, dir: 1 }, e: { joint: 2, dir: -1 }, "4": { joint: 3, dir: 1 }, r: { joint: 3, dir: -1 },
+      o: { grip: 1 }, p: { grip: -1 }, i: { v: 0.05 }, k: { v: -0.05 }, j: { w: 0.3 }, l: { w: -0.3 }, " ": { stop: true }
+    };
+    var held = {};
+    var flash = 0, flashParts = [];
+
+    function partsFor(k) {
+      var m = KEYMAP[k];
+      if (!m) return [];
+      if (m.joint !== undefined) return J[m.joint].parts;
+      if (m.grip) return [gL, gR];
+      if (m.stop) return [baseMesh];
+      return [wl.mesh, wr.mesh];
+    }
+    function press(k) {
+      var m = KEYMAP[k];
+      if (!m || held[k]) return;
+      held[k] = true;
+      if (m.v) drive.v = Math.max(-0.26, Math.min(0.26, drive.v + m.v));
+      if (m.w) drive.w = Math.max(-1.8, Math.min(1.8, drive.w + m.w));
+      if (m.stop) { drive.v = 0; drive.w = 0; }
+      if (m.v || m.w || m.stop) { flash = 0.35; flashParts = partsFor(k); }
+    }
+    function release(k) { delete held[k]; }
+
+    var yawView = 2.2, dist = 1.6, dragging = null;
+    canvas.addEventListener("pointerdown", function (e) { dragging = { x: e.clientX, yaw: yawView }; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener("pointermove", function (e) { if (dragging) yawView = dragging.yaw - (e.clientX - dragging.x) * 0.01; });
+    canvas.addEventListener("pointerup", function () { dragging = null; });
+    canvas.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      dist = Math.max(0.6, Math.min(5.5, dist * (e.deltaY > 0 ? 1.1 : 0.9)));
+    }, { passive: false });
+
+    function resize() {
+      var w = canvas.clientWidth || 1, h = canvas.clientHeight || 1;
+      if (canvas.width !== Math.round(w * renderer.getPixelRatio()) || canvas.height !== Math.round(h * renderer.getPixelRatio())) {
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h; camera.updateProjectionMatrix();
+      }
+    }
+
+    var last = 0, raf = 0, alive = true;
+    function tick(t) {
+      if (!alive) return;
+      var dt = last ? Math.min((t - last) / 1000, 0.05) : 0; last = t;
+      Object.keys(held).forEach(function (k) {
+        var m = KEYMAP[k];
+        if (m.joint !== undefined) { var j = J[m.joint]; j.q = Math.max(j.lo, Math.min(j.hi, j.q + m.dir * 1.2 * dt)); }
+        if (m.grip) grip.q = Math.max(grip.lo, Math.min(grip.hi, grip.q + m.grip * 0.03 * dt));
+      });
+      drive.yaw += drive.w * dt;
+      var nx = drive.x + Math.cos(drive.yaw) * drive.v * dt, ny = drive.y + Math.sin(drive.yaw) * drive.v * dt;
+      if (inArena(nx, ny)) { drive.x = nx; drive.y = ny; }          // 벽에 닿으면 벽을 따라 미끄러진다
+      else if (inArena(nx, drive.y)) { drive.x = nx; }
+      else if (inArena(drive.x, ny)) { drive.y = ny; }
+      footprint.position.set(drive.x, drive.y, 0); footprint.rotation.z = drive.yaw;
+      var spinL = (drive.v - drive.w * 0.144) / 0.033 * dt, spinR = (drive.v + drive.w * 0.144) / 0.033 * dt;
+      wl.spin.rotation.z -= spinL; wr.spin.rotation.z -= spinR;
+      J.forEach(function (j) { j.g.rotation.set(0, 0, 0); j.g.rotation[j.axis] = j.q; });
+      gl.position.y = 0.021 + grip.q; gr.position.y = -0.021 - grip.q;
+
+      var lit = [];
+      Object.keys(held).forEach(function (k) { lit = lit.concat(partsFor(k)); });
+      if (flash > 0) { flash -= dt; lit = lit.concat(flashParts); }
+      if (drive.v || drive.w) lit = lit.concat([wl.mesh, wr.mesh]);
+      mats.forEach(function (m) { m.color.copy(m.userData.base); m.emissive.setRGB(0, 0, 0); });
+      lit.forEach(function (o) { o.material.color.copy(accent); o.material.emissive.copy(accent).multiplyScalar(0.25); });
+
+      resize();
+      var cx = drive.x, cz = -drive.y;                                 // 기체를 따라가는 카메라
+      camera.position.set(cx + Math.cos(yawView) * dist, 0.25 + dist * 0.55, cz + Math.sin(yawView) * dist);
+      camera.lookAt(cx, 0.12, cz);
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(tick);
+    }
+    raf = requestAnimationFrame(tick);
+
+    return {
+      press: press,
+      release: release,
+      readout: function () {
+        return {
+          joints: J.map(function (j) { return j.q; }), grip: grip.q, v: drive.v, w: drive.w,
+          x: drive.x, y: drive.y, yaw: drive.yaw,
+          held: Object.keys(held)
+        };
+      },
+      dispose: function () { alive = false; cancelAnimationFrame(raf); renderer.dispose(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

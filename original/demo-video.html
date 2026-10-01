@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>시연 영상 - ROS 2 + turtlebot3_manipulation</title>
+<style>
+:root {
+  --bg: #FFFFFF; --card: #F3F4F6; --text: #1A1D21; --text2: #464C55;
+  --accent: #1D4ED8; --line: #6B7280;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121418; --card: #1D2127; --text: #F2F4F7; --text2: #B8BEC8;
+    --accent: #8AB4FF; --line: #8B93A0;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  line-height: 1.5;
+}
+.page { max-width: 1400px; margin: 0 auto; padding: 0 16px 32px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+nav ul { list-style: none; margin: 0 0 20px; padding: 0; display: flex; border-bottom: 1px solid var(--line); }
+nav a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 20px;
+  color: var(--text); text-decoration: none; border-bottom: 4px solid transparent; margin-bottom: -1px;
+}
+nav a:hover { background: var(--card); }
+nav a[aria-current="page"] { font-weight: 700; border-bottom-color: var(--accent); }
+
+h1 { font-size: 1.5rem; margin: 0 0 8px; }
+.desc p { margin: 0 0 4px; font-size: 1.125rem; }
+.desc p.sub { color: var(--text2); font-size: 1rem; }
+
+.player { margin-top: 20px; }
+.main-wrap { background: var(--card); border: 1px solid var(--line); padding: 8px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--card); }
+.tile { position: absolute; inset: 0; background: #000; overflow: hidden; will-change: transform; transform-origin: top left; }
+.tile video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tile .fail {
+  display: none; position: absolute; inset: 0; background: var(--card); color: var(--text);
+  align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 8px;
+  font-size: 0.875rem; overflow-wrap: anywhere;
+}
+.tile.failed video { visibility: hidden; }
+.tile.failed .fail { display: flex; }
+.main-wrap.is-main { border: 3px solid var(--accent); }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; padding: 10px 2px 2px; }
+.bar button {
+  min-height: 44px; min-width: 96px; padding: 0 16px; font: inherit; color: var(--text);
+  background: var(--bg); border: 2px solid var(--line); border-radius: 6px; cursor: pointer;
+}
+.bar button:hover { background: var(--card); }
+.state { color: var(--text2); }
+.now { font-weight: 700; }
+.live { color: var(--text2); }
+
+.list-section { margin-top: 24px; }
+.list-section h2 { font-size: 1.125rem; margin: 0 0 8px; }
+.list { list-style: none; margin: 0; padding: 4px 4px 12px; display: flex; gap: 12px; overflow-x: auto; }
+.list li { flex: 0 0 220px; }
+.cell {
+  display: block; width: 100%; padding: 6px; font: inherit; color: var(--text); text-align: left;
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px; cursor: pointer;
+}
+.cell:hover { border-color: var(--accent); }
+.cell .frame { pointer-events: none; }
+.cell .name { display: block; padding: 6px 2px 2px; color: var(--text); }
+.empty { color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav aria-label="화면 이동">
+    <ul>
+      <li><a href="demo-video.html" aria-current="page">시연 영상<span class="vh"> (현재 탭)</span></a></li>
+      <li><a href="teleop.html">teleop</a></li>
+      <li><a href="survey.html">설문</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <section class="desc" aria-labelledby="t-desc">
+      <h1 id="t-desc">프로젝트 시연 영상</h1>
+      <p>움직일 수 있는 장애물이 경로를 막고 있으면, 움직일 수 있는 장애물을 치우고 경로를 수행한다.</p>
+      <p class="sub">ROS 2 와 turtlebot3_manipulation 을 사용한 프로젝트입니다.</p>
+    </section>
+
+    <section class="player" aria-labelledby="t-player">
+      <h2 id="t-player" class="vh">메인 플레이어</h2>
+      <div class="main-wrap is-main" id="mainWrap">
+        <div class="frame" id="mainFrame"></div>
+        <div class="bar">
+          <button type="button" id="toggle">일시정지</button>
+          <span class="state" id="state" role="status">상태: 재생 중</span>
+          <span class="now" id="nowName"></span>
+          <span class="live" id="live" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="list-section" aria-labelledby="t-list">
+      <h2 id="t-list">영상 목록</h2>
+      <ul class="list" id="list"></ul>
+      <p class="empty" id="empty" hidden>재생할 시연 영상이 없습니다. 영상 파일을 추가하면 여기에 나타납니다.</p>
+    </section>
+  </main>
+</div>
+<style>
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+
+<script>
+// 영상 목록: 항목을 추가하거나 바꾸려면 이 배열만 고친다.
+const VIDEOS = [
+  { name: "intro", path: "../data/intro.mp4" },
+  { name: "data1", path: "../data/data1.mp4" },
+  { name: "data2", path: "../data/data2.mp4" },
+  { name: "data3", path: "../data/data3.mp4" },
+  { name: "data4", path: "../data/data4.mp4" }
+];
+const DURATION = 300; // 0.3초
+
+const mainFrame = document.getElementById('mainFrame');
+const listEl = document.getElementById('list');
+const toggle = document.getElementById('toggle');
+const stateEl = document.getElementById('state');
+const nowName = document.getElementById('nowName');
+const live = document.getElementById('live');
+
+let mainItem = null;
+let slots = [];      // 목록 칸 순서: 각 칸이 가진 항목
+let busy = false;
+
+function makeTile(v) {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  const video = document.createElement('video');
+  video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true;
+  video.preload = 'metadata'; video.tabIndex = -1;
+  video.setAttribute('aria-hidden', 'true');
+  video.src = v.path + '#t=0.001';
+  const fail = document.createElement('div');
+  fail.className = 'fail';
+  fail.innerHTML = '<strong>영상을 불러올 수 없습니다</strong><span></span>';
+  fail.lastChild.textContent = v.path;
+  video.addEventListener('error', () => { tile.classList.add('failed'); if (v === mainItem) setState(); });
+  tile.append(video, fail);
+  v.tile = tile; v.video = video;
+}
+
+function cellFor(v, index) {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'cell';
+  const fr = document.createElement('div'); fr.className = 'frame';
+  const nm = document.createElement('span'); nm.className = 'name';
+  b.append(fr, nm);
+  b.addEventListener('click', () => select(index));
+  li.appendChild(b);
+  return li;
+}
+
+function labelCells() {
+  [...listEl.children].forEach((li, i) => {
+    const b = li.firstChild, v = slots[i];
+    b.querySelector('.frame').appendChild(v.tile);
+    b.querySelector('.name').textContent = v.name;
+    b.setAttribute('aria-label', v.name + ' 재생');
+  });
+}
+
+function setState() {
+  const v = mainItem.video;
+  const failed = mainItem.tile.classList.contains('failed');
+  const playing = !failed && !v.paused;
+  stateEl.textContent = failed ? '상태: 영상을 불러올 수 없음' : '상태: ' + (playing ? '재생 중' : '정지');
+  toggle.textContent = playing ? '일시정지' : '재생';
+  toggle.setAttribute('aria-label', (playing ? '일시정지' : '재생') + ': ' + mainItem.name);
+  nowName.textContent = '현재 영상: ' + mainItem.name;
+}
+
+function playMain() {
+  const p = mainItem.video.play();
+  if (p && p.catch) p.catch(() => {});
+}
+
+function select(index) {
+  if (busy) return;
+  const picked = slots[index];
+  const prev = mainItem;
+  const pickedRect = picked.tile.getBoundingClientRect();
+  const prevRect = prev.tile.getBoundingClientRect();
+
+  prev.video.pause();
+  slots[index] = prev;
+  mainItem = picked;
+  mainFrame.appendChild(picked.tile);
+  labelCells();
+
+  const nowPicked = picked.tile.getBoundingClientRect();
+  const nowPrev = prev.tile.getBoundingClientRect();
+  busy = true;
+  const anim = (tile, from, to) => tile.animate([
+    { transform: 'translate(' + (from.left - to.left) + 'px,' + (from.top - to.top) + 'px) scale(' + (from.width / to.width) + ',' + (from.height / to.height) + ')' },
+    { transform: 'none' }
+  ], { duration: DURATION, easing: 'ease-in-out' });
+  const a1 = anim(picked.tile, pickedRect, nowPicked);
+  const a2 = anim(prev.tile, prevRect, nowPrev);
+  picked.tile.style.zIndex = 2;
+  const done = () => { picked.tile.style.zIndex = ''; busy = false; };
+  Promise.all([a1.finished, a2.finished]).then(done, done);
+
+  picked.video.currentTime = 0;
+  picked.video.muted = true;
+  playMain();
+  prev.video.currentTime = 0.001;
+  setState();
+  live.textContent = '지금 재생 중: ' + picked.name;
+}
+
+toggle.addEventListener('click', () => {
+  const v = mainItem.video;
+  if (v.paused) playMain(); else v.pause();
+  setState();
+});
+
+function init() {
+  if (VIDEOS.length === 0) {
+    document.getElementById('empty').hidden = false;
+    document.querySelector('.player').hidden = true;
+    return;
+  }
+  VIDEOS.forEach(makeTile);
+  mainItem = VIDEOS[0];
+  slots = VIDEOS.slice(1);
+  mainFrame.appendChild(mainItem.tile);
+  slots.forEach((v, i) => listEl.appendChild(cellFor(v, i)));
+  labelCells();
+  mainItem.video.preload = 'auto';
+  mainItem.video.autoplay = true;
+  mainItem.video.addEventListener('play', setState);
+  VIDEOS.forEach(v => { v.video.addEventListener('play', () => { if (v === mainItem) setState(); }); v.video.addEventListener('pause', () => { if (v === mainItem) setState(); }); });
+  live.textContent = '지금 재생 중: ' + mainItem.name;
+  playMain();
+  setState();
+}
+init();
+</script>
+</body>
+</html>

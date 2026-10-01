@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>TB3 viewer test</title>
+<style>body{margin:0;background:#0B0F14}canvas{display:block;width:900px;height:560px}#o{color:#fff;font:14px monospace;padding:8px}</style>
+<script src="../assets/three.r128.min.js"></script>
+<script src="tb3_viewer.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="o">loading</div>
+<script>
+fetch("../assets/robot/tb3_meshes.json").then(r => r.json()).then(data => {
+  const v = createTB3Viewer(THREE, document.getElementById("c"), data,
+    { accent: "#2997FF", body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8", ground: 0x223344, grid: 0x334455, gridMajor: 0x556677 });
+  window.v = v;
+  const q = new URLSearchParams(location.search).get("press");
+  if (q) q.split(",").forEach(k => v.press(k));
+  setInterval(() => { document.getElementById("o").textContent = JSON.stringify(v.readout()); }, 200);
+}).catch(e => { document.getElementById("o").textContent = "ERR " + e; });
+</script>
+</body>
+</html>

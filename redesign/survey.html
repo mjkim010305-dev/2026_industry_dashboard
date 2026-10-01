@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>설문</title>
+<!-- 리뉴얼: design-refs/design-guide.md 적용. 기능 스크립트는 원본(original/survey.html)과 같다. -->
+<!--
+임시 적용 목록 (사람 미확정)
+- 확대 창을 열고 닫을 때 효과: 없음. 즉시 나타나고 즉시 사라진다. (사람 미확정)
+- 확대된 카드(QR)를 눌렀을 때: 닫히지 않는다. 닫기 방법은 어두운 배경 · Esc · 닫기 버튼뿐. (사람 미확정)
+- 닫기 버튼 위치·글자 크기: 어두운 배경 오른쪽 위, 클릭 영역 44px 이상. (사람 미확정)
+- 파일이 없을 때 안내 문구("스캔해 주세요"): 그대로 유지한다. (사람 미확정)
+- 빈 상태 파일 경로 글자 크기: 본문보다 작게. (사람 미확정)
+- 운영체제 '동작 줄이기' 설정: 대응하지 않는다. 이 화면에는 움직임이 없다. (사람 미확정)
+- 요구 없는 항목(설문 URL 글자 표시, 테마 전환 버튼, 인쇄용 모양): 만들지 않는다. (사람 미확정)
+-->
+<style>
+/* ---------- 공통 토큰 ---------- */
+:root {
+  --bg: #F3F5F7; --surface: #FFFFFF; --surface-2: #F7F8FA;
+  --text: #0E1726; --text-2: #5B6472; --line: #DEE1E5;
+  --accent: #0066CC; --accent-fill: #0071E3; --on-accent: #FFFFFF;
+  --appbar: rgba(14, 23, 38, 0.92); --appbar-text: #F2F4F7; --appbar-focus: #7FB8FF;
+  --stage: #0B0F14; --stage-text: #E8ECF1;
+  --shadow: 0 0 1px rgba(14, 23, 38, 0.20), 0 2px 8px rgba(14, 23, 38, 0.06);
+  --card-border: transparent;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0B0F14; --surface: #151A21; --surface-2: #1C222B;
+    --text: #F2F4F7; --text-2: #A9B1BD; --line: #2C3440;
+    --accent: #2997FF; --accent-fill: #0071E3;
+    --appbar: rgba(7, 10, 14, 0.88); --stage: #05070A;
+    --shadow: none; --card-border: #2C3440;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+  font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip {
+  position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px; border-radius: 999px;
+  background: var(--surface); color: var(--text); font-weight: 600; text-decoration: none; box-shadow: var(--shadow);
+}
+.skip:focus { top: 10px; }
+
+/* 상단 바 */
+.appbar {
+  position: sticky; top: 0; z-index: 5; background: var(--appbar); color: var(--appbar-text);
+  backdrop-filter: saturate(180%) blur(16px); -webkit-backdrop-filter: saturate(180%) blur(16px);
+}
+.appbar-in { max-width: 1280px; margin: 0 auto; padding: 8px 24px; display: flex; align-items: center; gap: 16px; min-height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; }
+.brand-mark { width: 22px; height: 22px; border-radius: 7px; background: #0071E3; }
+.appbar nav { margin-left: auto; min-width: 0; }
+.appbar nav ul {
+  list-style: none; margin: 0; padding: 4px; display: flex; gap: 2px;
+  background: rgba(255, 255, 255, 0.08); border-radius: 999px; overflow-x: auto;
+}
+.appbar nav a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px;
+  color: rgba(242, 244, 247, 0.80); text-decoration: none; font-size: 15px; font-weight: 500; white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+}
+.appbar nav a:hover { background: rgba(255, 255, 255, 0.12); color: #FFFFFF; }
+.appbar nav a[aria-current="page"] { background: #FFFFFF; color: #0E1726; font-weight: 600; }
+.appbar nav a:focus-visible { outline: 3px solid var(--appbar-focus); outline-offset: 1px; }
+
+.page { max-width: 1280px; margin: 0 auto; padding: 32px 24px 56px; }
+.eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--accent); }
+@media (max-width: 640px) {
+  .appbar-in { padding: 8px 16px; flex-wrap: wrap; }
+  .appbar nav { margin-left: 0; width: 100%; }
+  .page { padding: 24px 16px 40px; }
+  :root { --qr: min(52vh, calc(100vw - 64px)); }
+}
+
+/* ---------- 이 페이지 ---------- */
+.survey-card {
+  max-width: 640px; margin: 0 auto; padding: 32px 24px 36px; text-align: center;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: 20px; box-shadow: var(--shadow);
+}
+.survey-card h1 { margin: 0 0 8px; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em; }
+.guide { margin: 0 0 24px; font-size: 17px; color: var(--text-2); }
+.slot { width: var(--qr); height: var(--qr); margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.qrcard {
+  width: 100%; height: 100%; background: #FFFFFF; border: 1px solid #DEE1E5; border-radius: 16px;
+  padding: 5%; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 1px rgba(14, 23, 38, 0.20), 0 8px 24px rgba(14, 23, 38, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.qrcard:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--accent-fill), 0 8px 24px rgba(14, 23, 38, 0.10); }
+.qrcard img, .zoomcard img {
+  width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated;
+}
+#qrImg { cursor: zoom-in; }
+.zoom-hint { margin: 16px 0 0; font-size: 14px; color: var(--text-2); }
+.slot:has(#qrCard[hidden]) + .zoom-hint { display: none; }
+.empty {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; color: var(--text-2); padding: 16px; overflow-wrap: anywhere;
+  background: var(--surface-2); border: 2px dashed var(--line); border-radius: 16px;
+}
+.empty .path { font-size: 13px; margin: 8px 0 0; font-family: ui-monospace, Consolas, monospace; }
+[hidden] { display: none !important; }
+
+/* 확대 창 */
+.overlay {
+  position: fixed; inset: 0; background: rgba(5, 7, 10, 0.94); display: flex; align-items: center; justify-content: center; z-index: 10;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.zoomcard {
+  width: min(88vh, calc(100vw - 24px)); height: min(88vh, calc(100vw - 24px));
+  background: #FFFFFF; border-radius: 20px; padding: 5%;
+}
+.closebtn {
+  position: absolute; top: 12px; right: 12px; z-index: 11; min-width: 44px; min-height: 44px; padding: 0 20px;
+  font: inherit; font-weight: 600; color: #0E1726; background: #FFFFFF; border: 0; border-radius: 999px; cursor: pointer;
+}
+.closebtn:hover { background: #E8ECF1; }
+.closebtn:focus-visible { outline: 3px solid #7FB8FF; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="appbar">
+  <div class="appbar-in">
+    <span class="brand"><span class="brand-mark" aria-hidden="true"></span>turtlebot3 · ROS 2</span>
+    <nav aria-label="화면 이동">
+      <ul>
+        <li><a href="demo-video.html">시연 영상</a></li>
+        <li><a href="teleop.html">teleop</a></li>
+        <li><a href="survey.html" aria-current="page">설문<span class="vh"> (현재 탭)</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+  <main id="main" class="survey-card">
+    <p class="eyebrow">SURVEY</p>
+    <h1>설문</h1>
+    <p class="guide">QR 코드를 스캔해 설문에 참여해 주세요</p>
+    <div class="slot">
+      <div class="qrcard" id="qrCard" hidden>
+        <img id="qrImg" alt="설문 참여용 QR 코드" role="button" tabindex="0" aria-label="설문 QR 확대 보기" aria-haspopup="dialog">
+      </div>
+      <div class="empty" id="empty" hidden>
+        <p style="margin:0">설문을 준비하고 있습니다. 준비되면 이 자리에 QR 이 표시됩니다.</p>
+        <p class="path">data/qrcode.png</p>
+      </div>
+    </div>
+    <p class="zoom-hint" aria-hidden="true">QR 을 누르면 크게 볼 수 있어요</p>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="설문 QR 확대 보기" hidden>
+  <button type="button" class="closebtn" id="closeBtn">닫기</button>
+  <div class="zoomcard"><img id="zoomImg" alt="설문 참여용 QR 코드"></div>
+</div>
+
+<!-- 기본값 지정 가능: QR 파일 이름 (현재 qrcode.png). 파일을 바꾸면 아래 한 줄만 고친다 -->
+<script>
+const QR_FILE = "qrcode.png";
+(function () {
+  var src = "../data/" + QR_FILE;
+  var card = document.getElementById("qrCard");
+  var empty = document.getElementById("empty");
+  var img = document.getElementById("qrImg");
+  var zoomImg = document.getElementById("zoomImg");
+  var overlay = document.getElementById("overlay");
+  var closeBtn = document.getElementById("closeBtn");
+
+  function openZoom() {
+    zoomImg.src = src;
+    overlay.hidden = false;
+    closeBtn.focus();
+  }
+  function closeZoom() {
+    if (overlay.hidden) return;
+    overlay.hidden = true;
+    img.focus();
+  }
+
+  var probe = new Image();
+  probe.onload = function () {
+    img.src = src;
+    card.hidden = false;
+  };
+  probe.onerror = function () {
+    empty.hidden = false;
+  };
+  probe.src = src;
+
+  img.addEventListener("click", openZoom);
+  img.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); openZoom(); }
+    else if (e.key === " ") { e.preventDefault(); }
+  });
+  img.addEventListener("keyup", function (e) {
+    if (e.key === " ") { e.preventDefault(); openZoom(); }
+  });
+  closeBtn.addEventListener("click", closeZoom);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) closeZoom();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (overlay.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); closeZoom(); }
+    else if (e.key === "Tab") { e.preventDefault(); closeBtn.focus(); }
+  });
+})();
+</script>
+</body>
+</html>

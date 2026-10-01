@@ -1,0 +1,280 @@
+{
+ "boards": {
+  "SamsungAnalysis.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1000,
+   "h": 2483,
+   "title": "삼성 · UI/UX 분석",
+   "page": "samsung"
+  },
+  "SamsungDemo.dc.html": {
+   "x": 1080,
+   "y": 0,
+   "w": 1440,
+   "h": 1520,
+   "title": "삼성 스타일 · 시연 영상",
+   "page": "samsung",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "SamsungTeleop.dc.html": {
+   "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "삼성 스타일 · teleop (3D 기체)",
+   "page": "samsung",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "SamsungSurvey.dc.html": {
+   "x": 4120,
+   "y": 0,
+   "w": 1440,
+   "h": 980,
+   "title": "삼성 스타일 · 설문",
+   "page": "samsung",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "LgAnalysis.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1000,
+   "h": 2455,
+   "title": "LG · UI/UX 분석",
+   "page": "lg"
+  },
+  "LgDemo.dc.html": {
+   "x": 1080,
+   "y": 0,
+   "w": 1440,
+   "h": 1520,
+   "title": "LG 스타일 · 시연 영상",
+   "page": "lg",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "LgTeleop.dc.html": {
+   "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "LG 스타일 · teleop (3D 기체)",
+   "page": "lg",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "LgSurvey.dc.html": {
+   "x": 4120,
+   "y": 0,
+   "w": 1440,
+   "h": 980,
+   "title": "LG 스타일 · 설문",
+   "page": "lg",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AppleAnalysis.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1000,
+   "h": 2556,
+   "title": "애플 · UI/UX 분석",
+   "page": "apple"
+  },
+  "AppleDemo.dc.html": {
+   "x": 1080,
+   "y": 0,
+   "w": 1440,
+   "h": 1520,
+   "title": "애플 스타일 · 시연 영상",
+   "page": "apple",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AppleTeleop.dc.html": {
+   "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "애플 스타일 · teleop (3D 기체)",
+   "page": "apple",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AppleSurvey.dc.html": {
+   "x": 4120,
+   "y": 0,
+   "w": 1440,
+   "h": 980,
+   "title": "애플 스타일 · 설문",
+   "page": "apple",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "MicrosoftAnalysis.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1000,
+   "h": 2533,
+   "title": "마이크로소프트 · UI/UX 분석",
+   "page": "microsoft"
+  },
+  "MicrosoftDemo.dc.html": {
+   "x": 1080,
+   "y": 0,
+   "w": 1440,
+   "h": 1520,
+   "title": "마이크로소프트 스타일 · 시연 영상",
+   "page": "microsoft",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "MicrosoftTeleop.dc.html": {
+   "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "마이크로소프트 스타일 · teleop (3D 기체)",
+   "page": "microsoft",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "MicrosoftSurvey.dc.html": {
+   "x": 4120,
+   "y": 0,
+   "w": 1440,
+   "h": 980,
+   "title": "마이크로소프트 스타일 · 설문",
+   "page": "microsoft",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AmazonAnalysis.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1000,
+   "h": 2446,
+   "title": "아마존 · UI/UX 분석",
+   "page": "amazon"
+  },
+  "AmazonDemo.dc.html": {
+   "x": 1080,
+   "y": 0,
+   "w": 1440,
+   "h": 1520,
+   "title": "아마존 스타일 · 시연 영상",
+   "page": "amazon",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AmazonTeleop.dc.html": {
+   "x": 2600,
+   "y": 0,
+   "w": 1440,
+   "h": 1420,
+   "title": "아마존 스타일 · teleop (3D 기체)",
+   "page": "amazon",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "AmazonSurvey.dc.html": {
+   "x": 4120,
+   "y": 0,
+   "w": 1440,
+   "h": 980,
+   "title": "아마존 스타일 · 설문",
+   "page": "amazon",
+   "expand": "fill",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "SamsungAnalysis.dc.html",
+  "SamsungDemo.dc.html",
+  "SamsungTeleop.dc.html",
+  "SamsungSurvey.dc.html",
+  "LgAnalysis.dc.html",
+  "LgDemo.dc.html",
+  "LgTeleop.dc.html",
+  "LgSurvey.dc.html",
+  "AppleAnalysis.dc.html",
+  "AppleDemo.dc.html",
+  "AppleTeleop.dc.html",
+  "AppleSurvey.dc.html",
+  "MicrosoftAnalysis.dc.html",
+  "MicrosoftDemo.dc.html",
+  "MicrosoftTeleop.dc.html",
+  "MicrosoftSurvey.dc.html",
+  "AmazonAnalysis.dc.html",
+  "AmazonDemo.dc.html",
+  "AmazonTeleop.dc.html",
+  "AmazonSurvey.dc.html"
+ ],
+ "notes": {
+  "samsung-title": {
+   "x": 0,
+   "y": -300,
+   "text": "삼성 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "kind": "title1",
+   "maxW": 5560,
+   "page": "samsung"
+  },
+  "lg-title": {
+   "x": 0,
+   "y": -300,
+   "text": "LG 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "kind": "title1",
+   "maxW": 5560,
+   "page": "lg"
+  },
+  "apple-title": {
+   "x": 0,
+   "y": -300,
+   "text": "애플 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "kind": "title1",
+   "maxW": 5560,
+   "page": "apple"
+  },
+  "microsoft-title": {
+   "x": 0,
+   "y": -300,
+   "text": "마이크로소프트 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "kind": "title1",
+   "maxW": 5560,
+   "page": "microsoft"
+  },
+  "amazon-title": {
+   "x": 0,
+   "y": -300,
+   "text": "아마존 스타일 — 분석글 · 시연 영상 · teleop · 설문",
+   "kind": "title1",
+   "maxW": 5560,
+   "page": "amazon"
+  }
+ },
+ "files": [
+  "SamsungAnalysis.dc.html",
+  "SamsungDemo.dc.html",
+  "SamsungTeleop.dc.html",
+  "SamsungSurvey.dc.html",
+  "LgAnalysis.dc.html",
+  "LgDemo.dc.html",
+  "LgTeleop.dc.html",
+  "LgSurvey.dc.html",
+  "AppleAnalysis.dc.html",
+  "AppleDemo.dc.html",
+  "AppleTeleop.dc.html",
+  "AppleSurvey.dc.html",
+  "MicrosoftAnalysis.dc.html",
+  "MicrosoftDemo.dc.html",
+  "MicrosoftTeleop.dc.html",
+  "MicrosoftSurvey.dc.html",
+  "AmazonAnalysis.dc.html",
+  "AmazonDemo.dc.html",
+  "AmazonTeleop.dc.html",
+  "AmazonSurvey.dc.html"
+ ]
+}

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>설문</title>
+<!--
+임시 적용 목록 (사람 미확정)
+- 확대 창을 열고 닫을 때 효과: 없음. 즉시 나타나고 즉시 사라진다. (사람 미확정)
+- 확대된 카드(QR)를 눌렀을 때: 닫히지 않는다. 닫기 방법은 어두운 배경 · Esc · 닫기 버튼뿐. (사람 미확정)
+- 닫기 버튼 위치·글자 크기: 어두운 배경 오른쪽 위, 클릭 영역 44px 이상. (사람 미확정)
+- 파일이 없을 때 안내 문구("스캔해 주세요"): 그대로 유지한다. (사람 미확정)
+- 빈 상태 파일 경로 글자 크기: 본문보다 작게. (사람 미확정)
+- 운영체제 '동작 줄이기' 설정: 대응하지 않는다. 이 화면에는 움직임이 없다. (사람 미확정)
+- 요구 없는 항목(설문 URL 글자 표시, 테마 전환 버튼, 인쇄용 모양): 만들지 않는다. (사람 미확정)
+-->
+<style>
+:root {
+  --bg: #FFFFFF; --text: #1A1D21; --text2: #464C55; --accent: #1D4ED8; --line: #6B7280; --card: #FFFFFF;
+  --qr: min(60vh, calc(100vw - 32px));
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #121418; --text: #F2F4F7; --text2: #B8BEC8; --accent: #8AB4FF; --line: #8B93A0; }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  line-height: 1.5;
+}
+.page { max-width: 1400px; margin: 0 auto; padding: 0 16px 32px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+nav ul { list-style: none; margin: 0 0 20px; padding: 0; display: flex; border-bottom: 1px solid var(--line); }
+nav a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 20px;
+  color: var(--text); text-decoration: none; border-bottom: 4px solid transparent; margin-bottom: -1px;
+}
+nav a[aria-current="page"] { font-weight: 700; border-bottom-color: var(--accent); }
+
+.guide { text-align: center; margin: 0 0 16px; font-size: 1rem; }
+.slot { width: var(--qr); height: var(--qr); margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.qrcard {
+  width: 100%; height: 100%; background: #FFFFFF; border: 2px solid var(--line); border-radius: 12px;
+  padding: 5%; display: flex; align-items: center; justify-content: center;
+}
+.qrcard img, .zoomcard img {
+  width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated;
+}
+#qrImg { cursor: pointer; }
+.empty { text-align: center; color: var(--text2); padding: 8px; overflow-wrap: anywhere; }
+.empty .path { font-size: 0.8125rem; margin: 4px 0 0; }
+[hidden] { display: none !important; }
+
+/* 확대 창 */
+.overlay { position: fixed; inset: 0; background: #121418; display: flex; align-items: center; justify-content: center; z-index: 10; }
+.zoomcard {
+  width: min(90vh, calc(100vw - 16px)); height: min(90vh, calc(100vw - 16px));
+  background: #FFFFFF; border: 2px solid #8B93A0; border-radius: 12px; padding: 5%;
+}
+.closebtn {
+  position: absolute; top: 8px; right: 8px; z-index: 11; min-width: 44px; min-height: 44px; padding: 0 16px;
+  font: inherit; color: #F2F4F7; background: #121418; border: 2px solid #8B93A0; border-radius: 6px; cursor: pointer;
+}
+.closebtn:focus-visible { outline: 3px solid #8AB4FF; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav aria-label="화면 이동">
+    <ul>
+      <li><a href="demo-video.html">시연 영상</a></li>
+      <li><a href="teleop.html">teleop</a></li>
+      <li><a href="survey.html" aria-current="page">설문<span class="vh"> (현재 탭)</span></a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1 class="vh">설문</h1>
+    <p class="guide">QR 코드를 스캔해 설문에 참여해 주세요</p>
+    <div class="slot">
+      <div class="qrcard" id="qrCard" hidden>
+        <img id="qrImg" alt="설문 참여용 QR 코드" role="button" tabindex="0" aria-label="설문 QR 확대 보기" aria-haspopup="dialog">
+      </div>
+      <div class="empty" id="empty" hidden>
+        <p style="margin:0">설문을 준비하고 있습니다. 준비되면 이 자리에 QR 이 표시됩니다.</p>
+        <p class="path">data/qrcode.png</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="설문 QR 확대 보기" hidden>
+  <button type="button" class="closebtn" id="closeBtn">닫기</button>
+  <div class="zoomcard"><img id="zoomImg" alt="설문 참여용 QR 코드"></div>
+</div>
+
+<!-- 기본값 지정 가능: QR 파일 이름 (현재 qrcode.png). 파일을 바꾸면 아래 한 줄만 고친다 -->
+<script>
+const QR_FILE = "qrcode.png";
+(function () {
+  var src = "../data/" + QR_FILE;
+  var card = document.getElementById("qrCard");
+  var empty = document.getElementById("empty");
+  var img = document.getElementById("qrImg");
+  var zoomImg = document.getElementById("zoomImg");
+  var overlay = document.getElementById("overlay");
+  var closeBtn = document.getElementById("closeBtn");
+
+  function openZoom() {
+    zoomImg.src = src;
+    overlay.hidden = false;
+    closeBtn.focus();
+  }
+  function closeZoom() {
+    if (overlay.hidden) return;
+    overlay.hidden = true;
+    img.focus();
+  }
+
+  var probe = new Image();
+  probe.onload = function () {
+    img.src = src;
+    card.hidden = false;
+  };
+  probe.onerror = function () {
+    empty.hidden = false;
+  };
+  probe.src = src;
+
+  img.addEventListener("click", openZoom);
+  img.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); openZoom(); }
+    else if (e.key === " ") { e.preventDefault(); }
+  });
+  img.addEventListener("keyup", function (e) {
+    if (e.key === " ") { e.preventDefault(); openZoom(); }
+  });
+  closeBtn.addEventListener("click", closeZoom);
+  overlay.addEventListener("click", function (e) {
+    if (e.target === overlay) closeZoom();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (overlay.hidden) return;
+    if (e.key === "Escape") { e.preventDefault(); closeZoom(); }
+    else if (e.key === "Tab") { e.preventDefault(); closeBtn.focus(); }
+  });
+})();
+</script>
+</body>
+</html>

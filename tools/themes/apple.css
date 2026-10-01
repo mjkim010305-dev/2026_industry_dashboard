@@ -1,0 +1,70 @@
+/* ---------- 애플 스타일: 얇은 반투명 고정 내비, 가운데 큰 제목, 회색 타일, 검정 무대, 파랑 알약 (design-refs/apple.md) ---------- */
+:root {
+  --font: -apple-system, "SF Pro KR", "SF Pro Text", "Apple SD Gothic Neo", "Malgun Gothic", "Helvetica Neue", sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #FFFFFF; --surface: #F5F5F7; --surface-2: #FFFFFF; --chip-bg: #FFFFFF;
+  --text: #1D1D1F; --text-2: #6E6E73; --line: #D2D2D7; --card-border: transparent; --shadow: none;
+  --accent: #0066CC; --focus: #0071E3; --eyebrow: #B64400;
+  --btn-bg: #0071E3; --btn-fg: #FFFFFF; --btn-border: #0071E3; --btn-shadow: none;
+  --btn2-bg: transparent; --btn2-fg: #0066CC; --btn2-border: #0066CC; --btn2-shadow: none;
+  --btn-size: 17px; --btn-weight: 400;
+  --r-card: 18px; --r-btn: 980px; --r-field: 12px; --r-stage: 12px; --r-thumb: 12px; --r-key: 12px; --r-group: 18px; --r-qr: 18px;
+  --card-pad: 28px; --page-max: 1120px;
+  --h1-size: 56px; --h1-lh: 60px; --h1-weight: 600; --h1-ls: -0.005em;
+  --h2-size: 24px; --h2-weight: 600; --h2-ls: 0.009em;
+  --body-size: 17px; --lead-size: 21px; --label-weight: 400; --label-color: #6E6E73;
+  --field-bg: #FFFFFF; --field-border: #D2D2D7; --field-shadow: none;
+  --stage: #000000; --stage-text: #F5F5F7; --stage-text-2: #A1A1A6; --stage-accent: #2997FF;
+  --ok: #1D7A35; --ok-bg: #E9F6EC; --busy: #0066CC; --busy-bg: #E8F2FC; --danger: #D70015; --danger-bg: #FDECEE;
+  --hint-bg: #FFFFFF; --hint-fg: #6E6E73; --hint-border: transparent;
+  --group-bg: #FFFFFF; --group-border: transparent;
+  --key-bg: #F5F5F7; --key-border: #F5F5F7; --key-depth: 1px; --key-on-bg: #1D1D1F; --key-on-fg: #FFFFFF;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000; --surface: #1D1D1F; --surface-2: #000000; --chip-bg: #000000;
+    --text: #F5F5F7; --text-2: #A1A1A6; --line: #424245; --label-color: #A1A1A6;
+    --accent: #2997FF; --focus: #2997FF; --eyebrow: #FF9F45;
+    --btn2-fg: #2997FF; --btn2-border: #2997FF;
+    --field-bg: #000000; --field-border: #424245;
+    --ok: #30D158; --ok-bg: rgba(48, 209, 88, 0.14); --busy: #2997FF; --busy-bg: rgba(41, 151, 255, 0.14);
+    --danger: #FF6961; --danger-bg: rgba(255, 105, 97, 0.14);
+    --hint-bg: #000000; --hint-fg: #A1A1A6; --group-bg: #000000;
+    --key-bg: #1D1D1F; --key-border: #424245; --key-on-bg: #F5F5F7; --key-on-fg: #000000;
+  }
+}
+
+/* 머리: 44px 반투명 + 흐림, 가운데 정렬 글자 메뉴 */
+.gnav {
+  position: sticky; top: 0; z-index: 20; background: rgba(245, 245, 247, 0.8);
+  backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+@media (prefers-color-scheme: dark) { .gnav { background: rgba(22, 22, 23, 0.8); } }
+.gnav-in { max-width: 1024px; margin: 0 auto; padding: 0 22px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 36px; }
+.wordmark { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.gnav nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 28px; }
+.gnav nav a {
+  display: flex; align-items: center; min-height: 44px; color: var(--text); opacity: 0.8; text-decoration: none; font-size: 13px;
+  transition: opacity 0.32s;
+}
+.gnav nav a:hover { opacity: 1; }
+.gnav nav a[aria-current="page"] { opacity: 1; font-weight: 600; box-shadow: inset 0 -2px 0 var(--text); }
+@media (max-width: 640px) { .gnav-in { justify-content: space-between; gap: 12px; } .gnav nav ul { gap: 16px; } }
+
+/* 가운데 정렬 큰 제목, 주황 'New' 라벨 */
+.page { padding-top: 56px; }
+.page-head { text-align: center; margin-bottom: 40px; }
+.page-head .eyebrow { font-size: 17px; font-weight: 600; letter-spacing: 0; }
+.desc p { margin-left: auto; margin-right: auto; }
+.desc p.sub { font-size: 17px; }
+
+/* 영상 플레이어는 검정 섹션 */
+.player .main-wrap { background: #000000; color: #F5F5F7; }
+.player .bar .state { background: rgba(255, 255, 255, 0.1); border-color: transparent; color: #D2D2D7; }
+.player .bar .state::before { background: #D2D2D7; }
+.player .live { color: #A1A1A6; }
+.cell { padding: 0; overflow: hidden; }
+.cell .frame, .cell .tile { border-radius: 0; }
+.cell .name { padding: 12px 16px 14px; font-weight: 600; }
+.cell .name::before { display: none; }

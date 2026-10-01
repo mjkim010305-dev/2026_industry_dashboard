@@ -1,0 +1,58 @@
+/* ---------- 삼성 스타일: 흑백 + 강조 파랑 한 줄, 회색 면, 그림자 없음, 검정 알약 버튼 (design-refs/samsung.md) ---------- */
+:root {
+  --font: "SamsungOne", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", Dotum, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+  --bg: #FFFFFF; --surface: #F7F7F7; --surface-2: #FFFFFF; --chip-bg: #FFFFFF;
+  --text: #000000; --text-2: #555555; --line: #D6D6D6; --card-border: transparent; --shadow: none;
+  --accent: #1259C3; --focus: #1259C3; --eyebrow: #1259C3;
+  --btn-bg: #000000; --btn-fg: #FFFFFF; --btn-border: #000000; --btn-shadow: none;
+  --btn2-bg: #FFFFFF; --btn2-fg: #000000; --btn2-border: #000000; --btn2-shadow: none;
+  --btn-size: 14px; --btn-weight: 700;
+  --r-card: 8px; --r-btn: 20px; --r-field: 8px; --r-stage: 8px; --r-thumb: 6px; --r-key: 8px; --r-group: 8px; --r-qr: 8px;
+  --card-pad: 28px; --page-max: 1440px;
+  --h1-size: 44px; --h1-lh: 56px; --h1-weight: 700; --h1-ls: -0.02em;
+  --h2-size: 24px; --h2-weight: 700; --h2-ls: -0.02em;
+  --body-size: 16px; --lead-size: 18px; --label-weight: 700; --label-color: #000000;
+  --field-bg: #FFFFFF; --field-border: #BDBDBD; --field-shadow: none;
+  --stage: #000000; --stage-text: #FFFFFF; --stage-text-2: #B5B5B5; --stage-accent: #4D9BFF;
+  --ok: #0A7A3B; --ok-bg: #E7F5EC; --busy: #1259C3; --busy-bg: #E8F0FC; --danger: #C4161C; --danger-bg: #FDECEC;
+  --hint-bg: #FFFFFF; --hint-fg: #555555; --hint-border: #E5E5E5;
+  --group-bg: #FFFFFF; --group-border: transparent;
+  --key-bg: #F7F7F7; --key-border: #E5E5E5; --key-depth: 1px; --key-on-bg: #000000; --key-on-fg: #FFFFFF;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000; --surface: #1A1A1A; --surface-2: #000000; --chip-bg: #000000;
+    --text: #FFFFFF; --text-2: #B5B5B5; --line: #3A3A3A; --label-color: #FFFFFF;
+    --accent: #6AA8FF; --focus: #6AA8FF; --eyebrow: #6AA8FF;
+    --btn-bg: #FFFFFF; --btn-fg: #000000; --btn-border: #FFFFFF;
+    --btn2-bg: #000000; --btn2-fg: #FFFFFF; --btn2-border: #FFFFFF;
+    --field-bg: #000000; --field-border: #5A5A5A;
+    --ok: #5FD08A; --ok-bg: rgba(95, 208, 138, 0.14); --busy: #6AA8FF; --busy-bg: rgba(106, 168, 255, 0.14);
+    --danger: #FF6B6B; --danger-bg: rgba(255, 107, 107, 0.14);
+    --hint-bg: #000000; --hint-fg: #B5B5B5; --hint-border: #3A3A3A;
+    --group-bg: #000000; --key-bg: #1A1A1A; --key-border: #3A3A3A; --key-on-bg: #FFFFFF; --key-on-fg: #000000;
+  }
+}
+
+/* 머리: 흰 64px, 굵은 워드마크, 굵은 글자 메뉴 + 현재 탭 밑줄 */
+.gnb { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.gnb-in { max-width: 1440px; margin: 0 auto; padding: 0 24px; min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 40px; }
+.wordmark { font-size: 20px; font-weight: 700; letter-spacing: 0.1em; }
+.gnb nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
+.gnb nav a {
+  display: flex; align-items: center; min-height: 64px; padding: 0 14px; color: var(--text); text-decoration: none;
+  font-size: 15px; font-weight: 700; box-shadow: inset 0 -2px 0 transparent; transition: box-shadow 0.2s;
+}
+.gnb nav a:hover { box-shadow: inset 0 -2px 0 var(--line); }
+.gnb nav a[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--text); }
+.gnb-meta { margin-left: auto; font-size: 13px; color: var(--text-2); }
+@media (max-width: 640px) { .gnb-in { padding: 0 16px; } .gnb nav a { min-height: 48px; } .gnb-meta { display: none; } }
+
+/* 가운데 정렬 히어로 머리, 파랑 한 줄 */
+.page-head { text-align: center; margin-bottom: 40px; }
+.page-head .eyebrow { font-size: 20px; letter-spacing: 0; margin-bottom: 8px; }
+.desc p { margin-left: auto; margin-right: auto; }
+.page-head .lead { font-size: 18px; }
+.card-head h2, .list-section h2 { font-size: 24px; }

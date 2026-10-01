@@ -1,0 +1,65 @@
+/* ---------- LG 스타일: #111 글자, 흰 둥근 카드 + 1px 그림자 테두리, 알약 세그먼트, 레드는 강조에만 (design-refs/lg.md) ---------- */
+:root {
+  --font: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+  --bg: #F4F5F7; --surface: #FFFFFF; --surface-2: #F3F5F7; --chip-bg: #F3F5F7;
+  --text: #111111; --text-2: #6B7079; --line: #DEE1E5; --card-border: transparent;
+  --shadow: 0 2px 8px rgba(33, 39, 49, 0.05), 0 0 1px rgba(33, 39, 49, 0.28);
+  --accent: #111111; --focus: #111111; --eyebrow: #D0021B;
+  --btn-bg: #111111; --btn-fg: #FFFFFF; --btn-border: #111111; --btn-shadow: none;
+  --btn2-bg: #FFFFFF; --btn2-fg: #111111; --btn2-border: #DEE1E5; --btn2-shadow: none;
+  --btn-size: 16px; --btn-weight: 600;
+  --r-card: 16px; --r-btn: 50px; --r-field: 8px; --r-stage: 12px; --r-thumb: 10px; --r-key: 10px; --r-group: 12px; --r-qr: 16px;
+  --card-pad: 24px; --page-max: 1380px;
+  --h1-size: 32px; --h1-lh: 40px; --h1-weight: 700; --h1-ls: -0.5px;
+  --h2-size: 24px; --h2-weight: 700; --h2-ls: -0.5px;
+  --body-size: 16px; --lead-size: 16px; --label-weight: 500; --label-color: #444444;
+  --field-bg: #FFFFFF; --field-border: #DEE1E5; --field-shadow: none;
+  --stage: #111111; --stage-text: #FFFFFF; --stage-text-2: #B0B4BB; --stage-accent: #FF5A5F;
+  --ok: #0B7A43; --ok-bg: #E8F5EE; --busy: #444444; --busy-bg: #EEF0F3; --danger: #D0021B; --danger-bg: #FDEBED;
+  --hint-bg: #F3F5F7; --hint-fg: #444444; --hint-border: transparent;
+  --group-bg: #F3F5F7; --group-border: transparent;
+  --key-bg: #FFFFFF; --key-border: #DEE1E5; --key-depth: 1px; --key-on-bg: #111111; --key-on-fg: #FFFFFF;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0E0F11; --surface: #1A1C1F; --surface-2: #24272B; --chip-bg: #24272B;
+    --text: #F5F5F5; --text-2: #A9AEB6; --line: #33373D; --label-color: #D5D8DC;
+    --shadow: 0 0 0 1px #2A2D32; --accent: #F5F5F5; --focus: #F5F5F5; --eyebrow: #FF5A5F;
+    --btn-bg: #F5F5F5; --btn-fg: #111111; --btn-border: #F5F5F5;
+    --btn2-bg: #1A1C1F; --btn2-fg: #F5F5F5; --btn2-border: #33373D;
+    --field-bg: #24272B; --field-border: #33373D;
+    --ok: #5FD08A; --ok-bg: rgba(95, 208, 138, 0.14); --busy: #D5D8DC; --busy-bg: #24272B;
+    --danger: #FF6B6B; --danger-bg: rgba(255, 107, 107, 0.14);
+    --hint-bg: #24272B; --hint-fg: #D5D8DC; --group-bg: #24272B;
+    --key-bg: #1A1C1F; --key-border: #33373D; --key-on-bg: #F5F5F5; --key-on-fg: #111111;
+  }
+}
+
+/* 머리: 위 유틸 줄 + 아래 메인 줄, 메뉴는 알약 세그먼트 */
+.gnb { position: sticky; top: 0; z-index: 20; background: var(--surface); box-shadow: 0 1px 0 var(--line); }
+.gnb .in { max-width: 1380px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; gap: 24px; }
+.gnb .util { background: var(--surface-2); font-size: 13px; color: var(--text-2); }
+.gnb .util .in { min-height: 32px; justify-content: flex-end; }
+.gnb .main { min-height: 72px; flex-wrap: wrap; }
+.wordmark { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+.gnb nav { margin-left: auto; }
+.gnb nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.gnb nav a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 50px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); text-decoration: none; font-size: 15px; font-weight: 500;
+}
+.gnb nav a:hover { border-color: var(--text-2); }
+.gnb nav a[aria-current="page"] { background: var(--btn-bg); color: var(--btn-fg); border-color: var(--btn-bg); font-weight: 700; }
+@media (max-width: 640px) { .gnb .in { padding: 0 16px; } .gnb nav { margin-left: 0; padding-bottom: 12px; } }
+
+/* 섹션 머리: 제목 + 한 줄 설명, 레드 배지형 라벨 */
+.page-head .eyebrow {
+  display: inline-block; padding: 2px 10px; border-radius: 50px; background: var(--eyebrow); color: #FFFFFF;
+  font-size: 12px; letter-spacing: 0.02em;
+}
+.cell { padding: 0; overflow: hidden; }
+.cell .frame, .cell .tile { border-radius: 0; }
+.cell .name { padding: 12px 14px 14px; }
+.cell .name::before { border-color: transparent transparent transparent var(--eyebrow); }

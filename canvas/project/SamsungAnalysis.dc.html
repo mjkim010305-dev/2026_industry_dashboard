@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>삼성 UI/UX 분석</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+/* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
+* { box-sizing: border-box; }
+.dc-root {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--body-size); line-height: 1.5; -webkit-font-smoothing: antialiased; word-break: keep-all;
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+a { color: var(--accent); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip {
+  position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px; border-radius: 8px;
+  background: var(--surface); color: var(--text); font-weight: 700; text-decoration: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.skip:focus { top: 10px; }
+
+/* 페이지 · 머리 · 카드 */
+.page { max-width: var(--page-max); margin: 0 auto; padding: 32px 24px 56px; }
+.page-head { margin: 0 0 24px; }
+.eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--eyebrow); }
+.page-head h1, .survey-card h1 {
+  margin: 0 0 8px; font-size: var(--h1-size); line-height: var(--h1-lh); font-weight: var(--h1-weight); letter-spacing: var(--h1-ls);
+}
+.lead { margin: 0; color: var(--text-2); font-size: var(--lead-size); }
+.card {
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card);
+  box-shadow: var(--shadow); padding: var(--card-pad);
+}
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.card-head h2, .list-section h2 {
+  margin: 0; font-size: var(--h2-size); line-height: 1.4; font-weight: var(--h2-weight); letter-spacing: var(--h2-ls);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 7.5em; padding: 0 22px; border-radius: var(--r-btn); cursor: pointer;
+  font: inherit; font-size: var(--btn-size); font-weight: var(--btn-weight);
+  color: var(--btn2-fg); background: var(--btn2-bg); border: 1px solid var(--btn2-border); box-shadow: var(--btn2-shadow);
+  transition: background-color 0.2s, border-color 0.2s, filter 0.2s;
+}
+.btn:hover { filter: brightness(0.96); }
+.btn.primary { color: var(--btn-fg); background: var(--btn-bg); border-color: var(--btn-border); box-shadow: var(--btn-shadow); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--chip-bg); color: var(--text-2); font-size: 14px; font-weight: 500; border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .page { padding: 24px 16px 40px; }
+  .page-head h1, .survey-card h1 { font-size: calc(var(--h1-size) * 0.72); line-height: 1.25; }
+  .card { padding: 16px; }
+}
+
+/* ---------- 시연 영상 ---------- */
+.desc p { margin: 0; font-size: var(--lead-size); max-width: 72ch; }
+.desc p.sub { margin-top: 4px; color: var(--text-2); font-size: 15px; }
+.player { margin-top: 8px; }
+.main-wrap { padding: 12px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--stage); border-radius: var(--r-stage); }
+.tile { position: absolute; inset: 0; background: #000; overflow: hidden; will-change: transform; transform-origin: top left; border-radius: var(--r-stage); }
+.tile video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tile .fail {
+  display: none; position: absolute; inset: 0; background: var(--stage); color: var(--stage-text);
+  align-items: center; justify-content: center; flex-direction: column; gap: 4px; text-align: center; padding: 12px;
+  font-size: 14px; overflow-wrap: anywhere;
+}
+.tile .fail span { color: var(--stage-text-2); font-size: 13px; }
+.tile.failed video { visibility: hidden; }
+.tile.failed .fail { display: flex; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 8px 4px; }
+.bar .state {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--chip-bg); border: 1px solid var(--line); color: var(--text-2); font-size: 14px; font-weight: 500;
+}
+.bar .state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-2); }
+.now { font-weight: 700; }
+.live { color: var(--text-2); font-size: 14px; margin-left: auto; }
+.list-section { margin-top: 32px; }
+.list-section h2 { margin-bottom: 12px; }
+.list { list-style: none; margin: 0; padding: 4px 4px 16px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; }
+.list li { flex: 0 0 240px; scroll-snap-align: start; }
+.cell {
+  display: block; width: 100%; padding: 8px; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.cell:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--focus), var(--shadow); }
+.cell .frame, .cell .tile { border-radius: var(--r-thumb); }
+.cell .frame { pointer-events: none; }
+.cell .name { display: flex; align-items: center; gap: 8px; padding: 10px 4px 4px; font-weight: 700; font-size: 15px; }
+.cell .name::before {
+  content: ""; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent var(--accent);
+}
+.empty { color: var(--text-2); }
+p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24px; box-shadow: var(--shadow); }
+
+/* ---------- teleop ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1100px) {
+  .layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; }
+  .layout .conn { grid-column: 1 / -1; }
+}
+.conn form {
+  display: grid; gap: 16px; align-items: end;
+  grid-template-columns: minmax(0, 2fr) minmax(76px, 0.7fr) minmax(0, 1.5fr) minmax(0, 2.2fr);
+}
+.f-cmd { grid-column: span 2; }
+@media (max-width: 900px) {
+  .conn form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .f-cmd { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .conn form { grid-template-columns: minmax(0, 1fr); }
+  .f-cmd { grid-column: auto; }
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 14px; font-weight: var(--label-weight); color: var(--label-color); }
+.field input {
+  min-height: 44px; padding: 0 14px; font: inherit; color: var(--text);
+  background: var(--field-bg); border: 1px solid var(--field-border); border-radius: var(--r-field); width: 100%;
+  box-shadow: var(--field-shadow);
+}
+.field input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
+.pass-wrap {
+  display: flex; align-items: stretch; background: var(--field-bg);
+  border: 1px solid var(--field-border); border-radius: var(--r-field); overflow: hidden; box-shadow: var(--field-shadow);
+}
+.pass-wrap:focus-within { border-color: var(--focus); }
+.pass-wrap input { border: 0; border-radius: 0; background: transparent; box-shadow: none; flex: 1 1 auto; min-width: 0; width: auto; }
+.pass-wrap input:focus-visible { outline-offset: -3px; }
+.eye {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 7.6em;
+  padding: 0 12px; font: inherit; font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent;
+  border: 0; border-left: 1px solid var(--field-border); cursor: pointer; white-space: nowrap;
+}
+.eye svg { flex: 0 0 auto; }
+.end { display: flex; align-items: center; }
+.end .btn { width: 100%; }
+.statusbox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.st, .reason {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 14px 4px 8px;
+  border-radius: 999px; font-size: 14px; font-weight: 700;
+  background: var(--chip-bg); color: var(--text-2); border: 1px solid var(--line);
+}
+.st:empty { display: none; }
+.st[data-sig="connected"] { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+.st[data-sig="connecting"] { background: var(--busy-bg); color: var(--busy); border-color: transparent; }
+.st svg, .reason svg { flex: 0 0 auto; }
+.ico-ok { color: var(--ok); }
+.ico-off { color: var(--text-2); }
+.ico-busy { color: var(--busy); animation: spin 1.5s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.reason { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+.reason .ico-off { color: var(--danger); }
+.reason[hidden] { display: none; }
+#frame { overflow: hidden; }
+.frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#camCanvas { object-fit: contain; }
+.center-msg {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  text-align: center; padding: 12px; background: var(--stage); color: var(--stage-text); overflow-wrap: anywhere;
+}
+.center-msg[hidden], canvas[hidden] { display: none; }
+.center-msg .path { color: var(--stage-text-2); font-size: 14px; }
+#loading::before {
+  content: ""; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25); border-top-color: var(--stage-accent); animation: spin 1s linear infinite;
+}
+#viewLabel::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.hint-row {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: var(--r-field);
+  background: var(--hint-bg); color: var(--hint-fg); font-size: 14px; border: 1px solid var(--hint-border);
+}
+.hint-row[hidden] { display: none; }
+.kbd { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: "move grip" "arm arm"; }
+.kbd > .group:nth-child(1) { grid-area: move; }
+.kbd > .group:nth-child(2) { grid-area: arm; }
+.kbd > .group:nth-child(3) { grid-area: grip; }
+@media (max-width: 420px) { .kbd { grid-template-columns: minmax(0, 1fr); grid-template-areas: "move" "arm" "grip"; } }
+.group { background: var(--group-bg); border: 1px solid var(--group-border); border-radius: var(--r-group); padding: 14px; }
+.group h3 { margin: 0 0 10px; font-size: 14px; color: var(--text-2); font-weight: 700; }
+.keys { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.keys.move { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 300px; }
+.keys.arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.keys.grip { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 200px; }
+.key {
+  min-height: 60px; min-width: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 6px 4px; background: var(--key-bg); color: var(--text);
+  border: 1px solid var(--key-border); border-bottom-width: var(--key-depth); border-radius: var(--r-key); line-height: 1.2;
+}
+.key .k { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.key .n { margin-top: 4px; font-size: 12px; color: var(--text-2); }
+.key.on { background: var(--key-on-bg); color: var(--key-on-fg); border-color: var(--key-on-bg); border-bottom-width: 1px; transform: translateY(2px); }
+.key.on .n { color: var(--key-on-fg); }
+.keys.move .k-i { grid-column: 2; }
+.keys.move .k-i + .key { grid-column: 1; }
+.keys.move .k-space { grid-column: 1 / span 3; }
+
+/* ---------- 설문 ---------- */
+.survey-card {
+  max-width: 640px; margin: 0 auto; padding: 32px 24px 36px; text-align: center;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow);
+}
+.guide { margin: 0 0 24px; font-size: var(--lead-size); color: var(--text-2); }
+.slot { width: var(--qr); height: var(--qr); margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.qrcard {
+  width: 100%; height: 100%; background: #FFFFFF; border: 1px solid #DEE1E5; border-radius: var(--r-qr);
+  padding: 5%; display: flex; align-items: center; justify-content: center; transition: box-shadow 0.2s;
+}
+.qrcard:hover { box-shadow: 0 0 0 2px var(--focus); }
+.qrcard img, .zoomcard img { width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
+#qrImg { cursor: zoom-in; }
+.zoom-hint { margin: 16px 0 0; font-size: 14px; color: var(--text-2); }
+.slot:has(#qrCard[hidden]) + .zoom-hint { display: none; }
+.slot .empty {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 16px; overflow-wrap: anywhere;
+  background: var(--surface-2); border: 2px dashed var(--line); border-radius: var(--r-qr);
+}
+.empty .path { font-size: 13px; margin: 8px 0 0; font-family: var(--mono); }
+[hidden] { display: none !important; }
+.overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); display: flex; align-items: center; justify-content: center; z-index: 30;
+}
+.zoomcard {
+  width: min(88vh, calc(100vw - 24px)); height: min(88vh, calc(100vw - 24px));
+  background: #FFFFFF; border-radius: var(--r-qr); padding: 5%;
+}
+.closebtn {
+  position: absolute; top: 12px; right: 12px; z-index: 31; min-width: 44px; min-height: 44px; padding: 0 20px;
+  font: inherit; font-weight: 700; color: #111111; background: #FFFFFF; border: 0; border-radius: var(--r-btn); cursor: pointer;
+}
+.closebtn:focus-visible { outline: 3px solid #8AB4FF; outline-offset: 2px; }
+
+/* ---------- 삼성 스타일: 흑백 + 강조 파랑 한 줄, 회색 면, 그림자 없음, 검정 알약 버튼 (design-refs/samsung.md) ---------- */
+:root {
+  --font: "SamsungOne", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", Dotum, "Noto Sans KR", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --bg: #FFFFFF; --surface: #F7F7F7; --surface-2: #FFFFFF; --chip-bg: #FFFFFF;
+  --text: #000000; --text-2: #555555; --line: #D6D6D6; --card-border: transparent; --shadow: none;
+  --accent: #1259C3; --focus: #1259C3; --eyebrow: #1259C3;
+  --btn-bg: #000000; --btn-fg: #FFFFFF; --btn-border: #000000; --btn-shadow: none;
+  --btn2-bg: #FFFFFF; --btn2-fg: #000000; --btn2-border: #000000; --btn2-shadow: none;
+  --btn-size: 14px; --btn-weight: 700;
+  --r-card: 8px; --r-btn: 20px; --r-field: 8px; --r-stage: 8px; --r-thumb: 6px; --r-key: 8px; --r-group: 8px; --r-qr: 8px;
+  --card-pad: 28px; --page-max: 1440px;
+  --h1-size: 44px; --h1-lh: 56px; --h1-weight: 700; --h1-ls: -0.02em;
+  --h2-size: 24px; --h2-weight: 700; --h2-ls: -0.02em;
+  --body-size: 16px; --lead-size: 18px; --label-weight: 700; --label-color: #000000;
+  --field-bg: #FFFFFF; --field-border: #BDBDBD; --field-shadow: none;
+  --stage: #000000; --stage-text: #FFFFFF; --stage-text-2: #B5B5B5; --stage-accent: #4D9BFF;
+  --ok: #0A7A3B; --ok-bg: #E7F5EC; --busy: #1259C3; --busy-bg: #E8F0FC; --danger: #C4161C; --danger-bg: #FDECEC;
+  --hint-bg: #FFFFFF; --hint-fg: #555555; --hint-border: #E5E5E5;
+  --group-bg: #FFFFFF; --group-border: transparent;
+  --key-bg: #F7F7F7; --key-border: #E5E5E5; --key-depth: 1px; --key-on-bg: #000000; --key-on-fg: #FFFFFF;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+
+
+/* 머리: 흰 64px, 굵은 워드마크, 굵은 글자 메뉴 + 현재 탭 밑줄 */
+.gnb { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.gnb-in { max-width: 1440px; margin: 0 auto; padding: 0 24px; min-height: 64px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 40px; }
+.wordmark { font-size: 20px; font-weight: 700; letter-spacing: 0.1em; }
+.gnb nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
+.gnb nav a {
+  display: flex; align-items: center; min-height: 64px; padding: 0 14px; color: var(--text); text-decoration: none;
+  font-size: 15px; font-weight: 700; box-shadow: inset 0 -2px 0 transparent; transition: box-shadow 0.2s;
+}
+.gnb nav a:hover { box-shadow: inset 0 -2px 0 var(--line); }
+.gnb nav a[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--text); }
+.gnb-meta { margin-left: auto; font-size: 13px; color: var(--text-2); }
+@media (max-width: 640px) { .gnb-in { padding: 0 16px; } .gnb nav a { min-height: 48px; } .gnb-meta { display: none; } }
+
+/* 가운데 정렬 히어로 머리, 파랑 한 줄 */
+.page-head { text-align: center; margin-bottom: 40px; }
+.page-head .eyebrow { font-size: 20px; letter-spacing: 0; margin-bottom: 8px; }
+.desc p { margin-left: auto; margin-right: auto; }
+.page-head .lead { font-size: 18px; }
+.card-head h2, .list-section h2 { font-size: 24px; }
+
+/* ---------- Claude Design 캔버스 전용 꾸밈 (기업 변수 그대로 사용) ---------- */
+.dc-root { background: var(--bg); color: var(--text); font-family: var(--font); font-size: var(--body-size); line-height: 1.5; word-break: keep-all; min-height: 100%; }
+.dc-root ul, .dc-root ol { margin: 0; }
+:root { --qr: 400px; }
+
+/* 시연 영상: 진행 3단계 */
+.story { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0 0 24px; }
+.story-step { background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow); padding: 20px; display: flex; gap: 14px; align-items: flex-start; }
+.story-num {
+  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--btn-bg); color: var(--btn-fg); font-weight: 700; font-family: var(--mono); font-size: 15px;
+}
+.story-step h3 { margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+.story-step p { margin: 0; font-size: 14px; color: var(--text-2); }
+.story-arrow { color: var(--text-2); }
+.poster { overflow: hidden; }
+.poster img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pl-badge {
+  position: absolute; left: 16px; bottom: 16px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+  border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #FFFFFF; font-size: 14px; font-weight: 700;
+}
+.pl-play {
+  position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18); border: 2px solid rgba(255, 255, 255, 0.7); display: flex; align-items: center; justify-content: center;
+}
+.cells { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.cells .cell .frame { overflow: hidden; }
+.cell.is-on { box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
+
+/* teleop: 3D 기체 무대 */
+.viewer {
+  position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: var(--r-stage); overflow: hidden;
+  background: var(--viewer-bg, #0E131A); outline: none; cursor: grab;
+}
+.viewer:focus-visible { box-shadow: 0 0 0 3px var(--focus); }
+.viewer canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.viewer-hint {
+  position: absolute; left: 12px; top: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 13px; font-weight: 500; pointer-events: none;
+}
+.viewer-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; }
+.pip {
+  position: absolute; right: 12px; bottom: 12px; width: 30%; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden;
+  background: #000000; border: 2px solid rgba(255, 255, 255, 0.85); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+.pip img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.pip-dot { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #1D4ED8; border: 2px solid #FFFFFF; }
+.pip-label { position: absolute; left: 6px; top: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, 0.6); color: #FFFFFF; font-size: 11px; font-weight: 700; }
+.pip-cam { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #A9B1BD; font-size: 12px; text-align: center; padding: 8px; }
+.readout { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.ro {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 10px; border-radius: var(--r-field);
+  background: var(--surface-2); border: 1px solid var(--line); font-family: var(--mono); font-size: 13px; color: var(--text);
+}
+.ro b { font-family: var(--font); font-size: 12px; font-weight: 600; color: var(--text-2); }
+.ro.is-on { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+button.key { font: inherit; cursor: pointer; width: 100%; -webkit-user-select: none; user-select: none; touch-action: none; }
+.dc-root .kbd { grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr); }
+.dc-root .keys.move, .dc-root .keys.grip { max-width: none; }
+
+/* 설문: 스캔 프레임 + 단계 */
+.qr-scan { position: relative; cursor: zoom-in; font: inherit; }
+.corner { position: absolute; width: 36px; height: 36px; border-color: var(--btn-bg); border-style: solid; border-width: 0; }
+.corner.tl { left: -10px; top: -10px; border-top-width: 4px; border-left-width: 4px; border-top-left-radius: 12px; }
+.corner.tr { right: -10px; top: -10px; border-top-width: 4px; border-right-width: 4px; border-top-right-radius: 12px; }
+.corner.bl { left: -10px; bottom: -10px; border-bottom-width: 4px; border-left-width: 4px; border-bottom-left-radius: 12px; }
+.corner.br { right: -10px; bottom: -10px; border-bottom-width: 4px; border-right-width: 4px; border-bottom-right-radius: 12px; }
+.scanline {
+  position: absolute; left: 6%; right: 6%; height: 3px; top: 10%; border-radius: 3px; background: var(--btn-bg); opacity: 0.55;
+  animation: scan 2.6s ease-in-out infinite alternate;
+}
+@keyframes scan { from { top: 8%; } to { top: 90%; } }
+.steps { list-style: none; padding: 0; margin: 28px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; text-align: left; }
+.steps li { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: var(--r-field); background: var(--surface-2); font-size: 14px; }
+.steps b {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--btn-bg); color: var(--btn-fg); font-size: 13px;
+}
+.dc-overlay { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.92); }
+.dc-overlay .zoomcard { width: 640px; height: 640px; }
+
+/* 분석 문서 */
+.doc { width: 1000px; box-sizing: border-box; padding: 56px 64px 64px; background: var(--surface); color: var(--text); font-family: var(--font); line-height: 1.65; word-break: keep-all; }
+.doc-band { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 0 24px; margin: 0 0 24px; border-bottom: 1px solid var(--line); }
+.doc-brand { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--eyebrow); }
+.swatches { display: flex; gap: 6px; }
+.swatches span { width: 28px; height: 28px; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
+.doc h1 { margin: 0 0 12px; font-size: 34px; line-height: 1.25; letter-spacing: -0.02em; }
+.doc h2 { margin: 36px 0 12px; font-size: 22px; letter-spacing: -0.01em; }
+.doc h3 { margin: 24px 0 8px; font-size: 17px; }
+.doc p, .doc li { font-size: 15px; }
+.doc p { margin: 0 0 12px; }
+.doc ul, .doc ol { margin: 0 0 12px; padding-left: 22px; }
+.doc li { margin: 4px 0; }
+.doc table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 14px; }
+.doc th, .doc td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc th { background: var(--surface-2); font-weight: 700; }
+.doc code { font-family: var(--mono); font-size: 0.9em; padding: 1px 6px; border-radius: 6px; background: var(--surface-2); }
+.doc blockquote { margin: 0 0 16px; padding: 12px 16px; border-radius: var(--r-field); background: var(--surface-2); color: var(--text-2); }
+.doc blockquote p { margin: 0; }
+.chipcolor { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.dc-root .zoom-hint { margin-top: 24px; }
+.pip.pip-arena { width: 24%; aspect-ratio: 1 / 1; background: #0B0F14; }
+.pip-arena svg { display: block; width: 100%; height: 100%; }
+
+</style>
+</helmet>
+<article class="doc">
+<div class="doc-band"><span class="doc-brand">UI/UX ANALYSIS · 삼성</span><div class="swatches" aria-label="주요 색"><span style="background: #000000;" title="#000000"></span><span style="background: #555555;" title="#555555"></span><span style="background: #757575;" title="#757575"></span><span style="background: #FFFFFF;" title="#FFFFFF"></span><span style="background: #F7F7F7;" title="#F7F7F7"></span><span style="background: #212425;" title="#212425"></span><span style="background: #007AFF;" title="#007AFF"></span><span style="background: #2189FF;" title="#2189FF"></span></div></div>
+<h1>삼성전자 (samsung.com/sec) UI/UX 분석</h1>
+<ul><li>조사일: 2026-10-02 · 뷰포트 1440×900 · 메인 페이지 기준</li><li>방법: 화면 캡처 관찰 + 계산된 스타일(getComputedStyle) 집계</li><li>브랜드 자산(로고·폰트 파일·이미지)은 가져오지 않는다. 설계 원칙만 참고한다.</li></ul>
+<h2>1. 전체 인상</h2>
+<p>흰 바탕에 거의 검정에 가까운 글자, 제품 사진이 화면의 주인공이다. 장식은 최소화하고 <strong>큰 제목 + 짧은 부제 + 알약(pill) 버튼 두 개</strong> 조합을 섹션마다 반복한다.</p>
+<h2>2. 레이아웃</h2>
+<table><thead><tr><th>항목</th><th>관찰값</th></tr></thead><tbody><tr><td>콘텐츠 최대 폭</td><td><code>1440px</code> (풀블리드 배경은 <code>1920px</code>)</td></tr><tr><td>헤더 높이</td><td><code>64px</code>, 흰 배경, 로고 왼쪽 · 아이콘(검색·장바구니·계정·메뉴) 오른쪽</td></tr><tr><td>섹션 구성</td><td>풀폭 히어로(KV) → 제품 카드 그리드 → 다시 풀폭 배너, 교차 반복</td></tr><tr><td>그리드 간격</td><td><code>24px</code> 가 가장 흔함, 보조로 <code>8px</code></td></tr><tr><td>카드</td><td>연회색 <code><span class="chipcolor" style="background: #F7F7F7;"></span>#F7F7F7</code> 바탕, 그림자 없음, 모서리 <code>8px</code></td></tr></tbody></table>
+<ul><li>히어로는 텍스트를 가운데 또는 한쪽에 몰고 반대편에 큰 제품 이미지를 둔다.</li><li>카드에 테두리·그림자를 쓰지 않고 <strong>배경 명도 차이만으로</strong> 영역을 나눈다.</li></ul>
+<h2>3. 타이포그래피</h2>
+<table><thead><tr><th>역할</th><th>크기</th><th>굵기</th></tr></thead><tbody><tr><td>히어로 제목</td><td>약 <code>71px</code> (화면 비례로 커짐)</td><td>700</td></tr><tr><td>섹션 제목</td><td>약 <code>44px</code> / <code>40px</code></td><td>700</td></tr><tr><td>소제목</td><td><code>24px</code>, 자간 <code>-0.02em</code></td><td>700</td></tr><tr><td>본문</td><td><code>16px</code></td><td>400</td></tr><tr><td>버튼·보조</td><td><code>14px</code> / <code>12px</code></td><td>400~700</td></tr></tbody></table>
+<ul><li>굵기는 <strong>400과 700 두 단계만</strong> 쓴다. 중간 굵기는 거의 없다.</li><li>큰 제목일수록 자간을 살짝 좁힌다(음수 letter-spacing).</li></ul>
+<h2>4. 색</h2>
+<table><thead><tr><th>용도</th><th>값</th></tr></thead><tbody><tr><td>글자</td><td><code><span class="chipcolor" style="background: #000000;"></span>#000000</code> (압도적), 보조 <code><span class="chipcolor" style="background: #555555;"></span>#555555</code>, <code><span class="chipcolor" style="background: #757575;"></span>#757575</code></td></tr><tr><td>바탕</td><td><code><span class="chipcolor" style="background: #FFFFFF;"></span>#FFFFFF</code>, 면 구분 <code><span class="chipcolor" style="background: #F7F7F7;"></span>#F7F7F7</code></td></tr><tr><td>주 버튼</td><td>바탕 <code><span class="chipcolor" style="background: #000000;"></span>#000000</code>/<code><span class="chipcolor" style="background: #212425;"></span>#212425</code>, 글자 흰색</td></tr><tr><td>강조(링크·포인트)</td><td>파랑 <code><span class="chipcolor" style="background: #007AFF;"></span>#007AFF</code> / <code><span class="chipcolor" style="background: #2189FF;"></span>#2189FF</code> — 아주 적게 사용</td></tr><tr><td>딤(모달 배경)</td><td><code>rgba(0,0,0,0.5)</code></td></tr></tbody></table>
+<ul><li>색은 거의 흑백이고, 파랑은 "Available now" 같은 핵심 한 줄에만 쓴다.</li></ul>
+<h2>5. 컴포넌트</h2>
+<ul><li><strong>버튼</strong>: 알약형(<code>border-radius: 20px</code>), 높이 약 40px, 좌우 패딩 <code>24px</code>, 글자 <code>14px</code>.<ul><li>주 버튼 = 검정 채움, 보조 버튼 = 흰 바탕 + 1px 테두리. 항상 두 개를 나란히 둔다("더 알아보기" / "구매하기").</li></ul></li><li><strong>칩(필터·추천 키워드)</strong>: <code><span class="chipcolor" style="background: #F7F7F7;"></span>#F7F7F7</code> 바탕, <code>border-radius: 100px</code>, 패딩 <code>9px 12px</code>.</li><li><strong>플로팅 버튼</strong>: 오른쪽 아래 원형 AI 상담 버튼(<code>50%</code> 라운드).</li><li><strong>그림자</strong>: 페이지 전체에서 단 한 곳(<code>0 4px 10px rgba(0,0,0,.2)</code>). 그림자를 거의 쓰지 않는다.</li></ul>
+<h2>6. 모션</h2>
+<ul><li>전환 시간 <code>0.2s</code>(호버) · <code>0.5s</code>(콘텐츠 전환)가 기본. 배너 슬라이드는 <code>1s</code>.</li><li>짧은 호버, 느긋한 콘텐츠 전환으로 두 단계를 나눠 쓴다.</li></ul>
+<h2>7. 접근성 관찰</h2>
+<ul><li><code>lang="ko-KR"</code> 지정.</li><li>본문으로 건너뛰기 링크는 찾지 못했다.</li><li>버튼 높이가 40px 수준이라 권장 터치 크기(44px)보다 조금 작다.</li></ul>
+<h2>8. 우리 대시보드에 가져올 점</h2>
+<ol><li><strong>흑백 기반 + 강조색 한 가지</strong>: 강조색은 상태(연결됨, 현재 탭)처럼 꼭 필요한 곳에만.</li><li><strong>테두리 대신 면 색으로 구역 나누기</strong>: 회색 테두리 박스 대신 <code><span class="chipcolor" style="background: #F7F7F7;"></span>#F7F7F7</code> 같은 옅은 면.</li><li><strong>알약형 버튼과 주/보조 쌍</strong>: "연결"(주) / "비밀번호 보기"(보조) 같은 위계를 버튼 모양으로 표현.</li><li><strong>제목 크기 대비를 크게</strong>: 페이지 제목과 본문 크기 차이를 확실히 벌린다.</li><li><strong>굵기 두 단계(400/700)만</strong> 써서 정돈된 인상.</li></ol>
+</article>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1000, "height": 2483}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

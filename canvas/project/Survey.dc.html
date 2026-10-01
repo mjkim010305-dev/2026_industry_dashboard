@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>설문</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0066CC}a:hover{color:#004C99}
+</style>
+</helmet>
+<div style="position: relative; min-height: 900px; background: #F3F5F7; color: #0E1726; font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.5;">
+<header style="position: sticky; top: 0; z-index: 5; background: #0E1726; color: #F2F4F7;">
+<div style="max-width: 1280px; margin: 0 auto; padding: 8px 24px; min-height: 64px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em;">
+<span style="width: 22px; height: 22px; border-radius: 7px; background: {{accent}};"></span>
+<span>turtlebot3 · ROS 2</span>
+</div>
+<nav aria-label="화면 이동" style="margin-left: auto;">
+<div style="display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,0.08);">
+<a href="Main.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; color: rgba(242,244,247,0.8); font-size: 15px; font-weight: 500; text-decoration: none;">시연 영상</a>
+<a href="Teleop.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; color: rgba(242,244,247,0.8); font-size: 15px; font-weight: 500; text-decoration: none;">teleop</a>
+<a href="Survey.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #0E1726; font-size: 15px; font-weight: 600; text-decoration: none;">설문</a>
+</div>
+</nav>
+</div>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 32px 24px 56px; box-sizing: border-box;">
+<div style="max-width: 640px; margin: 0 auto; padding: 32px 24px 36px; box-sizing: border-box; text-align: center; background: #FFFFFF; border-radius: 20px; box-shadow: 0 0 1px rgba(14,23,38,0.2), 0 2px 8px rgba(14,23,38,0.06);">
+<p style="margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #0066CC;">SURVEY</p>
+<h1 style="margin: 0 0 8px; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em;">설문</h1>
+<p style="margin: 0 0 24px; font-size: 17px; color: #5B6472;">QR 코드를 스캔해 설문에 참여해 주세요</p>
+<button type="button" onClick="{{open}}" aria-label="설문 QR 확대 보기" aria-haspopup="dialog" style="display: block; width: 440px; max-width: 100%; aspect-ratio: 1 / 1; margin: 0 auto; padding: 5%; box-sizing: border-box; background: #FFFFFF; border: 1px solid #DEE1E5; border-radius: 16px; cursor: zoom-in; box-shadow: 0 0 1px rgba(14,23,38,0.2), 0 8px 24px rgba(14,23,38,0.08);">
+<img src="/_blob/5070642424a65999a686a493839c89b3" alt="설문 참여용 QR 코드" style="display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;">
+</button>
+<p style="margin: 16px 0 0; font-size: 14px; color: #5B6472;">QR 을 누르면 크게 볼 수 있어요</p>
+</div>
+</main>
+
+<sc-if value="{{zoom}}" hint-placeholder-val="{{ false }}">
+<div role="dialog" aria-modal="true" aria-label="설문 QR 확대 보기" style="position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: rgba(5,7,10,0.94);">
+<button type="button" onClick="{{close}}" style="position: absolute; top: 12px; right: 12px; min-width: 44px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: #FFFFFF; color: #0E1726; font: inherit; font-weight: 600; cursor: pointer;">닫기</button>
+<div style="width: 720px; max-width: calc(100% - 24px); aspect-ratio: 1 / 1; padding: 5%; box-sizing: border-box; background: #FFFFFF; border-radius: 20px;">
+<img src="/_blob/5070642424a65999a686a493839c89b3" alt="설문 참여용 QR 코드" style="display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated;">
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0071E3","options":["#0071E3","#0A7D5A","#5B4FD8"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    return {
+      accent: this.props.accent ?? '#0071E3',
+      zoom: !!s.zoom,
+      open: () => this.setState({ zoom: true }),
+      close: () => this.setState({ zoom: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

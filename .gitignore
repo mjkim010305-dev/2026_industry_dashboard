@@ -1,0 +1,8 @@
+# 확인용 화면 캡처 · 미리보기
+.shots/
+
+# 시연 영상(각 20 MB, 원본은 dashboard/data/ 에 있다)
+data/*.mp4
+
+# 파이썬 캐시
+__pycache__/

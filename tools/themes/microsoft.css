@@ -1,0 +1,58 @@
+/* ---------- 마이크로소프트 스타일: Fluent 계열, 흰 카드 + 깊이 그림자, 8px 버튼, 4의 배수 간격, 밑줄 입력칸 (design-refs/microsoft.md) ---------- */
+:root {
+  --font: "Segoe UI Variable Text", "Segoe UI", "Malgun Gothic", "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
+  --bg: #FAFAFA; --surface: #FFFFFF; --surface-2: #F5F5F5; --chip-bg: #F5F5F5;
+  --text: #0E1726; --text-2: #616161; --line: #D1D1D1; --card-border: transparent;
+  --shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.14);
+  --accent: #0067B8; --focus: #000000; --eyebrow: #0067B8;
+  --btn-bg: #0067B8; --btn-fg: #FFFFFF; --btn-border: #0067B8; --btn-shadow: none;
+  --btn2-bg: #FFFFFF; --btn2-fg: #0E1726; --btn2-border: #D1D1D1; --btn2-shadow: none;
+  --btn-size: 15px; --btn-weight: 600;
+  --r-card: 16px; --r-btn: 8px; --r-field: 4px; --r-stage: 8px; --r-thumb: 8px; --r-key: 6px; --r-group: 8px; --r-qr: 12px;
+  --card-pad: 24px; --page-max: 1328px;
+  --h1-size: 44px; --h1-lh: 52px; --h1-weight: 500; --h1-ls: -1.1px;
+  --h2-size: 20px; --h2-weight: 600; --h2-ls: -0.5px;
+  --body-size: 16px; --lead-size: 16px; --label-weight: 600; --label-color: #242424;
+  --field-bg: #FFFFFF; --field-border: #D1D1D1; --field-shadow: inset 0 -1px 0 #616161;
+  --stage: #1B1A19; --stage-text: #FFFFFF; --stage-text-2: #ADADAD; --stage-accent: #479EF5;
+  --ok: #0E700E; --ok-bg: #F1FAF1; --busy: #0F6CBD; --busy-bg: #EBF3FC; --danger: #B10E1C; --danger-bg: #FDF3F4;
+  --hint-bg: #EBF3FC; --hint-fg: #0E1726; --hint-border: #B4D6FA;
+  --group-bg: #FAFAFA; --group-border: #E0E0E0;
+  --key-bg: #FFFFFF; --key-border: #D1D1D1; --key-depth: 2px; --key-on-bg: #0067B8; --key-on-fg: #FFFFFF;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141414; --surface: #1F1F1F; --surface-2: #292929; --chip-bg: #292929;
+    --text: #FFFFFF; --text-2: #ADADAD; --line: #3D3D3D; --label-color: #E0E0E0;
+    --shadow: 0 0 2px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.5);
+    --accent: #479EF5; --focus: #FFFFFF; --eyebrow: #479EF5;
+    --btn-bg: #115EA3; --btn-border: #115EA3; --btn2-bg: #292929; --btn2-fg: #FFFFFF; --btn2-border: #3D3D3D;
+    --field-bg: #292929; --field-border: #3D3D3D; --field-shadow: inset 0 -1px 0 #ADADAD;
+    --ok: #54B054; --ok-bg: #052505; --busy: #479EF5; --busy-bg: #082338; --danger: #DC626D; --danger-bg: #3B0509;
+    --hint-bg: #082338; --hint-fg: #E0E0E0; --hint-border: #0E4775;
+    --group-bg: #292929; --group-border: #3D3D3D;
+    --key-bg: #1F1F1F; --key-border: #3D3D3D; --key-on-bg: #479EF5; --key-on-fg: #000000;
+  }
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 4px var(--surface); }
+
+/* 머리: 흰 54px, 워드마크 | 구분선 | 글자 메뉴 + 밑줄 */
+.mshead { position: sticky; top: 0; z-index: 20; background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+.mshead .in { max-width: 1600px; margin: 0 auto; padding: 0 24px; min-height: 54px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.wordmark { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.mshead .sep { width: 2px; height: 24px; background: var(--text); }
+.mshead nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
+.mshead nav a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 10px; color: var(--text); text-decoration: none; font-size: 13px;
+  text-underline-offset: 6px;
+}
+.mshead nav a:hover { text-decoration: underline; }
+.mshead nav a[aria-current="page"] { font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; }
+
+/* 슬라이드 제어처럼 보이는 플레이어 막대, 큰 카드 모서리 24 */
+.page-head .eyebrow { font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.main-wrap.card, .conn.card { border-radius: 24px; }
+.cell .name::before { border-color: transparent transparent transparent var(--accent); }
+.pass-wrap input { box-shadow: none; }

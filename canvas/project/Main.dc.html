@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>시연 영상</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#0066CC}a:hover{color:#004C99}
+</style>
+</helmet>
+<div style="min-height: 1400px; background: #F3F5F7; color: #0E1726; font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; line-height: 1.5;">
+<header style="position: sticky; top: 0; z-index: 5; background: #0E1726; color: #F2F4F7;">
+<div style="max-width: 1280px; margin: 0 auto; padding: 8px 24px; min-height: 64px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.01em;">
+<span style="width: 22px; height: 22px; border-radius: 7px; background: {{accent}};"></span>
+<span>turtlebot3 · ROS 2</span>
+</div>
+<nav aria-label="화면 이동" style="margin-left: auto;">
+<div style="display: flex; gap: 2px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,0.08);">
+<a href="Main.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #0E1726; font-size: 15px; font-weight: 600; text-decoration: none;">시연 영상</a>
+<a href="Teleop.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; color: rgba(242,244,247,0.8); font-size: 15px; font-weight: 500; text-decoration: none;">teleop</a>
+<a href="Survey.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; color: rgba(242,244,247,0.8); font-size: 15px; font-weight: 500; text-decoration: none;">설문</a>
+</div>
+</nav>
+</div>
+</header>
+
+<main style="max-width: 1280px; margin: 0 auto; padding: 32px 24px 56px; box-sizing: border-box;">
+<section style="margin: 0 0 24px;">
+<p style="margin: 0 0 6px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #0066CC;">DEMO</p>
+<h1 style="margin: 0 0 8px; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em;">프로젝트 시연 영상</h1>
+<p style="margin: 0; font-size: 18px; line-height: 28px; max-width: 72ch;">움직일 수 있는 장애물이 경로를 막고 있으면, 움직일 수 있는 장애물을 치우고 경로를 수행한다.</p>
+<p style="margin: 4px 0 0; font-size: 15px; line-height: 22px; color: #5B6472;">ROS 2 와 turtlebot3_manipulation 을 사용한 프로젝트입니다.</p>
+</section>
+
+<section aria-label="메인 플레이어" style="background: #FFFFFF; border-radius: 16px; padding: 12px; box-shadow: 0 0 1px rgba(14,23,38,0.2), 0 2px 8px rgba(14,23,38,0.06);">
+<div style="position: relative; aspect-ratio: 16 / 9; background: #0B0F14; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #E8ECF1;">
+<div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14l11-7z"></path></svg>
+</div>
+<div style="font-size: 20px; font-weight: 600;">{{main}}.mp4</div>
+<div style="font-size: 14px; color: #A9B1BD;">[영상 영역 — 실제 페이지에서는 data/{{main}}.mp4 가 반복 재생됩니다]</div>
+<span style="position: absolute; left: 16px; top: 16px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,0.12); font-size: 13px; font-weight: 600;">메인 플레이어</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 8px 4px;">
+<button type="button" onClick="{{toggle}}" style="min-height: 44px; min-width: 96px; padding: 0 20px; border-radius: 999px; border: 0; background: {{accent}}; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;">{{toggleLabel}}</button>
+<span style="display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 4px 12px; border-radius: 999px; background: #F7F8FA; border: 1px solid #DEE1E5; color: #5B6472; font-size: 14px; font-weight: 500;"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{stateDot}};"></span>{{stateLabel}}</span>
+<span style="font-weight: 600;">현재 영상: {{main}}</span>
+<span style="margin-left: auto; font-size: 14px; color: #5B6472;">지금 재생 중: {{main}}</span>
+</div>
+</section>
+
+<section style="margin-top: 32px;">
+<h2 style="margin: 0 0 12px; font-size: 18px; line-height: 26px; font-weight: 600;">영상 목록</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;">
+<sc-for list="{{list}}" as="item" hint-placeholder-count="4">
+<button type="button" onClick="{{item.pick}}" aria-label="{{item.name}} 재생" style="display: block; width: 100%; padding: 8px; border: 0; border-radius: 14px; background: #FFFFFF; color: #0E1726; text-align: left; font: inherit; cursor: pointer; box-shadow: 0 0 1px rgba(14,23,38,0.2), 0 2px 8px rgba(14,23,38,0.06);">
+<span style="display: flex; align-items: center; justify-content: center; aspect-ratio: 16 / 9; border-radius: 8px; background: #0B0F14; color: #A9B1BD; font-size: 13px;">{{item.name}}.mp4</span>
+<span style="display: flex; align-items: center; gap: 8px; padding: 10px 4px 4px; font-size: 15px; font-weight: 600;"><svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M0 0l10 6-10 6z" fill="#0066CC"></path></svg>{{item.name}}</span>
+</button>
+</sc-for>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0071E3","options":["#0071E3","#0A7D5A","#5B4FD8"]},"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const names = ['intro', 'data1', 'data2', 'data3', 'data4'];
+    const main = s.main || 'intro';
+    const playing = s.playing !== false;
+    return {
+      accent: this.props.accent ?? '#0071E3',
+      main: main,
+      toggleLabel: playing ? '일시정지' : '재생',
+      stateLabel: '상태: ' + (playing ? '재생 중' : '정지'),
+      stateDot: playing ? '#1F7A45' : '#5B6472',
+      toggle: () => this.setState({ playing: !playing }),
+      list: names.filter((n) => n !== main).map((n) => ({ name: n, pick: () => this.setState({ main: n, playing: true }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

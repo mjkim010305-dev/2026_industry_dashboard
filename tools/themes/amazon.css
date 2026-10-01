@@ -1,0 +1,65 @@
+/* ---------- 아마존 스타일: 짙은 남색 2단 머리, 회색 바탕 + 흰 카드, 노랑 행동 버튼, 파랑 링크, 고밀도 (design-refs/amazon.md) ---------- */
+:root {
+  --font: Arial, "Helvetica Neue", "Malgun Gothic", sans-serif;
+  --mono: "Courier New", Consolas, ui-monospace, monospace;
+  --bg: #E3E6E6; --surface: #FFFFFF; --surface-2: #F7FAFA; --chip-bg: #F7FAFA;
+  --text: #0F1111; --text-2: #565959; --line: #D5D9D9; --card-border: transparent; --shadow: none;
+  --accent: #2162A1; --focus: #007185; --eyebrow: #565959;
+  --btn-bg: #FFD814; --btn-fg: #0F1111; --btn-border: #FCD200; --btn-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+  --btn2-bg: #FFFFFF; --btn2-fg: #0F1111; --btn2-border: #D5D9D9; --btn2-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+  --btn-size: 14px; --btn-weight: 400;
+  --r-card: 8px; --r-btn: 100px; --r-field: 8px; --r-stage: 4px; --r-thumb: 4px; --r-key: 8px; --r-group: 8px; --r-qr: 8px;
+  --card-pad: 20px; --page-max: 1500px;
+  --h1-size: 28px; --h1-lh: 36px; --h1-weight: 700; --h1-ls: 0;
+  --h2-size: 21px; --h2-weight: 700; --h2-ls: 0;
+  --body-size: 15px; --lead-size: 15px; --label-weight: 700; --label-color: #0F1111;
+  --field-bg: #FFFFFF; --field-border: #888C8C; --field-shadow: inset 0 1px 2px rgba(15, 17, 17, 0.15);
+  --stage: #0F1111; --stage-text: #FFFFFF; --stage-text-2: #BBBFBF; --stage-accent: #FFD814;
+  --ok: #067D62; --ok-bg: #E9F6F2; --busy: #2162A1; --busy-bg: #EDF4FB; --danger: #B12704; --danger-bg: #FCF1EE;
+  --hint-bg: #F7FAFA; --hint-fg: #0F1111; --hint-border: #D5D9D9;
+  --group-bg: #F7FAFA; --group-border: #D5D9D9;
+  --key-bg: #FFFFFF; --key-border: #D5D9D9; --key-depth: 2px; --key-on-bg: #FFD814; --key-on-fg: #0F1111;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F1111; --surface: #1B1F23; --surface-2: #232F3E; --chip-bg: #232F3E;
+    --text: #F2F2F2; --text-2: #BBBFBF; --line: #3A4553; --label-color: #F2F2F2;
+    --accent: #6FB1F0; --focus: #4FC3D1; --eyebrow: #BBBFBF;
+    --btn2-bg: #232F3E; --btn2-fg: #F2F2F2; --btn2-border: #3A4553; --btn2-shadow: none; --btn-shadow: none;
+    --field-bg: #0F1111; --field-border: #6A7380; --field-shadow: none;
+    --ok: #4CC9A6; --ok-bg: rgba(76, 201, 166, 0.14); --busy: #6FB1F0; --busy-bg: rgba(111, 177, 240, 0.14);
+    --danger: #FF7A59; --danger-bg: rgba(255, 122, 89, 0.14);
+    --hint-bg: #232F3E; --hint-fg: #F2F2F2; --hint-border: #3A4553;
+    --group-bg: #232F3E; --group-border: #3A4553; --key-bg: #1B1F23; --key-border: #3A4553;
+  }
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 4px rgba(0, 113, 133, 0.25); }
+
+/* 머리: 위 #131921 (워드마크), 아래 #232F3E (메뉴) */
+.az { position: sticky; top: 0; z-index: 20; color: #FFFFFF; }
+.az-top { background: #131921; }
+.az-top .in, .az-sub .in { max-width: 1500px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 16px; }
+.az-top .in { min-height: 60px; }
+.wordmark { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; padding: 6px 8px; border: 1px solid transparent; border-radius: 2px; }
+.az-msg { margin-left: auto; font-size: 13px; color: #CCCCCC; }
+.az-sub { background: #232F3E; }
+.az-sub ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; }
+.az-sub a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 10px; color: #FFFFFF; text-decoration: none; font-size: 14px;
+  border: 1px solid transparent; border-radius: 2px;
+}
+.az-sub a:hover { border-color: #FFFFFF; }
+.az-sub a[aria-current="page"] { font-weight: 700; border-color: #FFFFFF; }
+.az a:focus-visible { outline-color: #FFD814; box-shadow: none; }
+
+/* 라벨 없이 바로 제목, 고밀도 카드 */
+.page { padding-top: 20px; }
+.page-head { background: var(--surface); border-radius: var(--r-card); padding: 20px; margin-bottom: 16px; }
+.page-head .eyebrow { display: none; }
+.survey-card .eyebrow { display: none; }
+.layout { gap: 12px; }
+.cell .name { color: var(--accent); font-weight: 400; }
+.cell .name::before { display: none; }
+.cell:hover .name { color: #C7511F; text-decoration: underline; }
+.btn.primary:hover { background: #F7CA00; filter: none; }
