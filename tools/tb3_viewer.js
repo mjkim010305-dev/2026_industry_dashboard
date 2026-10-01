@@ -1,11 +1,12 @@
 // turtlebot3_manipulation 3D 뷰어. 관절 구조와 mesh 위치는 공식 URDF(turtlebot3_manipulation_description)를 그대로 따른다.
 // createTB3Viewer(THREE, canvas, data, theme) → { press, release, readout, dispose, select, setExplode, setPose, project, tip, world, drive }
-// theme 선택 항목: arena(기본 true) · view("follow" | "showcase") · collide(nx, ny, x, y) → {x, y} · onFrame(dt) · onPick(part)
+// theme 선택 항목: arena(기본 true) · floorGrid(arena 가 false 일 때 바닥 격자, 기본 true) · view("follow" | "showcase")
+//                  collide(nx, ny, x, y) → {x, y} · onFrame(dt) · onPick(part) · onFloorClick(x, y)
 function createTB3Viewer(THREE, canvas, data, theme) {
   var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   var scene = new THREE.Scene();
-  var camera = new THREE.PerspectiveCamera(35, 1, 0.01, 40);
+  var camera = new THREE.PerspectiveCamera(35, 1, 0.01, 120);
   scene.add(new THREE.HemisphereLight(0xffffff, theme.ground, 0.85));
   var sun = new THREE.DirectionalLight(0xffffff, 0.9);
   sun.position.set(1.2, 2.0, 1.0);
@@ -74,7 +75,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
       wall.rotation.z = Math.atan2(b[1] - a[1], b[0] - a[0]);
       world.add(wall);
     });
-  } else {
+  } else if (theme.floorGrid !== false) {
     var grid = new THREE.GridHelper(1.6, 16, theme.gridMajor, theme.grid);
     scene.add(grid);
   }
@@ -167,19 +168,22 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     if (Math.abs(e.clientX - dragging.x) + Math.abs(e.clientY - dragging.y) > 5) dragging.moved = true;
     yawView = dragging.yaw - (e.clientX - dragging.x) * 0.01; idle = 0;
   });
+  var floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), floorHit = new THREE.Vector3();
   canvas.addEventListener("pointerup", function (e) {
-    if (dragging && !dragging.moved && theme.onPick) {
+    if (dragging && !dragging.moved && (theme.onPick || theme.onFloorClick)) {
       var r = canvas.getBoundingClientRect();
       ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       ray.setFromCamera(ndc, camera);
       var hit = ray.intersectObjects(pickables, false)[0];
-      theme.onPick(hit ? hit.object.userData.part : null);
+      if (theme.onPick) theme.onPick(hit ? hit.object.userData.part : null);
+      // 바닥(z = 0) 클릭 좌표를 ROS 좌표로 넘긴다: three (x, -, z) → ROS (x, −z)
+      if (!hit && theme.onFloorClick && ray.ray.intersectPlane(floorPlane, floorHit)) theme.onFloorClick(floorHit.x, -floorHit.z);
     }
     dragging = null;
   });
   canvas.addEventListener("wheel", function (e) {
     e.preventDefault(); idle = 0;
-    dist = Math.max(0.5, Math.min(5.5, dist * (e.deltaY > 0 ? 1.1 : 0.9)));
+    dist = Math.max(0.5, Math.min(theme.maxDist || 5.5, dist * (e.deltaY > 0 ? 1.1 : 0.9)));
   }, { passive: false });
 
   function resize() {
@@ -268,6 +272,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     },
     select: function (part) { selected = part && PARTS[part] ? part : null; },
     setExplode: function (on) { explode.target = on ? 1 : 0; },
+    setDist: function (d) { dist = d; },
     setPose: function (joints, g) {
       joints.forEach(function (q, n) { var j = J[n]; j.target = Math.max(j.lo, Math.min(j.hi, q)); });
       if (g !== undefined && g !== null) grip.target = Math.max(grip.lo, Math.min(grip.hi, g));
