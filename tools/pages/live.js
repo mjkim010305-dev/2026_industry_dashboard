@@ -230,9 +230,10 @@
       ROLE = {}; Object.keys(c.topics).forEach(function (r) { if (c.topics[r]) ROLE[c.topics[r]] = r; });
       $("srvChip").textContent = c.mock ? "모의 서버" : "ROS 도메인 " + c.ros_domain_id;
       var t = CFG.teleop, tgt = $("ctrlTarget");
-      tgt.innerHTML = "<dt>로봇</dt><dd></dd><dt>명령</dt><dd></dd>";
+      tgt.innerHTML = "<dt>로봇</dt><dd></dd>";
       tgt.children[1].textContent = c.mock ? "모의 기체 (ssh 없음)" : (t.username || "?") + "@" + (t.host || "?") + ":" + (t.port || 22);
-      tgt.children[3].textContent = t.command || "(비어 있음)";
+      tgt.title = "teleop 명령: " + (t.command || "(비어 있음)");
+      $("cmdText").textContent = t.command || "(비어 있음)";
       $("btnCtrl").disabled = false;
       wanted = Object.keys(c.topics).filter(function (r) { return r !== "camera" && c.topics[r]; }).map(function (r) { return c.topics[r]; });
       connect();
@@ -448,19 +449,32 @@
   }
   function startCam() {
     if (!camSel.value) return;
-    camOn = true; camBtn.setAttribute("aria-pressed", "true"); camBtn.textContent = "영상 끄기";
+    camOn = true; camBtn.setAttribute("aria-pressed", "true"); camBtn.textContent = "끄기";
     camMsg.textContent = "영상을 기다리는 중"; camMsg.hidden = false;
     camImg.onload = function () { camImg.hidden = false; camMsg.hidden = true; };
     camImg.onerror = function () { camImg.hidden = true; camMsg.hidden = false; camMsg.textContent = "영상을 받지 못했어요 (JPEG 으로 바꿀 수 없는 형식이거나 토픽이 없어요)"; };
     camImg.src = TB3Live.imageUrl(BASE, camSel.value);
   }
   function stopCam() {
-    camOn = false; camBtn.setAttribute("aria-pressed", "false"); camBtn.textContent = "영상 켜기";
+    camOn = false; camBtn.setAttribute("aria-pressed", "false"); camBtn.textContent = "켜기";
     camImg.removeAttribute("src"); camImg.hidden = true; camMsg.hidden = false; camMsg.textContent = "영상은 켤 때만 받아요 (로봇 부하를 줄이려고)";
   }
-  function pickCam(n) { camSel.value = n; startCam(); $("t-cam").scrollIntoView({ block: "nearest" }); }
+  function pickCam(n) { camSel.value = n; startCam(); $("t-cam").scrollIntoView({ block: "nearest", behavior: "smooth" }); }
   camBtn.addEventListener("click", function () { if (camOn) stopCam(); else startCam(); });
   camSel.addEventListener("change", function () { if (camOn) startCam(); });
+
+  // ---------- 한 화면 맞춤: 3D 와 카메라 높이를 남은 화면 높이에 맞춘다(머리 높이가 스타일마다 달라서) ----------
+  var stageEl = $("lvStage"), keyCard = document.querySelector(".lv-keycard"), camEl = $("lvCam"), stateCard = document.querySelector(".lv-statecard");
+  function fit() {
+    if (innerWidth < 1100) { stageEl.style.height = ""; camEl.style.height = ""; return; }
+    var y0 = window.scrollY, pad = 12;
+    var stTop = stageEl.getBoundingClientRect().top + y0;
+    stageEl.style.height = clamp(innerHeight - stTop - (keyCard.offsetHeight + 10 + 8) - pad, 260, 760) + "px";
+    var camTop = camEl.getBoundingClientRect().top + y0;
+    camEl.style.height = clamp(innerHeight - camTop - (stateCard.offsetHeight + 10 + 12) - pad, 150, 520) + "px";
+  }
+  window.addEventListener("resize", fit);
+  fit(); setTimeout(fit, 300); setTimeout(fit, 1500);
 
   useMap();
   loadConfig();

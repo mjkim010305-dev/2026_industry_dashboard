@@ -1,20 +1,45 @@
-/* ---------- 실시간 조종 페이지 ---------- */
-.lv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-@media (min-width: 1000px) { .lv-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
-.lv-main, .lv-side { display: grid; gap: 16px; min-width: 0; }
-.lv-layers { display: flex; flex-wrap: wrap; gap: 12px; }
-.check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 14px; cursor: pointer; }
-.lv-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+/* ---------- 실시간 조종 페이지 (노트북 한 화면: 조종 바 + 3D · 카메라 · 키) ---------- */
+.page { padding-top: 12px; }
+.lv-page .card { padding: 12px 14px; }
+.lv-page .card-head { margin-bottom: 8px; }
+.lv-page .card-head h2, .lv-keyhead h2 { font-size: 16px; margin: 0; }
+
+/* 조종 바 (제목 포함) */
+.lv-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 10px; }
+.lv-page .lv-title { margin: 0 4px 0 0; font-size: 22px; line-height: 1.2; white-space: nowrap; }
+.lv-ctrl-btn { min-width: 128px; }
+.lv-target { display: flex; flex-wrap: wrap; gap: 2px 8px; margin: 0; font-size: 13px; min-width: 0; }
+.lv-target dt { color: var(--text-2); }
+.lv-target dd { margin: 0 10px 0 0; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--text); overflow-wrap: anywhere; }
+.lv-status { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.lv-status.error { color: #C62828; }
+.lv-bar-chips { display: flex; gap: 8px; margin-left: auto; }
+
+/* 조종 화면 */
+.lv-cockpit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 1100px) { .lv-cockpit { grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 430px); align-items: start; } }
+.lv-left, .lv-side { display: grid; gap: 10px; min-width: 0; }
+@media (min-width: 700px) and (max-width: 1099px) { .lv-side { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lv-view.card { padding: 8px; }
+.lv-layers {
+  position: absolute; right: 10px; top: 10px; display: flex; gap: 10px; padding: 3px 10px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62); color: #E8ECF1;
+}
+.check { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; font-size: 12px; cursor: pointer; }
+
+/* 높이: 노트북(브라우저 안 높이 650~730 px)에서 3D + 키가 한 화면에 들어가게 */
+.lv-stage { position: relative; width: 100%; height: clamp(260px, calc(100vh - 330px), 720px); border-radius: 10px; overflow: hidden; background: #0E131A; cursor: grab; }
+@media (max-width: 1099px) { .lv-stage { height: auto; aspect-ratio: 16 / 10; } }
 .lv-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .lv-stage .v-hint {
-  position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
-  color: #E8ECF1; font-size: 13px; pointer-events: none;
+  position: absolute; left: 10px; bottom: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 12px; pointer-events: none;
 }
-.lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
+.lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
 .lv-stage .v-msg[hidden] { display: none; }
-.lv-badges { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+.lv-badges { position: absolute; left: 10px; top: 10px; right: 240px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
 .lv-badge {
-  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px;
   background: rgba(0, 0, 0, 0.62); color: #E8ECF1; font-size: 13px; font-weight: 700;
 }
 .lv-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #8A94A3; flex: 0 0 auto; }
@@ -22,51 +47,59 @@
 .lv-badge[data-tone="warn"]::before { background: #F2B134; box-shadow: 0 0 0 3px rgba(242, 177, 52, 0.25); }
 .lv-badge[data-tone="bad"]::before { background: #FF5A5A; box-shadow: 0 0 0 3px rgba(255, 90, 90, 0.25); }
 .lv-warn {
-  position: absolute; left: 12px; right: 12px; bottom: 52px; margin: 0; padding: 8px 12px; border-radius: 10px;
+  position: absolute; left: 10px; right: 10px; bottom: 44px; margin: 0; padding: 8px 12px; border-radius: 10px;
   background: rgba(198, 40, 40, 0.92); color: #FFFFFF; font-size: 13px; font-weight: 600;
 }
 .lv-warn[hidden] { display: none; }
-.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin: 12px 0 0; }
-.lv-readout div { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
-.lv-readout div.est { border-color: #F2B134; }
-.lv-readout dt { font-size: 12px; color: var(--text-2); }
-.lv-readout dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-/* 키 */
-.lv-keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
-.kg-title { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--text); }
-.kg-title span { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--text-2); }
-.kgrid { display: grid; gap: 6px; }
-.kgrid.move { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: ". i ." "j k l" "s s s"; }
+/* 현재 값 (오른쪽) */
+.lv-legend { font-size: 11px; color: var(--text-2); }
+.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 4px; margin: 0; }
+.lv-readout div { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; padding: 3px 6px;
+  border-radius: 6px; background: var(--surface-2); border: 1px solid transparent; min-width: 0; }
+.lv-readout div.est { border-color: #F2B134; }
+.lv-readout dt { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.lv-readout dd { margin: 0; font-size: 12px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 카메라 */
+.lv-camctl { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.lv-camctl select {
+  min-height: 34px; max-width: 190px; padding: 0 8px; font: inherit; font-size: 12px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0;
+}
+.lv-camctl .btn { min-width: 0; min-height: 34px; padding: 0 12px; font-size: 13px; }
+.lv-cam { position: relative; height: clamp(170px, calc(100vh - 470px), 460px); border-radius: 10px; overflow: hidden; background: #0E131A;
+  display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
+.lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.lv-cam img[hidden], .lv-cam span[hidden] { display: none; }
+
+/* 키 (3D 아래 가로로) */
+.lv-keyhead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 6px; }
+.lv-keyhead .lv-note { margin: 0 0 0 auto; }
+.lv-keys { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: 16px; }
+.kg-title { margin: 0 0 4px; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.kgrid { display: grid; gap: 5px; }
+.kgrid.move { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: ". i . s" "j k l s"; }
 .kgrid.move [data-key="i"] { grid-area: i; } .kgrid.move [data-key="j"] { grid-area: j; }
 .kgrid.move [data-key="k"] { grid-area: k; } .kgrid.move [data-key="l"] { grid-area: l; }
 .kgrid.move [data-key=" "] { grid-area: s; }
-.kgrid.arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.kgrid.grip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kgrid.arm { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr); }   /* 1 2 3 4 o / q w e r p */
 .lk {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; padding: 4px;
-  border-radius: 10px; border: 1px solid var(--line); border-bottom-width: 3px; background: var(--surface); color: var(--text);
-  font: inherit; cursor: pointer; touch-action: manipulation;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-height: 38px; padding: 2px;
+  border-radius: 8px; border: 1px solid var(--line); border-bottom-width: 3px; background: var(--surface); color: var(--text);
+  font: inherit; cursor: pointer; touch-action: manipulation; min-width: 0;
 }
-.lk b { font-family: ui-monospace, Consolas, monospace; font-size: 16px; }
-.lk span { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.lk b { font-family: ui-monospace, Consolas, monospace; font-size: 15px; line-height: 1.2; }
+.lk span { font-size: 10px; color: var(--text-2); white-space: nowrap; }
 .lk.on { background: var(--robot-accent); border-color: var(--robot-accent); color: #FFFFFF; transform: translateY(1px); }
 .lk.on span { color: rgba(255, 255, 255, 0.9); }
-
-/* 폼 · 상태 */
-.lv-target { margin: 0 0 12px; }
-.lv-target dd { overflow-wrap: anywhere; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
-.lv-ctrl-btn { width: 100%; }
-.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); min-width: 0; }
-.f input, .f select {
-  min-height: 40px; padding: 0 10px; font: inherit; font-size: 14px; color: var(--text);
-  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; width: 100%; min-width: 0;
-}
-.lv-status { margin: 10px 0 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
-.lv-status.error { color: #C62828; font-weight: 600; }
-.lv-note { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+.lv-note { margin: 8px 0 0; font-size: 12px; color: var(--text-2); }
 .lv-note code, .lv-table code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
 .btn[aria-pressed="true"] { outline: 3px solid var(--robot-accent); outline-offset: 1px; }
+
+/* 아래: 통신 상태 · 지도 */
+.lv-more { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+@media (min-width: 900px) { .lv-more { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .lv-link { width: 100%; border-collapse: collapse; font-size: 13px; }
 .lv-link th, .lv-link td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .lv-link thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
@@ -75,8 +108,6 @@
 .lv-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 12px 0 0; font-size: 13px; }
 .lv-kv dt { color: var(--text-2); }
 .lv-kv dd { margin: 0; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-
-/* 지도 */
 .dropzone {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   min-height: 88px; padding: 14px; border-radius: 12px; text-align: center; cursor: pointer;
@@ -91,14 +122,8 @@
 .map-info.error { color: #C62828; font-weight: 600; }
 .btn[hidden] { display: none; }
 
-/* 카메라 */
-.lv-cam { position: relative; margin-top: 10px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #0E131A;
-  display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
-.lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.lv-cam img[hidden], .lv-cam span[hidden] { display: none; }
-
 /* 토픽 */
-.lv-topics { margin-top: 16px; }
+.lv-topics { margin-top: 12px; }
 .table-wrap { overflow-x: auto; }
 .lv-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .lv-table th, .lv-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
@@ -117,3 +142,11 @@
 .lv-raw-head strong { font-family: ui-monospace, Consolas, monospace; color: var(--text); font-size: 14px; }
 .lv-raw pre { margin: 0; padding: 12px; max-height: 420px; overflow: auto; font-family: ui-monospace, Consolas, monospace; font-size: 12px;
   line-height: 1.5; background: #0E131A; color: #D7DEE8; white-space: pre; }
+
+/* 좁은 화면: 3D 위 보이기 스위치는 아래 오른쪽으로 */
+@media (max-width: 699px) {
+  .lv-badges { right: 10px; }
+  .lv-layers { top: auto; bottom: 10px; }
+  .lv-stage .v-hint { display: none; }
+  .lv-keys { grid-template-columns: minmax(0, 1fr); }
+}

@@ -311,23 +311,48 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .cell:hover .name { color: #C7511F; text-decoration: underline; }
 .btn.primary:hover { background: #F7CA00; filter: none; }
 
-/* ---------- 실시간 조종 페이지 ---------- */
-.lv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-@media (min-width: 1000px) { .lv-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
-.lv-main, .lv-side { display: grid; gap: 16px; min-width: 0; }
-.lv-layers { display: flex; flex-wrap: wrap; gap: 12px; }
-.check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 14px; cursor: pointer; }
-.lv-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+/* ---------- 실시간 조종 페이지 (노트북 한 화면: 조종 바 + 3D · 카메라 · 키) ---------- */
+.page { padding-top: 12px; }
+.lv-page .card { padding: 12px 14px; }
+.lv-page .card-head { margin-bottom: 8px; }
+.lv-page .card-head h2, .lv-keyhead h2 { font-size: 16px; margin: 0; }
+
+/* 조종 바 (제목 포함) */
+.lv-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 10px; }
+.lv-page .lv-title { margin: 0 4px 0 0; font-size: 22px; line-height: 1.2; white-space: nowrap; }
+.lv-ctrl-btn { min-width: 128px; }
+.lv-target { display: flex; flex-wrap: wrap; gap: 2px 8px; margin: 0; font-size: 13px; min-width: 0; }
+.lv-target dt { color: var(--text-2); }
+.lv-target dd { margin: 0 10px 0 0; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--text); overflow-wrap: anywhere; }
+.lv-status { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.lv-status.error { color: #C62828; }
+.lv-bar-chips { display: flex; gap: 8px; margin-left: auto; }
+
+/* 조종 화면 */
+.lv-cockpit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 1100px) { .lv-cockpit { grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 430px); align-items: start; } }
+.lv-left, .lv-side { display: grid; gap: 10px; min-width: 0; }
+@media (min-width: 700px) and (max-width: 1099px) { .lv-side { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lv-view.card { padding: 8px; }
+.lv-layers {
+  position: absolute; right: 10px; top: 10px; display: flex; gap: 10px; padding: 3px 10px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62); color: #E8ECF1;
+}
+.check { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; font-size: 12px; cursor: pointer; }
+
+/* 높이: 노트북(브라우저 안 높이 650~730 px)에서 3D + 키가 한 화면에 들어가게 */
+.lv-stage { position: relative; width: 100%; height: clamp(260px, calc(100vh - 330px), 720px); border-radius: 10px; overflow: hidden; background: #0E131A; cursor: grab; }
+@media (max-width: 1099px) { .lv-stage { height: auto; aspect-ratio: 16 / 10; } }
 .lv-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .lv-stage .v-hint {
-  position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
-  color: #E8ECF1; font-size: 13px; pointer-events: none;
+  position: absolute; left: 10px; bottom: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 12px; pointer-events: none;
 }
-.lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
+.lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; text-align: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
 .lv-stage .v-msg[hidden] { display: none; }
-.lv-badges { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+.lv-badges { position: absolute; left: 10px; top: 10px; right: 240px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; }
 .lv-badge {
-  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px;
   background: rgba(0, 0, 0, 0.62); color: #E8ECF1; font-size: 13px; font-weight: 700;
 }
 .lv-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #8A94A3; flex: 0 0 auto; }
@@ -335,51 +360,59 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .lv-badge[data-tone="warn"]::before { background: #F2B134; box-shadow: 0 0 0 3px rgba(242, 177, 52, 0.25); }
 .lv-badge[data-tone="bad"]::before { background: #FF5A5A; box-shadow: 0 0 0 3px rgba(255, 90, 90, 0.25); }
 .lv-warn {
-  position: absolute; left: 12px; right: 12px; bottom: 52px; margin: 0; padding: 8px 12px; border-radius: 10px;
+  position: absolute; left: 10px; right: 10px; bottom: 44px; margin: 0; padding: 8px 12px; border-radius: 10px;
   background: rgba(198, 40, 40, 0.92); color: #FFFFFF; font-size: 13px; font-weight: 600;
 }
 .lv-warn[hidden] { display: none; }
-.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin: 12px 0 0; }
-.lv-readout div { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
-.lv-readout div.est { border-color: #F2B134; }
-.lv-readout dt { font-size: 12px; color: var(--text-2); }
-.lv-readout dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
-/* 키 */
-.lv-keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
-.kg-title { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--text); }
-.kg-title span { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--text-2); }
-.kgrid { display: grid; gap: 6px; }
-.kgrid.move { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: ". i ." "j k l" "s s s"; }
+/* 현재 값 (오른쪽) */
+.lv-legend { font-size: 11px; color: var(--text-2); }
+.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 4px; margin: 0; }
+.lv-readout div { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; padding: 3px 6px;
+  border-radius: 6px; background: var(--surface-2); border: 1px solid transparent; min-width: 0; }
+.lv-readout div.est { border-color: #F2B134; }
+.lv-readout dt { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.lv-readout dd { margin: 0; font-size: 12px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 카메라 */
+.lv-camctl { display: flex; gap: 6px; align-items: center; min-width: 0; }
+.lv-camctl select {
+  min-height: 34px; max-width: 190px; padding: 0 8px; font: inherit; font-size: 12px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; min-width: 0;
+}
+.lv-camctl .btn { min-width: 0; min-height: 34px; padding: 0 12px; font-size: 13px; }
+.lv-cam { position: relative; height: clamp(170px, calc(100vh - 470px), 460px); border-radius: 10px; overflow: hidden; background: #0E131A;
+  display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
+.lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.lv-cam img[hidden], .lv-cam span[hidden] { display: none; }
+
+/* 키 (3D 아래 가로로) */
+.lv-keyhead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 6px; }
+.lv-keyhead .lv-note { margin: 0 0 0 auto; }
+.lv-keys { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 6fr); gap: 16px; }
+.kg-title { margin: 0 0 4px; font-size: 12px; font-weight: 700; color: var(--text-2); }
+.kgrid { display: grid; gap: 5px; }
+.kgrid.move { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-areas: ". i . s" "j k l s"; }
 .kgrid.move [data-key="i"] { grid-area: i; } .kgrid.move [data-key="j"] { grid-area: j; }
 .kgrid.move [data-key="k"] { grid-area: k; } .kgrid.move [data-key="l"] { grid-area: l; }
 .kgrid.move [data-key=" "] { grid-area: s; }
-.kgrid.arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.kgrid.grip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.kgrid.arm { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.4fr); }   /* 1 2 3 4 o / q w e r p */
 .lk {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; padding: 4px;
-  border-radius: 10px; border: 1px solid var(--line); border-bottom-width: 3px; background: var(--surface); color: var(--text);
-  font: inherit; cursor: pointer; touch-action: manipulation;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; min-height: 38px; padding: 2px;
+  border-radius: 8px; border: 1px solid var(--line); border-bottom-width: 3px; background: var(--surface); color: var(--text);
+  font: inherit; cursor: pointer; touch-action: manipulation; min-width: 0;
 }
-.lk b { font-family: ui-monospace, Consolas, monospace; font-size: 16px; }
-.lk span { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.lk b { font-family: ui-monospace, Consolas, monospace; font-size: 15px; line-height: 1.2; }
+.lk span { font-size: 10px; color: var(--text-2); white-space: nowrap; }
 .lk.on { background: var(--robot-accent); border-color: var(--robot-accent); color: #FFFFFF; transform: translateY(1px); }
 .lk.on span { color: rgba(255, 255, 255, 0.9); }
-
-/* 폼 · 상태 */
-.lv-target { margin: 0 0 12px; }
-.lv-target dd { overflow-wrap: anywhere; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
-.lv-ctrl-btn { width: 100%; }
-.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); min-width: 0; }
-.f input, .f select {
-  min-height: 40px; padding: 0 10px; font: inherit; font-size: 14px; color: var(--text);
-  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; width: 100%; min-width: 0;
-}
-.lv-status { margin: 10px 0 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
-.lv-status.error { color: #C62828; font-weight: 600; }
-.lv-note { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+.lv-note { margin: 8px 0 0; font-size: 12px; color: var(--text-2); }
 .lv-note code, .lv-table code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
 .btn[aria-pressed="true"] { outline: 3px solid var(--robot-accent); outline-offset: 1px; }
+
+/* 아래: 통신 상태 · 지도 */
+.lv-more { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 12px; }
+@media (min-width: 900px) { .lv-more { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; } }
 .lv-link { width: 100%; border-collapse: collapse; font-size: 13px; }
 .lv-link th, .lv-link td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
 .lv-link thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
@@ -388,8 +421,6 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .lv-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 12px 0 0; font-size: 13px; }
 .lv-kv dt { color: var(--text-2); }
 .lv-kv dd { margin: 0; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-
-/* 지도 */
 .dropzone {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   min-height: 88px; padding: 14px; border-radius: 12px; text-align: center; cursor: pointer;
@@ -404,14 +435,8 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .map-info.error { color: #C62828; font-weight: 600; }
 .btn[hidden] { display: none; }
 
-/* 카메라 */
-.lv-cam { position: relative; margin-top: 10px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #0E131A;
-  display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
-.lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.lv-cam img[hidden], .lv-cam span[hidden] { display: none; }
-
 /* 토픽 */
-.lv-topics { margin-top: 16px; }
+.lv-topics { margin-top: 12px; }
 .table-wrap { overflow-x: auto; }
 .lv-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .lv-table th, .lv-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
@@ -431,6 +456,14 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 .lv-raw pre { margin: 0; padding: 12px; max-height: 420px; overflow: auto; font-family: ui-monospace, Consolas, monospace; font-size: 12px;
   line-height: 1.5; background: #0E131A; color: #D7DEE8; white-space: pre; }
 
+/* 좁은 화면: 3D 위 보이기 스위치는 아래 오른쪽으로 */
+@media (max-width: 699px) {
+  .lv-badges { right: 10px; }
+  .lv-layers { top: auto; bottom: 10px; }
+  .lv-stage .v-hint { display: none; }
+  .lv-keys { grid-template-columns: minmax(0, 1fr); }
+}
+
 :root { --robot-accent: #FF9900; }
 </style>
 </head>
@@ -439,113 +472,113 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 <header class="az"><div class="az-top"><div class="in"><span class="wordmark">turtlebot3</span><span class="az-msg">ROS 2 · turtlebot3_manipulation</span></div></div><nav class="az-sub" aria-label="화면 이동"><div class="in"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="live.html" aria-current="page">실시간 조종<span class="vh"> (현재 탭)</span></a></li><li><a href="survey.html">설문</a></li></ul></div></nav></header>
 
 <div class="page">
-  <main id="main">
-    <div class="page-head">
-      <p class="eyebrow">LIVE · TELEOP</p>
-      <h1>실시간 조종</h1>
-      <p class="lead">키보드로 실제 로봇을 조종하고, ROS 2 토픽으로 받은 팔·바퀴·위치를 3D 에 그대로 맞춰 보여줘요. 통신이 나쁘면 지도와 보낸 키로 움직임을 추정해서 이어 그려요.</p>
-    </div>
+  <main id="main" class="lv-page">
+    <!-- 조종 바: 제목 + 조종 시작 + 상태 (조종 중에 늘 보이는 것) -->
+    <section class="card lv-bar" aria-label="조종 연결">
+      <h1 class="lv-title">실시간 조종</h1>
+      <button type="button" class="btn primary lv-ctrl-btn" id="btnCtrl" disabled>조종 시작</button>
+      <dl class="lv-target" id="ctrlTarget"><dt>로봇</dt><dd>서버 설정을 읽는 중</dd></dl>
+      <p class="lv-status" id="ctrlStatus" aria-live="polite">연결 안 됨</p>
+      <div class="lv-bar-chips">
+        <span class="chip" id="srvChip">서버 확인 중</span>
+        <span class="chip" id="linkChip" title="통신 상태">—</span>
+      </div>
+    </section>
 
-    <div class="lv-layout">
-      <div class="lv-main">
-        <section class="card" aria-labelledby="t-lv3d">
-          <div class="card-head">
-            <h2 id="t-lv3d">로봇이 보는 환경</h2>
-            <div class="lv-layers" role="group" aria-label="보이기">
-              <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
-              <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
-              <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
-            </div>
-          </div>
+    <!-- 조종 화면: 노트북 한 화면에 3D · 키 (왼쪽), 카메라 · 현재 값 (오른쪽) -->
+    <div class="lv-cockpit">
+      <div class="lv-left">
+        <section class="card lv-view" aria-label="로봇이 보는 환경 (3D)">
           <div class="lv-stage" id="lvStage">
             <canvas id="lvCanvas" aria-hidden="true"></canvas>
             <div class="lv-badges">
               <span class="lv-badge" id="modeBadge" data-tone="off">연결 안 됨</span>
               <span class="lv-badge" id="ctrlBadge" data-tone="off">조종 안 함</span>
             </div>
+            <div class="lv-layers" role="group" aria-label="3D 에 보이기">
+              <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
+              <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
+              <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
+            </div>
             <span class="v-hint">끌어서 회전 · 휠로 확대</span>
             <div class="v-msg" id="lvMsg">3D 기체를 불러오는 중</div>
             <p class="lv-warn" id="lvWarn" role="alert" hidden></p>
           </div>
-          <dl class="lv-readout" id="lvReadout" aria-label="현재 상태"></dl>
         </section>
 
-        <section class="card" aria-labelledby="t-keys">
-          <div class="card-head"><h2 id="t-keys">조종 키</h2><span class="chip" id="keyMode">로봇에 안 보냄</span></div>
-          <div class="lv-keys" id="lvKeys">
-            <div class="kgroup" aria-label="이동">
-              <p class="kg-title">이동 <span>한 번에 ±0.01 m/s · ±0.1 rad/s</span></p>
-              <div class="kgrid move">
-                <button type="button" class="lk" data-key="i"><b>i</b><span>앞으로</span></button>
-                <button type="button" class="lk" data-key="j"><b>j</b><span>왼쪽</span></button>
-                <button type="button" class="lk" data-key="k"><b>k</b><span>뒤로</span></button>
-                <button type="button" class="lk" data-key="l"><b>l</b><span>오른쪽</span></button>
-                <button type="button" class="lk wide" data-key=" "><b>space</b><span>정지</span></button>
-              </div>
-            </div>
-            <div class="kgroup" aria-label="팔">
-              <p class="kg-title">팔 <span>한 번에 한 칸</span></p>
-              <div class="kgrid arm">
-                <button type="button" class="lk" data-key="1"><b>1</b><span>joint1 +</span></button>
-                <button type="button" class="lk" data-key="2"><b>2</b><span>joint2 +</span></button>
-                <button type="button" class="lk" data-key="3"><b>3</b><span>joint3 +</span></button>
-                <button type="button" class="lk" data-key="4"><b>4</b><span>joint4 +</span></button>
-                <button type="button" class="lk" data-key="q"><b>q</b><span>joint1 −</span></button>
-                <button type="button" class="lk" data-key="w"><b>w</b><span>joint2 −</span></button>
-                <button type="button" class="lk" data-key="e"><b>e</b><span>joint3 −</span></button>
-                <button type="button" class="lk" data-key="r"><b>r</b><span>joint4 −</span></button>
-              </div>
-            </div>
-            <div class="kgroup" aria-label="그리퍼">
-              <p class="kg-title">그리퍼</p>
-              <div class="kgrid grip">
-                <button type="button" class="lk" data-key="o"><b>o</b><span>열기</span></button>
-                <button type="button" class="lk" data-key="p"><b>p</b><span>닫기</span></button>
-              </div>
+        <section class="card lv-keycard" aria-labelledby="t-keys">
+          <div class="lv-keyhead"><h2 id="t-keys">조종 키</h2><span class="chip" id="keyMode">로봇에 안 보냄</span>
+            <p class="lv-note" id="keyNote">i/k 한 번에 ±0.01 m/s · j/l ±0.1 rad/s · 누르고 있으면 계속 들어가요</p></div>
+        <div class="lv-keys" id="lvKeys">
+          <div class="kgroup" aria-label="이동">
+                        <div class="kgrid move">
+              <button type="button" class="lk" data-key="i"><b>i</b><span>앞</span></button>
+              <button type="button" class="lk" data-key="j"><b>j</b><span>왼쪽</span></button>
+              <button type="button" class="lk" data-key="k"><b>k</b><span>뒤</span></button>
+              <button type="button" class="lk" data-key="l"><b>l</b><span>오른쪽</span></button>
+              <button type="button" class="lk wide" data-key=" "><b>space</b><span>정지</span></button>
             </div>
           </div>
-          <p class="lv-note" id="keyNote">키를 누르고 있으면 계속 들어가요(터미널 teleop 과 같음). 입력칸에 글자를 쓰는 동안은 보내지 않아요.</p>
+          <div class="kgroup" aria-label="팔과 그리퍼">
+                        <div class="kgrid arm">
+              <button type="button" class="lk" data-key="1"><b>1</b><span>j1 +</span></button>
+              <button type="button" class="lk" data-key="2"><b>2</b><span>j2 +</span></button>
+              <button type="button" class="lk" data-key="3"><b>3</b><span>j3 +</span></button>
+              <button type="button" class="lk" data-key="4"><b>4</b><span>j4 +</span></button>
+                <button type="button" class="lk" data-key="o"><b>o</b><span>그리퍼 열기</span></button>
+              <button type="button" class="lk" data-key="q"><b>q</b><span>j1 −</span></button>
+              <button type="button" class="lk" data-key="w"><b>w</b><span>j2 −</span></button>
+              <button type="button" class="lk" data-key="e"><b>e</b><span>j3 −</span></button>
+              <button type="button" class="lk" data-key="r"><b>r</b><span>j4 −</span></button>
+                            <button type="button" class="lk" data-key="p"><b>p</b><span>그리퍼 닫기</span></button>
+            </div>
+          </div>
+        </div>
         </section>
       </div>
 
       <div class="lv-side">
-        <section class="card" aria-labelledby="t-ctrl">
-          <div class="card-head"><h2 id="t-ctrl">조종 연결</h2><span class="chip" id="srvChip">서버 확인 중</span></div>
-          <dl class="lv-kv lv-target" id="ctrlTarget"><dt>로봇</dt><dd>서버 설정을 읽는 중</dd></dl>
-          <button type="button" class="btn primary lv-ctrl-btn" id="btnCtrl" disabled>조종 시작</button>
-          <p class="lv-status" id="ctrlStatus" aria-live="polite">연결 안 됨</p>
-          <p class="lv-note">접속 정보는 서버의 <code>ros/config.yaml</code>(teleop) 에서 정해요. 서버가 ssh 키로 로봇에 들어가 teleop 을 켜고 키를 넣어요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요.</p>
-        </section>
-
-        <section class="card" aria-labelledby="t-link">
-          <div class="card-head"><h2 id="t-link">통신 상태</h2><span class="chip" id="linkChip">—</span></div>
-          <table class="lv-link">
-            <thead><tr><th scope="col">받는 것</th><th scope="col">마지막</th><th scope="col">주기</th></tr></thead>
-            <tbody id="linkBody"></tbody>
-          </table>
-          <dl class="lv-kv" id="linkKv"></dl>
-          <p class="lv-note" id="srvNote">서버 주소: <code id="srvUrl"></code></p>
-        </section>
-
-        <section class="card" aria-labelledby="t-map">
-          <div class="card-head"><h2 id="t-map">지도</h2><span class="chip" id="mapChip">없음</span></div>
-          <label class="dropzone" id="dropzone">
-            <input type="file" id="mapFiles" multiple accept=".yaml,.yml,.pgm,.png,.jpg,.jpeg,.bmp">
-            <strong>map.yaml + map.pgm 올리기</strong>
-            <span>통신이 나빠 /map 을 못 받을 때 쓰세요. 올린 지도가 우선이에요</span>
-          </label>
-          <p class="map-info" id="mapInfo" aria-live="polite">/map 을 기다리는 중</p>
-          <button type="button" class="btn" id="btnMapClear" hidden>올린 지도 지우기 (/map 쓰기)</button>
-        </section>
-
-        <section class="card" aria-labelledby="t-cam">
-          <div class="card-head"><h2 id="t-cam">카메라</h2>
-            <button type="button" class="btn" id="btnCam" aria-pressed="false" disabled>영상 켜기</button>
+        <section class="card lv-camcard" aria-labelledby="t-cam">
+          <div class="card-head">
+            <h2 id="t-cam">카메라</h2>
+            <div class="lv-camctl">
+              <label class="vh" for="camTopic">영상 토픽</label>
+              <select id="camTopic" disabled><option value="">영상 토픽 없음</option></select>
+              <button type="button" class="btn" id="btnCam" aria-pressed="false" disabled>켜기</button>
+            </div>
           </div>
-          <label class="f">토픽<select id="camTopic" disabled><option value="">영상 토픽 없음</option></select></label>
           <div class="lv-cam" id="lvCam"><img id="camImg" alt="로봇 카메라 영상" hidden><span id="camMsg">영상은 켤 때만 받아요 (로봇 부하를 줄이려고)</span></div>
         </section>
+
+        <section class="card lv-statecard" aria-labelledby="t-state">
+          <div class="card-head"><h2 id="t-state">현재 값</h2><span class="lv-legend">노란 테두리 = 추정</span></div>
+          <dl class="lv-readout" id="lvReadout"></dl>
+        </section>
       </div>
+    </div>
+
+    <!-- 아래: 준비 · 문제 확인용 -->
+    <div class="lv-more">
+      <section class="card" aria-labelledby="t-link">
+        <div class="card-head"><h2 id="t-link">통신 상태</h2></div>
+        <table class="lv-link">
+          <thead><tr><th scope="col">받는 것</th><th scope="col">마지막</th><th scope="col">주기</th></tr></thead>
+          <tbody id="linkBody"></tbody>
+        </table>
+        <dl class="lv-kv" id="linkKv"></dl>
+        <p class="lv-note">teleop 명령: <code id="cmdText">—</code><br>서버 주소: <code id="srvUrl"></code> · 접속 정보와 토픽 이름은 서버의 <code>ros/config.yaml</code> 에서 정해요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요.</p>
+      </section>
+
+      <section class="card" aria-labelledby="t-map">
+        <div class="card-head"><h2 id="t-map">지도</h2><span class="chip" id="mapChip">없음</span></div>
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="mapFiles" multiple accept=".yaml,.yml,.pgm,.png,.jpg,.jpeg,.bmp">
+          <strong>map.yaml + map.pgm 올리기</strong>
+          <span>통신이 나빠 /map 을 못 받을 때 쓰세요. 올린 지도가 우선이에요</span>
+        </label>
+        <p class="map-info" id="mapInfo" aria-live="polite">/map 을 기다리는 중</p>
+        <button type="button" class="btn" id="btnMapClear" hidden>올린 지도 지우기 (/map 쓰기)</button>
+      </section>
     </div>
 
     <section class="card lv-topics" aria-labelledby="t-topics">
@@ -803,9 +836,10 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
       ROLE = {}; Object.keys(c.topics).forEach(function (r) { if (c.topics[r]) ROLE[c.topics[r]] = r; });
       $("srvChip").textContent = c.mock ? "모의 서버" : "ROS 도메인 " + c.ros_domain_id;
       var t = CFG.teleop, tgt = $("ctrlTarget");
-      tgt.innerHTML = "<dt>로봇</dt><dd></dd><dt>명령</dt><dd></dd>";
+      tgt.innerHTML = "<dt>로봇</dt><dd></dd>";
       tgt.children[1].textContent = c.mock ? "모의 기체 (ssh 없음)" : (t.username || "?") + "@" + (t.host || "?") + ":" + (t.port || 22);
-      tgt.children[3].textContent = t.command || "(비어 있음)";
+      tgt.title = "teleop 명령: " + (t.command || "(비어 있음)");
+      $("cmdText").textContent = t.command || "(비어 있음)";
       $("btnCtrl").disabled = false;
       wanted = Object.keys(c.topics).filter(function (r) { return r !== "camera" && c.topics[r]; }).map(function (r) { return c.topics[r]; });
       connect();
@@ -1021,19 +1055,32 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
   }
   function startCam() {
     if (!camSel.value) return;
-    camOn = true; camBtn.setAttribute("aria-pressed", "true"); camBtn.textContent = "영상 끄기";
+    camOn = true; camBtn.setAttribute("aria-pressed", "true"); camBtn.textContent = "끄기";
     camMsg.textContent = "영상을 기다리는 중"; camMsg.hidden = false;
     camImg.onload = function () { camImg.hidden = false; camMsg.hidden = true; };
     camImg.onerror = function () { camImg.hidden = true; camMsg.hidden = false; camMsg.textContent = "영상을 받지 못했어요 (JPEG 으로 바꿀 수 없는 형식이거나 토픽이 없어요)"; };
     camImg.src = TB3Live.imageUrl(BASE, camSel.value);
   }
   function stopCam() {
-    camOn = false; camBtn.setAttribute("aria-pressed", "false"); camBtn.textContent = "영상 켜기";
+    camOn = false; camBtn.setAttribute("aria-pressed", "false"); camBtn.textContent = "켜기";
     camImg.removeAttribute("src"); camImg.hidden = true; camMsg.hidden = false; camMsg.textContent = "영상은 켤 때만 받아요 (로봇 부하를 줄이려고)";
   }
-  function pickCam(n) { camSel.value = n; startCam(); $("t-cam").scrollIntoView({ block: "nearest" }); }
+  function pickCam(n) { camSel.value = n; startCam(); $("t-cam").scrollIntoView({ block: "nearest", behavior: "smooth" }); }
   camBtn.addEventListener("click", function () { if (camOn) stopCam(); else startCam(); });
   camSel.addEventListener("change", function () { if (camOn) startCam(); });
+
+  // ---------- 한 화면 맞춤: 3D 와 카메라 높이를 남은 화면 높이에 맞춘다(머리 높이가 스타일마다 달라서) ----------
+  var stageEl = $("lvStage"), keyCard = document.querySelector(".lv-keycard"), camEl = $("lvCam"), stateCard = document.querySelector(".lv-statecard");
+  function fit() {
+    if (innerWidth < 1100) { stageEl.style.height = ""; camEl.style.height = ""; return; }
+    var y0 = window.scrollY, pad = 12;
+    var stTop = stageEl.getBoundingClientRect().top + y0;
+    stageEl.style.height = clamp(innerHeight - stTop - (keyCard.offsetHeight + 10 + 8) - pad, 260, 760) + "px";
+    var camTop = camEl.getBoundingClientRect().top + y0;
+    camEl.style.height = clamp(innerHeight - camTop - (stateCard.offsetHeight + 10 + 12) - pad, 150, 520) + "px";
+  }
+  window.addEventListener("resize", fit);
+  fit(); setTimeout(fit, 300); setTimeout(fit, 1500);
 
   useMap();
   loadConfig();

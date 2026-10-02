@@ -1,111 +1,111 @@
 <div class="page">
-  <main id="main">
-    <div class="page-head">
-      <p class="eyebrow">LIVE · TELEOP</p>
-      <h1>실시간 조종</h1>
-      <p class="lead">키보드로 실제 로봇을 조종하고, ROS 2 토픽으로 받은 팔·바퀴·위치를 3D 에 그대로 맞춰 보여줘요. 통신이 나쁘면 지도와 보낸 키로 움직임을 추정해서 이어 그려요.</p>
-    </div>
+  <main id="main" class="lv-page">
+    <!-- 조종 바: 제목 + 조종 시작 + 상태 (조종 중에 늘 보이는 것) -->
+    <section class="card lv-bar" aria-label="조종 연결">
+      <h1 class="lv-title">실시간 조종</h1>
+      <button type="button" class="btn primary lv-ctrl-btn" id="btnCtrl" disabled>조종 시작</button>
+      <dl class="lv-target" id="ctrlTarget"><dt>로봇</dt><dd>서버 설정을 읽는 중</dd></dl>
+      <p class="lv-status" id="ctrlStatus" aria-live="polite">연결 안 됨</p>
+      <div class="lv-bar-chips">
+        <span class="chip" id="srvChip">서버 확인 중</span>
+        <span class="chip" id="linkChip" title="통신 상태">—</span>
+      </div>
+    </section>
 
-    <div class="lv-layout">
-      <div class="lv-main">
-        <section class="card" aria-labelledby="t-lv3d">
-          <div class="card-head">
-            <h2 id="t-lv3d">로봇이 보는 환경</h2>
-            <div class="lv-layers" role="group" aria-label="보이기">
-              <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
-              <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
-              <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
-            </div>
-          </div>
+    <!-- 조종 화면: 노트북 한 화면에 3D · 키 (왼쪽), 카메라 · 현재 값 (오른쪽) -->
+    <div class="lv-cockpit">
+      <div class="lv-left">
+        <section class="card lv-view" aria-label="로봇이 보는 환경 (3D)">
           <div class="lv-stage" id="lvStage">
             <canvas id="lvCanvas" aria-hidden="true"></canvas>
             <div class="lv-badges">
               <span class="lv-badge" id="modeBadge" data-tone="off">연결 안 됨</span>
               <span class="lv-badge" id="ctrlBadge" data-tone="off">조종 안 함</span>
             </div>
+            <div class="lv-layers" role="group" aria-label="3D 에 보이기">
+              <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
+              <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
+              <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
+            </div>
             <span class="v-hint">끌어서 회전 · 휠로 확대</span>
             <div class="v-msg" id="lvMsg">3D 기체를 불러오는 중</div>
             <p class="lv-warn" id="lvWarn" role="alert" hidden></p>
           </div>
-          <dl class="lv-readout" id="lvReadout" aria-label="현재 상태"></dl>
         </section>
 
-        <section class="card" aria-labelledby="t-keys">
-          <div class="card-head"><h2 id="t-keys">조종 키</h2><span class="chip" id="keyMode">로봇에 안 보냄</span></div>
-          <div class="lv-keys" id="lvKeys">
-            <div class="kgroup" aria-label="이동">
-              <p class="kg-title">이동 <span>한 번에 ±0.01 m/s · ±0.1 rad/s</span></p>
-              <div class="kgrid move">
-                <button type="button" class="lk" data-key="i"><b>i</b><span>앞으로</span></button>
-                <button type="button" class="lk" data-key="j"><b>j</b><span>왼쪽</span></button>
-                <button type="button" class="lk" data-key="k"><b>k</b><span>뒤로</span></button>
-                <button type="button" class="lk" data-key="l"><b>l</b><span>오른쪽</span></button>
-                <button type="button" class="lk wide" data-key=" "><b>space</b><span>정지</span></button>
-              </div>
-            </div>
-            <div class="kgroup" aria-label="팔">
-              <p class="kg-title">팔 <span>한 번에 한 칸</span></p>
-              <div class="kgrid arm">
-                <button type="button" class="lk" data-key="1"><b>1</b><span>joint1 +</span></button>
-                <button type="button" class="lk" data-key="2"><b>2</b><span>joint2 +</span></button>
-                <button type="button" class="lk" data-key="3"><b>3</b><span>joint3 +</span></button>
-                <button type="button" class="lk" data-key="4"><b>4</b><span>joint4 +</span></button>
-                <button type="button" class="lk" data-key="q"><b>q</b><span>joint1 −</span></button>
-                <button type="button" class="lk" data-key="w"><b>w</b><span>joint2 −</span></button>
-                <button type="button" class="lk" data-key="e"><b>e</b><span>joint3 −</span></button>
-                <button type="button" class="lk" data-key="r"><b>r</b><span>joint4 −</span></button>
-              </div>
-            </div>
-            <div class="kgroup" aria-label="그리퍼">
-              <p class="kg-title">그리퍼</p>
-              <div class="kgrid grip">
-                <button type="button" class="lk" data-key="o"><b>o</b><span>열기</span></button>
-                <button type="button" class="lk" data-key="p"><b>p</b><span>닫기</span></button>
-              </div>
+        <section class="card lv-keycard" aria-labelledby="t-keys">
+          <div class="lv-keyhead"><h2 id="t-keys">조종 키</h2><span class="chip" id="keyMode">로봇에 안 보냄</span>
+            <p class="lv-note" id="keyNote">i/k 한 번에 ±0.01 m/s · j/l ±0.1 rad/s · 누르고 있으면 계속 들어가요</p></div>
+        <div class="lv-keys" id="lvKeys">
+          <div class="kgroup" aria-label="이동">
+                        <div class="kgrid move">
+              <button type="button" class="lk" data-key="i"><b>i</b><span>앞</span></button>
+              <button type="button" class="lk" data-key="j"><b>j</b><span>왼쪽</span></button>
+              <button type="button" class="lk" data-key="k"><b>k</b><span>뒤</span></button>
+              <button type="button" class="lk" data-key="l"><b>l</b><span>오른쪽</span></button>
+              <button type="button" class="lk wide" data-key=" "><b>space</b><span>정지</span></button>
             </div>
           </div>
-          <p class="lv-note" id="keyNote">키를 누르고 있으면 계속 들어가요(터미널 teleop 과 같음). 입력칸에 글자를 쓰는 동안은 보내지 않아요.</p>
+          <div class="kgroup" aria-label="팔과 그리퍼">
+                        <div class="kgrid arm">
+              <button type="button" class="lk" data-key="1"><b>1</b><span>j1 +</span></button>
+              <button type="button" class="lk" data-key="2"><b>2</b><span>j2 +</span></button>
+              <button type="button" class="lk" data-key="3"><b>3</b><span>j3 +</span></button>
+              <button type="button" class="lk" data-key="4"><b>4</b><span>j4 +</span></button>
+                <button type="button" class="lk" data-key="o"><b>o</b><span>그리퍼 열기</span></button>
+              <button type="button" class="lk" data-key="q"><b>q</b><span>j1 −</span></button>
+              <button type="button" class="lk" data-key="w"><b>w</b><span>j2 −</span></button>
+              <button type="button" class="lk" data-key="e"><b>e</b><span>j3 −</span></button>
+              <button type="button" class="lk" data-key="r"><b>r</b><span>j4 −</span></button>
+                            <button type="button" class="lk" data-key="p"><b>p</b><span>그리퍼 닫기</span></button>
+            </div>
+          </div>
+        </div>
         </section>
       </div>
 
       <div class="lv-side">
-        <section class="card" aria-labelledby="t-ctrl">
-          <div class="card-head"><h2 id="t-ctrl">조종 연결</h2><span class="chip" id="srvChip">서버 확인 중</span></div>
-          <dl class="lv-kv lv-target" id="ctrlTarget"><dt>로봇</dt><dd>서버 설정을 읽는 중</dd></dl>
-          <button type="button" class="btn primary lv-ctrl-btn" id="btnCtrl" disabled>조종 시작</button>
-          <p class="lv-status" id="ctrlStatus" aria-live="polite">연결 안 됨</p>
-          <p class="lv-note">접속 정보는 서버의 <code>ros/config.yaml</code>(teleop) 에서 정해요. 서버가 ssh 키로 로봇에 들어가 teleop 을 켜고 키를 넣어요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요.</p>
-        </section>
-
-        <section class="card" aria-labelledby="t-link">
-          <div class="card-head"><h2 id="t-link">통신 상태</h2><span class="chip" id="linkChip">—</span></div>
-          <table class="lv-link">
-            <thead><tr><th scope="col">받는 것</th><th scope="col">마지막</th><th scope="col">주기</th></tr></thead>
-            <tbody id="linkBody"></tbody>
-          </table>
-          <dl class="lv-kv" id="linkKv"></dl>
-          <p class="lv-note" id="srvNote">서버 주소: <code id="srvUrl"></code></p>
-        </section>
-
-        <section class="card" aria-labelledby="t-map">
-          <div class="card-head"><h2 id="t-map">지도</h2><span class="chip" id="mapChip">없음</span></div>
-          <label class="dropzone" id="dropzone">
-            <input type="file" id="mapFiles" multiple accept=".yaml,.yml,.pgm,.png,.jpg,.jpeg,.bmp">
-            <strong>map.yaml + map.pgm 올리기</strong>
-            <span>통신이 나빠 /map 을 못 받을 때 쓰세요. 올린 지도가 우선이에요</span>
-          </label>
-          <p class="map-info" id="mapInfo" aria-live="polite">/map 을 기다리는 중</p>
-          <button type="button" class="btn" id="btnMapClear" hidden>올린 지도 지우기 (/map 쓰기)</button>
-        </section>
-
-        <section class="card" aria-labelledby="t-cam">
-          <div class="card-head"><h2 id="t-cam">카메라</h2>
-            <button type="button" class="btn" id="btnCam" aria-pressed="false" disabled>영상 켜기</button>
+        <section class="card lv-camcard" aria-labelledby="t-cam">
+          <div class="card-head">
+            <h2 id="t-cam">카메라</h2>
+            <div class="lv-camctl">
+              <label class="vh" for="camTopic">영상 토픽</label>
+              <select id="camTopic" disabled><option value="">영상 토픽 없음</option></select>
+              <button type="button" class="btn" id="btnCam" aria-pressed="false" disabled>켜기</button>
+            </div>
           </div>
-          <label class="f">토픽<select id="camTopic" disabled><option value="">영상 토픽 없음</option></select></label>
           <div class="lv-cam" id="lvCam"><img id="camImg" alt="로봇 카메라 영상" hidden><span id="camMsg">영상은 켤 때만 받아요 (로봇 부하를 줄이려고)</span></div>
         </section>
+
+        <section class="card lv-statecard" aria-labelledby="t-state">
+          <div class="card-head"><h2 id="t-state">현재 값</h2><span class="lv-legend">노란 테두리 = 추정</span></div>
+          <dl class="lv-readout" id="lvReadout"></dl>
+        </section>
       </div>
+    </div>
+
+    <!-- 아래: 준비 · 문제 확인용 -->
+    <div class="lv-more">
+      <section class="card" aria-labelledby="t-link">
+        <div class="card-head"><h2 id="t-link">통신 상태</h2></div>
+        <table class="lv-link">
+          <thead><tr><th scope="col">받는 것</th><th scope="col">마지막</th><th scope="col">주기</th></tr></thead>
+          <tbody id="linkBody"></tbody>
+        </table>
+        <dl class="lv-kv" id="linkKv"></dl>
+        <p class="lv-note">teleop 명령: <code id="cmdText">—</code><br>서버 주소: <code id="srvUrl"></code> · 접속 정보와 토픽 이름은 서버의 <code>ros/config.yaml</code> 에서 정해요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요.</p>
+      </section>
+
+      <section class="card" aria-labelledby="t-map">
+        <div class="card-head"><h2 id="t-map">지도</h2><span class="chip" id="mapChip">없음</span></div>
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="mapFiles" multiple accept=".yaml,.yml,.pgm,.png,.jpg,.jpeg,.bmp">
+          <strong>map.yaml + map.pgm 올리기</strong>
+          <span>통신이 나빠 /map 을 못 받을 때 쓰세요. 올린 지도가 우선이에요</span>
+        </label>
+        <p class="map-info" id="mapInfo" aria-live="polite">/map 을 기다리는 중</p>
+        <button type="button" class="btn" id="btnMapClear" hidden>올린 지도 지우기 (/map 쓰기)</button>
+      </section>
     </div>
 
     <section class="card lv-topics" aria-labelledby="t-topics">
