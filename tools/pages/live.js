@@ -14,7 +14,7 @@
   var CFG = {
     topics: { joint_states: "/joint_states", tf: "/tf", tf_static: "/tf_static", odom: "/odom", cmd_vel: "/cmd_vel", scan: "/scan",
               map: "/map", plan: "/plan", camera: "/camera/camera/color/image_raw" },
-    predict: { linear_step: 0.01, linear_max: 0.26, angular_step: 0.1, angular_max: 1.8, arm_step: 0.05,
+    predict: { linear_step: 0.01, linear_max: 0.26, angular_step: 0.1, angular_max: 1.8, linear_accel: 1.0, angular_accel: 4.0, arm_step: 0.05,
                gripper_open: 0.019, gripper_close: -0.010, fresh_sec: 0.5, lost_sec: 3.0 },
     teleop: {}, mock: false, loaded: false
   };
@@ -186,8 +186,8 @@
       mode = "live";
     } else {
       // 받은 마지막 위치에서 teleop 명령 속도로 이어 간다(가속 제한). 지도 벽에 막히면 멈춘다.
-      est.v += clamp(cmd.v - est.v, -2.5 * dt, 2.5 * dt);
-      est.w += clamp(cmd.w - est.w, -3.2 * dt, 3.2 * dt);
+      est.v += clamp(cmd.v - est.v, -P.linear_accel * dt, P.linear_accel * dt);
+      est.w += clamp(cmd.w - est.w, -P.angular_accel * dt, P.angular_accel * dt);
       var yaw = wrap(est.yaw + est.w * dt), nx = est.x + Math.cos(yaw) * est.v * dt, ny = est.y + Math.sin(yaw) * est.v * dt;
       if (activeMap && est.v && !activeMap.circleFree(nx - 0.064 * Math.cos(yaw), ny - 0.064 * Math.sin(yaw), 0.18)) { est.v = 0; }
       else { est.x = nx; est.y = ny; }

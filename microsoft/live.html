@@ -80,6 +80,39 @@ a { color: var(--accent); }
 .bar .state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-2); }
 .now { font-weight: 700; }
 .live { color: var(--text-2); font-size: 14px; margin-left: auto; }
+/* 타임라인: 메인 영상 재생 위치 (끌어서 이동) */
+.timeline { display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; }
+.tl-time { min-width: 44px; font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; text-align: center; }
+.tl-track { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; height: 28px; }
+.tl-track input[type="range"] {
+  --pct: 0%; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.tl-track input[type="range"]:disabled { cursor: default; opacity: 0.5; }
+.tl-track input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--pct), var(--line) var(--pct));
+}
+.tl-track input[type="range"]::-moz-range-track { height: 6px; border-radius: 999px; background: var(--line); }
+.tl-track input[type="range"]::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--accent); }
+.tl-track input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
+  background: #FFFFFF; border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.tl-track input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #FFFFFF; border: 2px solid var(--accent); }
+.tl-marks { position: absolute; left: 9px; right: 9px; top: 50%; height: 0; pointer-events: none; }
+.tl-marks span { position: absolute; top: -7px; width: 2px; height: 14px; margin-left: -1px; border-radius: 1px; background: var(--text-2); opacity: 0.7; }
+/* 크게 보기: 전체 화면(지원 안 하면 창 가득) */
+.main-wrap:fullscreen, .main-wrap.is-big {
+  display: flex; flex-direction: column; padding: 16px; background: #000; border-radius: 0; color: #F2F4F7;
+}
+.main-wrap.is-big { position: fixed; inset: 0; z-index: 200; }
+.main-wrap:fullscreen .frame, .main-wrap.is-big .frame { flex: 1; aspect-ratio: auto; min-height: 0; border-radius: 0; }
+.main-wrap:fullscreen .tile, .main-wrap.is-big .tile { border-radius: 0; }
+.main-wrap:fullscreen .tl-time, .main-wrap.is-big .tl-time, .main-wrap:fullscreen .live, .main-wrap.is-big .live { color: #C9CED6; }
+.main-wrap:fullscreen .bar .state, .main-wrap.is-big .bar .state { background: rgba(255, 255, 255, 0.1); border-color: transparent; color: #D2D7DE; }
+.main-wrap:fullscreen .btn:not(.primary), .main-wrap.is-big .btn:not(.primary) { background: rgba(255, 255, 255, 0.1); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.25); }
+.frame { cursor: zoom-in; }
+.main-wrap:fullscreen .frame, .main-wrap.is-big .frame { cursor: zoom-out; }
+.cell .frame { cursor: pointer; }
 .list-section { margin-top: 32px; }
 .list-section h2 { margin-bottom: 12px; }
 .list { list-style: none; margin: 0; padding: 4px 4px 16px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; }
@@ -462,7 +495,7 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 </head>
 <body>
 <a class="skip" href="#main">본문 바로가기</a>
-<header class="mshead"><div class="in"><span class="wordmark">turtlebot3</span><span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="live.html" aria-current="page">실시간 조종<span class="vh"> (현재 탭)</span></a></li><li><a href="survey.html">설문</a></li></ul></nav></div></header>
+<header class="mshead"><div class="in"><span class="wordmark">MoNa</span><span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="live.html" aria-current="page">실시간 조종<span class="vh"> (현재 탭)</span></a></li><li><a href="survey.html">설문</a></li></ul></nav></div></header>
 
 <div class="page">
   <main id="main" class="lv-page">
@@ -613,7 +646,7 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
   var CFG = {
     topics: { joint_states: "/joint_states", tf: "/tf", tf_static: "/tf_static", odom: "/odom", cmd_vel: "/cmd_vel", scan: "/scan",
               map: "/map", plan: "/plan", camera: "/camera/camera/color/image_raw" },
-    predict: { linear_step: 0.01, linear_max: 0.26, angular_step: 0.1, angular_max: 1.8, arm_step: 0.05,
+    predict: { linear_step: 0.01, linear_max: 0.26, angular_step: 0.1, angular_max: 1.8, linear_accel: 1.0, angular_accel: 4.0, arm_step: 0.05,
                gripper_open: 0.019, gripper_close: -0.010, fresh_sec: 0.5, lost_sec: 3.0 },
     teleop: {}, mock: false, loaded: false
   };
@@ -785,8 +818,8 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
       mode = "live";
     } else {
       // 받은 마지막 위치에서 teleop 명령 속도로 이어 간다(가속 제한). 지도 벽에 막히면 멈춘다.
-      est.v += clamp(cmd.v - est.v, -2.5 * dt, 2.5 * dt);
-      est.w += clamp(cmd.w - est.w, -3.2 * dt, 3.2 * dt);
+      est.v += clamp(cmd.v - est.v, -P.linear_accel * dt, P.linear_accel * dt);
+      est.w += clamp(cmd.w - est.w, -P.angular_accel * dt, P.angular_accel * dt);
       var yaw = wrap(est.yaw + est.w * dt), nx = est.x + Math.cos(yaw) * est.v * dt, ny = est.y + Math.sin(yaw) * est.v * dt;
       if (activeMap && est.v && !activeMap.circleFree(nx - 0.064 * Math.cos(yaw), ny - 0.064 * Math.sin(yaw), 0.18)) { est.v = 0; }
       else { est.x = nx; est.y = ny; }

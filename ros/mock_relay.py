@@ -165,8 +165,9 @@ class Sim:
                 tw = 0.9 * self.turn if self.turn else 0.15 * math.sin(time.time() * 0.4)
             else:
                 tv = tw = 0.0
-            self.v += max(-2.5 * dt, min(2.5 * dt, tv - self.v))          # 가속 제한
-            self.w += max(-3.2 * dt, min(3.2 * dt, tw - self.w))
+            la, aa = self.pred["linear_accel"], self.pred["angular_accel"]   # 가속 제한(diff_drive_controller 값)
+            self.v += max(-la * dt, min(la * dt, tv - self.v))
+            self.w += max(-aa * dt, min(aa * dt, tw - self.w))
             nx, ny = self.x + self.v * math.cos(self.yaw) * dt, self.y + self.v * math.sin(self.yaw) * dt
             if self.free_circle(nx, ny):
                 self.x, self.y = nx, ny

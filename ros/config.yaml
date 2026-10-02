@@ -43,12 +43,15 @@ teleop:
   # 로봇에서 먼저 실행돼 있어야 하는 것: hardware.launch.py, moveit_config servo.launch.py
   command: "ros2 run turtlebot3_manipulation_teleop turtlebot3_manipulation_teleop"
 
-# 추정(네트워크가 나쁠 때 화면이 혼자 움직임을 이어 그리는 값). 실제 teleop 소스 값.
+# 추정(네트워크가 나쁠 때 화면이 혼자 움직임을 이어 그리는 값). 로봇의 teleop 소스 · 컨트롤러 설정에서 읽은 값이며
+# 실기체에서 아직 맞춰 보지 않았다(README 의 "실기체 검증이 필요한 것" 참고).
 predict:
   linear_step: 0.01     # i/k 한 번에 m/s (BASE_LINEAR_VEL_STEP)
   linear_max: 0.26
   angular_step: 0.1     # j/l 한 번에 rad/s (BASE_ANGULAR_VEL_STEP)
   angular_max: 1.8
+  linear_accel: 1.0     # m/s² — diff_drive_controller linear.x.max_acceleration (로봇 hardware_controller_manager.yaml)
+  angular_accel: 4.0    # rad/s² — angular.z.max_acceleration
   arm_step: 0.05        # 1~4/q~r 한 번에 rad (처음 값. 실제 /joint_states 로 자동 보정)
   gripper_open: 0.019   # o (teleop 은 0.025 를 보내지만 관절 한도 0.019)
   gripper_close: -0.010 # p (teleop 은 -0.015)

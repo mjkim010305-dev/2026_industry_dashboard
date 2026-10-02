@@ -14,7 +14,8 @@ DEFAULTS = {
     "rates": {"joint_states": 30, "tf": 30, "odom": 20, "cmd_vel": 10, "scan": 10, "plan": 4, "map": 1, "camera": 10},
     "camera_max_width": 640,
     "teleop": {"host": "", "port": 22, "username": "", "key_file": "", "command": ""},
-    "predict": {"linear_step": 0.01, "linear_max": 0.26, "angular_step": 0.1, "angular_max": 1.8, "arm_step": 0.05,
+    "predict": {"linear_step": 0.01, "linear_max": 0.26, "angular_step": 0.1, "angular_max": 1.8,
+                "linear_accel": 1.0, "angular_accel": 4.0, "arm_step": 0.05,
                 "gripper_open": 0.019, "gripper_close": -0.010, "fresh_sec": 0.5, "lost_sec": 3.0},
 }
 

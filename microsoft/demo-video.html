@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>시연 영상 - ROS 2 + turtlebot3_manipulation</title>
-<!-- 마이크로소프트 스타일: design-refs/microsoft.md 참고. 기능 스크립트는 원본(original/demo-video.html)과 같다. -->
+<!-- 마이크로소프트 스타일: design-refs/microsoft.md 참고. 기능 스크립트는 redesign/demo-video.html 과 같다(원본 + 시연 영상 타임라인 · 크게 보기). -->
 <style>
 /* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
 * { box-sizing: border-box; }
@@ -80,6 +80,39 @@ a { color: var(--accent); }
 .bar .state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-2); }
 .now { font-weight: 700; }
 .live { color: var(--text-2); font-size: 14px; margin-left: auto; }
+/* 타임라인: 메인 영상 재생 위치 (끌어서 이동) */
+.timeline { display: flex; align-items: center; gap: 12px; padding: 14px 8px 0; }
+.tl-time { min-width: 44px; font-size: 13px; font-weight: 600; color: var(--text-2); font-variant-numeric: tabular-nums; text-align: center; }
+.tl-track { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; height: 28px; }
+.tl-track input[type="range"] {
+  --pct: 0%; width: 100%; height: 28px; margin: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.tl-track input[type="range"]:disabled { cursor: default; opacity: 0.5; }
+.tl-track input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--pct), var(--line) var(--pct));
+}
+.tl-track input[type="range"]::-moz-range-track { height: 6px; border-radius: 999px; background: var(--line); }
+.tl-track input[type="range"]::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--accent); }
+.tl-track input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
+  background: #FFFFFF; border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+.tl-track input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #FFFFFF; border: 2px solid var(--accent); }
+.tl-marks { position: absolute; left: 9px; right: 9px; top: 50%; height: 0; pointer-events: none; }
+.tl-marks span { position: absolute; top: -7px; width: 2px; height: 14px; margin-left: -1px; border-radius: 1px; background: var(--text-2); opacity: 0.7; }
+/* 크게 보기: 전체 화면(지원 안 하면 창 가득) */
+.main-wrap:fullscreen, .main-wrap.is-big {
+  display: flex; flex-direction: column; padding: 16px; background: #000; border-radius: 0; color: #F2F4F7;
+}
+.main-wrap.is-big { position: fixed; inset: 0; z-index: 200; }
+.main-wrap:fullscreen .frame, .main-wrap.is-big .frame { flex: 1; aspect-ratio: auto; min-height: 0; border-radius: 0; }
+.main-wrap:fullscreen .tile, .main-wrap.is-big .tile { border-radius: 0; }
+.main-wrap:fullscreen .tl-time, .main-wrap.is-big .tl-time, .main-wrap:fullscreen .live, .main-wrap.is-big .live { color: #C9CED6; }
+.main-wrap:fullscreen .bar .state, .main-wrap.is-big .bar .state { background: rgba(255, 255, 255, 0.1); border-color: transparent; color: #D2D7DE; }
+.main-wrap:fullscreen .btn:not(.primary), .main-wrap.is-big .btn:not(.primary) { background: rgba(255, 255, 255, 0.1); color: #FFFFFF; border-color: rgba(255, 255, 255, 0.25); }
+.frame { cursor: zoom-in; }
+.main-wrap:fullscreen .frame, .main-wrap.is-big .frame { cursor: zoom-out; }
+.cell .frame { cursor: pointer; }
 .list-section { margin-top: 32px; }
 .list-section h2 { margin-bottom: 12px; }
 .list { list-style: none; margin: 0; padding: 4px 4px 16px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; }
@@ -307,7 +340,7 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
 </head>
 <body>
 <a class="skip" href="#main">본문 바로가기</a>
-<header class="mshead"><div class="in"><span class="wordmark">turtlebot3</span><span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html" aria-current="page">시연 영상<span class="vh"> (현재 탭)</span></a></li><li><a href="robot.html">기체</a></li><li><a href="live.html">실시간 조종</a></li><li><a href="survey.html">설문</a></li></ul></nav></div></header>
+<header class="mshead"><div class="in"><span class="wordmark">MoNa</span><span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul><li><a href="demo-video.html" aria-current="page">시연 영상<span class="vh"> (현재 탭)</span></a></li><li><a href="robot.html">기체</a></li><li><a href="live.html">실시간 조종</a></li><li><a href="survey.html">설문</a></li></ul></nav></div></header>
 
 <div class="page">
   <main id="main">
@@ -321,9 +354,18 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
     <section class="player" aria-labelledby="t-player">
       <h2 id="t-player" class="vh">메인 플레이어</h2>
       <div class="main-wrap card is-main" id="mainWrap">
-        <div class="frame" id="mainFrame"></div>
+        <div class="frame" id="mainFrame" title="두 번 누르면 크게 보기"></div>
+        <div class="timeline">
+          <span class="tl-time" id="tlNow">0:00</span>
+          <div class="tl-track">
+            <input type="range" id="seek" min="0" max="0" step="0.1" value="0" aria-label="재생 위치" disabled>
+            <div class="tl-marks" id="tlMarks" aria-hidden="true"></div>
+          </div>
+          <span class="tl-time" id="tlDur">0:00</span>
+        </div>
         <div class="bar">
           <button type="button" class="btn primary" id="toggle">일시정지</button>
+          <button type="button" class="btn" id="bigBtn" aria-pressed="false">크게 보기</button>
           <span class="state" id="state" role="status">상태: 재생 중</span>
           <span class="now" id="nowName"></span>
           <span class="live" id="live" aria-live="polite"></span>
@@ -460,6 +502,7 @@ function select(index) {
   setState();
   live.textContent = '지금 재생 중: ' + picked.name;
   VIDEOS.forEach(v => v.markChapters && v.markChapters());
+  drawMarks();
 }
 
 function fmtTime(sec) {
@@ -529,6 +572,79 @@ function jumpTo(v, sec) {
   live.textContent = '지금 재생 중: ' + v.name + ' ' + fmtTime(sec);
 }
 
+// 타임라인: 메인 영상의 재생 위치를 보이고, 끌거나 눌러서 원하는 시각으로 옮긴다. ←/→ 는 5초씩.
+const seek = document.getElementById('seek');
+const tlNow = document.getElementById('tlNow');
+const tlDur = document.getElementById('tlDur');
+const tlMarks = document.getElementById('tlMarks');
+let seeking = false;
+
+function syncTimeline() {
+  if (!mainItem) return;
+  const v = mainItem.video, d = v.duration, ok = isFinite(d) && d > 0;
+  seek.disabled = !ok;
+  if (ok && +seek.max !== d) { seek.max = d; drawMarks(); }
+  if (!seeking) seek.value = ok ? v.currentTime : 0;
+  const t = seeking ? +seek.value : v.currentTime;
+  tlNow.textContent = fmtTime(t);
+  tlDur.textContent = ok ? fmtTime(d) : '0:00';
+  seek.style.setProperty('--pct', ok ? Math.min(100, t / d * 100) + '%' : '0%');
+  seek.setAttribute('aria-valuetext', tlNow.textContent + ' / ' + tlDur.textContent);
+}
+
+// intro 영상이면 구간 시작 위치에 눈금
+function drawMarks() {
+  tlMarks.textContent = '';
+  const d = mainItem && mainItem.video.duration;
+  if (!mainItem || mainItem.name !== CHAPTER_VIDEO || !(d > 0)) return;
+  CHAPTERS.forEach(c => {
+    const m = document.createElement('span');
+    m.style.left = (c.start / d * 100) + '%';
+    m.title = fmtTime(c.start) + ' ' + c.title;
+    tlMarks.appendChild(m);
+  });
+}
+
+function seekTo(sec) {
+  const v = mainItem.video, d = v.duration;
+  if (!(d > 0)) return;
+  v.currentTime = Math.max(0, Math.min(d - 0.05, sec));
+  syncTimeline();
+}
+seek.addEventListener('input', () => { seeking = true; seekTo(+seek.value); });
+seek.addEventListener('change', () => { seeking = false; syncTimeline(); live.textContent = mainItem.name + ' ' + fmtTime(mainItem.video.currentTime) + ' 로 이동'; });
+seek.addEventListener('pointerup', () => { seeking = false; });
+seek.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  e.preventDefault();
+  seekTo(mainItem.video.currentTime + (e.key === 'ArrowRight' ? 5 : -5));
+});
+(function loop() { syncTimeline(); requestAnimationFrame(loop); })();
+
+// 크게 보기: 메인 플레이어(영상 + 타임라인 + 버튼)를 전체 화면으로. 전체 화면을 못 쓰면 창 가득. 영상을 두 번 눌러도 된다.
+const bigBtn = document.getElementById('bigBtn');
+const mainWrap = document.getElementById('mainWrap');
+function isBig() { return document.fullscreenElement === mainWrap || mainWrap.classList.contains('is-big'); }
+function showBig() {
+  const on = isBig();
+  bigBtn.textContent = on ? '작게 보기' : '크게 보기';
+  bigBtn.setAttribute('aria-pressed', String(on));
+}
+function setBig(on) {
+  if (on) {
+    if (mainWrap.requestFullscreen) mainWrap.requestFullscreen().catch(() => { mainWrap.classList.add('is-big'); showBig(); });
+    else mainWrap.classList.add('is-big');
+  } else {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    mainWrap.classList.remove('is-big');
+  }
+  showBig();
+}
+bigBtn.addEventListener('click', () => setBig(!isBig()));
+mainFrame.addEventListener('dblclick', () => setBig(!isBig()));
+document.addEventListener('fullscreenchange', showBig);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mainWrap.classList.contains('is-big')) setBig(false); });
+
 toggle.addEventListener('click', () => {
   const v = mainItem.video;
   if (v.paused) playMain(); else v.pause();
@@ -553,6 +669,7 @@ function init() {
   VIDEOS.forEach(v => { v.video.addEventListener('play', () => { if (v === mainItem) setState(); }); v.video.addEventListener('pause', () => { if (v === mainItem) setState(); }); });
   live.textContent = '지금 재생 중: ' + mainItem.name;
   buildChapters();
+  VIDEOS.forEach(v => v.video.addEventListener('loadedmetadata', () => { if (v === mainItem) drawMarks(); }));
   playMain();
   setState();
 }

@@ -16,6 +16,8 @@ Hub 가 토픽마다 정한 주기(config.yaml rates)로 최신 메시지만 골
   그 밖의 경로                       → --root 폴더의 정적 파일
 """
 import json
+import os
+import re
 import math
 import threading
 import time
@@ -290,8 +292,46 @@ def make_handler(hub, root):
                 self._stream(topics)
             elif u.path == "/api/image":
                 self._mjpeg(q.get("topic", [""])[0])
+            elif self.headers.get("Range"):
+                self._range()
             else:
                 super().do_GET()
+
+        def _range(self):
+            """정적 파일의 일부(Range) 응답. 영상 타임라인으로 원하는 시각에 옮길 때 브라우저가 쓴다."""
+            path = self.translate_path(self.path)
+            m = re.match(r"bytes=(\d*)-(\d*)$", self.headers.get("Range", "").strip())
+            if not m or not os.path.isfile(path) or not (m.group(1) or m.group(2)):
+                return super().do_GET()
+            size = os.path.getsize(path)
+            if m.group(1):
+                start, end = int(m.group(1)), int(m.group(2)) if m.group(2) else size - 1
+            else:
+                start, end = max(0, size - int(m.group(2))), size - 1
+            end = min(end, size - 1)
+            if start > end:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.end_headers()
+                return
+            self.send_response(206)
+            self.send_header("Content-Type", self.guess_type(path))
+            self.send_header("Accept-Ranges", "bytes")
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+            self.send_header("Content-Length", str(end - start + 1))
+            self.end_headers()
+            try:
+                with open(path, "rb") as f:
+                    f.seek(start)
+                    left = end - start + 1
+                    while left > 0:
+                        chunk = f.read(min(256 * 1024, left))
+                        if not chunk:
+                            break
+                        self.wfile.write(chunk)
+                        left -= len(chunk)
+            except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError, OSError):
+                pass
 
         def _stream(self, topics):
             self.send_response(200)

@@ -24,15 +24,15 @@ SCRIPTS_3D = ('<script src="../assets/three.r128.min.js"></script>' + NL
               + '<script src="../assets/robot/tb3_meshes.js"></script>' + NL)
 
 BRANDS = {
-    "samsung": ("삼성", '<header class="gnb"><div class="gnb-in"><span class="wordmark">TURTLEBOT3</span>'
+    "samsung": ("삼성", '<header class="gnb"><div class="gnb-in"><span class="wordmark">MoNa</span>'
                 '<nav aria-label="화면 이동"><ul>{nav}</ul></nav><span class="gnb-meta">ROS 2 · turtlebot3_manipulation</span></div></header>'),
     "lg": ("LG", '<header class="gnb"><div class="util"><div class="in"><span>ROS 2 · turtlebot3_manipulation</span></div></div>'
-           '<div class="in main"><span class="wordmark">turtlebot3</span><nav aria-label="화면 이동"><ul>{nav}</ul></nav></div></header>'),
-    "apple": ("애플", '<header class="gnav"><div class="gnav-in"><span class="wordmark">turtlebot3</span>'
+           '<div class="in main"><span class="wordmark">MoNa</span><nav aria-label="화면 이동"><ul>{nav}</ul></nav></div></header>'),
+    "apple": ("애플", '<header class="gnav"><div class="gnav-in"><span class="wordmark">MoNa</span>'
               '<nav aria-label="화면 이동"><ul>{nav}</ul></nav></div></header>'),
-    "microsoft": ("마이크로소프트", '<header class="mshead"><div class="in"><span class="wordmark">turtlebot3</span>'
+    "microsoft": ("마이크로소프트", '<header class="mshead"><div class="in"><span class="wordmark">MoNa</span>'
                   '<span class="sep" aria-hidden="true"></span><nav aria-label="화면 이동"><ul>{nav}</ul></nav></div></header>'),
-    "amazon": ("아마존", '<header class="az"><div class="az-top"><div class="in"><span class="wordmark">turtlebot3</span>'
+    "amazon": ("아마존", '<header class="az"><div class="az-top"><div class="in"><span class="wordmark">MoNa</span>'
                '<span class="az-msg">ROS 2 · turtlebot3_manipulation</span></div></div>'
                '<nav class="az-sub" aria-label="화면 이동"><div class="in"><ul>{nav}</ul></div></nav></header>'),
 }
@@ -113,7 +113,7 @@ def main():
             src = (ROOT / "redesign" / f"{page}.html").read_text(encoding="utf-8")
             head, body, tail = split_source(src)
             head = re.sub(r"<!-- 리뉴얼:.*?-->",
-                          f"<!-- {label} 스타일: design-refs/{brand}.md 참고. 기능 스크립트는 원본(original/{page}.html)과 같다. -->",
+                          f"<!-- {label} 스타일: design-refs/{brand}.md 참고. 기능 스크립트는 redesign/{page}.html 과 같다(원본 + 시연 영상 타임라인 · 크게 보기). -->",
                           head)
             html = (head + "<style>\n" + base + "\n" + skin + "</style>\n</head>\n<body>\n"
                     + '<a class="skip" href="#main">본문 바로가기</a>\n'
