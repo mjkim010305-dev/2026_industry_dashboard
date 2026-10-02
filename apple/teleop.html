@@ -112,6 +112,13 @@ a { color: var(--accent); }
   content: ""; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px;
   border-color: transparent transparent transparent var(--accent);
 }
+/* intro 구간: 누르면 intro 영상의 재생 위치만 옮긴다 */
+.chapters .cell.is-on { box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
+.cell .stamp {
+  position: absolute; right: 8px; bottom: 10px; z-index: 1; padding: 2px 6px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75); color: #FFFFFF; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.cell .seg { position: absolute; left: 0; bottom: 0; z-index: 1; height: 4px; width: 0; background: var(--accent); }
 .empty { color: var(--text-2); }
 p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24px; box-shadow: var(--shadow); }
 

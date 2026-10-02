@@ -97,6 +97,13 @@ a { color: var(--accent); }
   content: ""; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px;
   border-color: transparent transparent transparent var(--accent);
 }
+/* intro 구간: 누르면 intro 영상의 재생 위치만 옮긴다 */
+.chapters .cell.is-on { box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
+.cell .stamp {
+  position: absolute; right: 8px; bottom: 10px; z-index: 1; padding: 2px 6px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75); color: #FFFFFF; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.cell .seg { position: absolute; left: 0; bottom: 0; z-index: 1; height: 4px; width: 0; background: var(--accent); }
 .empty { color: var(--text-2); }
 p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24px; box-shadow: var(--shadow); }
 
@@ -324,6 +331,11 @@ p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24p
       </div>
     </section>
 
+    <section class="list-section chapters" aria-labelledby="t-chapters" id="chapterSection" hidden>
+      <h2 id="t-chapters">intro 구간</h2>
+      <ul class="list" id="chapters"></ul>
+    </section>
+
     <section class="list-section" aria-labelledby="t-list">
       <h2 id="t-list">영상 목록</h2>
       <ul class="list" id="list"></ul>
@@ -340,6 +352,14 @@ const VIDEOS = [
   { name: "data2", path: "../data/data2.mp4" },
   { name: "data3", path: "../data/data3.mp4" },
   { name: "data4", path: "../data/data4.mp4" }
+];
+// intro 구간: start 는 초 단위 시작 시각(영상 속 장면 전환 기준). 구간 끝은 다음 구간의 start(마지막은 영상 끝).
+const CHAPTER_VIDEO = "intro";
+const CHAPTERS = [
+  { title: "주요 기술 및 핵심 기술", start: 9 },
+  { title: "기존 주행 (우회 주행)", start: 14.5 },
+  { title: "로봇팔로 상자를 미는 시나리오", start: 22 },
+  { title: "기대효과", start: 83 }
 ];
 const DURATION = 300; // 0.3초
 
@@ -439,6 +459,74 @@ function select(index) {
   prev.video.currentTime = 0.001;
   setState();
   live.textContent = '지금 재생 중: ' + picked.name;
+  VIDEOS.forEach(v => v.markChapters && v.markChapters());
+}
+
+function fmtTime(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+
+// intro 구간 목록: 썸네일은 각 구간 시작 장면, 누르면 intro 를 메인으로 올리고 그 시각으로 이동한다.
+function buildChapters() {
+  const host = VIDEOS.find(v => v.name === CHAPTER_VIDEO);
+  if (!host || CHAPTERS.length === 0) return;
+  const listCh = document.getElementById('chapters');
+  const cells = CHAPTERS.map((c, i) => {
+    const li = document.createElement('li');
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cell';
+    b.setAttribute('aria-label', host.name + ' ' + fmtTime(c.start) + '부터 재생: ' + c.title);
+    const fr = document.createElement('div'); fr.className = 'frame';
+    const tile = document.createElement('div'); tile.className = 'tile';
+    const video = document.createElement('video');
+    video.muted = true; video.playsInline = true; video.preload = 'metadata'; video.tabIndex = -1;
+    video.setAttribute('aria-hidden', 'true');
+    video.src = host.path + '#t=' + Math.max(c.start, 0.001);
+    const fail = document.createElement('div');
+    fail.className = 'fail';
+    fail.innerHTML = '<strong>영상을 불러올 수 없습니다</strong><span></span>';
+    fail.lastChild.textContent = host.path;
+    video.addEventListener('error', () => tile.classList.add('failed'));
+    const stamp = document.createElement('span'); stamp.className = 'stamp'; stamp.textContent = fmtTime(c.start);
+    const seg = document.createElement('span'); seg.className = 'seg';
+    tile.append(video, fail);
+    fr.append(tile, stamp, seg);
+    const nm = document.createElement('span'); nm.className = 'name'; nm.textContent = (i + 1) + '. ' + c.title;
+    b.append(fr, nm);
+    b.addEventListener('click', () => jumpTo(host, c.start));
+    li.appendChild(b);
+    listCh.appendChild(li);
+    return { b, seg };
+  });
+
+  // 재생 위치에 맞춰 현재 구간을 표시하고, 구간 안에서 얼마나 진행했는지 막대로 보인다.
+  const mark = () => {
+    const v = host.video, t = v.currentTime, end = v.duration || Infinity;
+    const onMain = host === mainItem;
+    CHAPTERS.forEach((c, i) => {
+      const next = i + 1 < CHAPTERS.length ? CHAPTERS[i + 1].start : end;
+      const on = onMain && t >= c.start && t < next;
+      cells[i].b.classList.toggle('is-on', on);
+      if (on) cells[i].b.setAttribute('aria-current', 'true'); else cells[i].b.removeAttribute('aria-current');
+      const pct = on && isFinite(next) && next > c.start ? (t - c.start) / (next - c.start) * 100 : 0;
+      cells[i].seg.style.width = Math.min(100, pct) + '%';
+    });
+  };
+  host.video.addEventListener('timeupdate', mark);
+  host.video.addEventListener('seeked', mark);
+  host.markChapters = mark;
+  document.getElementById('chapterSection').hidden = false;
+}
+
+function jumpTo(v, sec) {
+  if (v !== mainItem) {
+    if (busy) return;
+    select(slots.indexOf(v));
+  }
+  v.video.currentTime = sec;
+  playMain();
+  live.textContent = '지금 재생 중: ' + v.name + ' ' + fmtTime(sec);
 }
 
 toggle.addEventListener('click', () => {
@@ -464,6 +552,7 @@ function init() {
   mainItem.video.addEventListener('play', setState);
   VIDEOS.forEach(v => { v.video.addEventListener('play', () => { if (v === mainItem) setState(); }); v.video.addEventListener('pause', () => { if (v === mainItem) setState(); }); });
   live.textContent = '지금 재생 중: ' + mainItem.name;
+  buildChapters();
   playMain();
   setState();
 }
