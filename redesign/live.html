@@ -428,7 +428,9 @@ body {
   var accent = getComputedStyle(document.documentElement).getPropertyValue("--robot-accent").trim() || "#0071E3";
   var viewer = createTB3Viewer(THREE, $("lvCanvas"), TB3_MESHES, {
     accent: accent, body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8",
-    ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666, arena: false, floorGrid: false, maxDist: 30, external: true
+    ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666, arena: false, floorGrid: false, maxDist: 30, external: true,
+    // 기본 시점: 기체와 주변 지도를 함께. 화면 위쪽 = 지도 +y (지도 그림과 같은 방향), 기체 앞 0.5 m 를 본다
+    viewYaw: Math.PI / 2 + 0.25, viewDist: 2.8, followPitch: 0.98, lookAhead: 0.5
   });
   msgEl.textContent = "서버에 연결하는 중";
 
