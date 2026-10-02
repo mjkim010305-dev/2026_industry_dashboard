@@ -21,7 +21,7 @@ WSL (ROS 2 Humble): python3 ros/topic_relay.py   ── ros/config.yaml
 | `ros_domain_id` | ROS 2 도메인. 로봇 `~/.bashrc` 와 같게 (지금 30) |
 | `topics.*` | 화면 역할 → 실제 토픽 이름 (joint_states, tf, tf_static, odom, cmd_vel, scan, map, plan, camera) |
 | `rates.*` | 역할별 최대 전송 주기(Hz) |
-| `teleop.*` | ssh 접속 기본값(호스트·포트·계정·키 파일)과 teleop 명령. **비밀번호는 쓰지 않는다** |
+| `teleop.*` | ssh 접속 정보(호스트·포트·계정·키 파일)와 teleop 명령. 화면에서는 못 바꾼다. **비밀번호는 쓰지 않는다(ssh 키)** |
 | `predict.*` | 추정에 쓰는 값(teleop 소스의 속도 단계, 팔 한 칸 처음 값, 느림·끊김 기준 시간) |
 | `server.*` | 서버 주소·포트 |
 
@@ -36,7 +36,8 @@ python3 ros/topic_relay.py      # 브라우저: http://localhost:8765/redesign/l
 ```
 
 - 로봇에서 먼저: `ros2 launch turtlebot3_manipulation_bringup hardware.launch.py`, `ros2 launch turtlebot3_manipulation_moveit_config servo.launch.py`
-- 화면 "조종 연결" → 서버가 ssh 로 teleop 을 켠다. 비밀번호 칸을 비우면 WSL 의 `~/.ssh` 키로 접속한다.
+- 화면 "조종 시작" → 서버가 config.yaml 의 teleop 접속 정보로 ssh 접속해 teleop 을 켠다. 인증은 ssh 키뿐이라,
+  WSL 에서 한 번 `ssh-keygen` 후 `ssh-copy-id ubuntu@192.168.0.21` 로 키를 등록해 둔다.
 - 안전: 조종을 끊으면 정지(space) 후 teleop 을 끝낸다. 화면이 모두 닫히면 2초 뒤 정지를 보낸다. 창을 닫을 때도 정지를 보낸다.
 - 카메라 JPEG 변환에는 `cv2`(python3-opencv)가 필요하다.
 
@@ -75,4 +76,4 @@ curl -X POST localhost:8765/api/mock/network -d '{"freeze": true}'   # 통신 �
 - `GET /api/topics` — `[{name, type, subscribed, hz, image}]`
 - `GET /api/stream?topics=/a,/b` — SSE. `event: msg` `{topic, type, stamp, msg}` (inf/nan → null), `event: teleop` `{state, reason, label, dropped}`
 - `GET /api/image?topic=/x` — MJPEG
-- `GET /api/teleop` · `POST /api/teleop/connect {host, port, username, password?, command?}` · `POST /api/teleop/key {key}` · `POST /api/teleop/disconnect`
+- `GET /api/teleop` · `POST /api/teleop/connect` (config 사용) · `POST /api/teleop/key {key}` · `POST /api/teleop/disconnect`

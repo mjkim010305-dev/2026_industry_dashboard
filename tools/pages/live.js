@@ -229,11 +229,11 @@
       armStep = P.arm_step;
       ROLE = {}; Object.keys(c.topics).forEach(function (r) { if (c.topics[r]) ROLE[c.topics[r]] = r; });
       $("srvChip").textContent = c.mock ? "모의 서버" : "ROS 도메인 " + c.ros_domain_id;
-      var t = CFG.teleop;
-      if (!$("cHost").value) $("cHost").value = t.host || "";
-      if (!$("cPort").value) $("cPort").value = t.port || 22;
-      if (!$("cUser").value) $("cUser").value = t.username || "";
-      if (!$("cCmd").value) $("cCmd").value = t.command || "";
+      var t = CFG.teleop, tgt = $("ctrlTarget");
+      tgt.innerHTML = "<dt>로봇</dt><dd></dd><dt>명령</dt><dd></dd>";
+      tgt.children[1].textContent = c.mock ? "모의 기체 (ssh 없음)" : (t.username || "?") + "@" + (t.host || "?") + ":" + (t.port || 22);
+      tgt.children[3].textContent = t.command || "(비어 있음)";
+      $("btnCtrl").disabled = false;
       wanted = Object.keys(c.topics).filter(function (r) { return r !== "camera" && c.topics[r]; }).map(function (r) { return c.topics[r]; });
       connect();
     }).catch(function () {
@@ -256,8 +256,7 @@
 
   // ---------- 조종 연결 (ssh teleop) ----------
   var teleop = { state: "disconnected", label: null };
-  var ERR = { "invalid_field:host": "호스트를 넣어 주세요", "invalid_field:username": "계정을 넣어 주세요", "invalid_field:port": "포트가 올바르지 않아요",
-              already_connecting_or_connected: "이미 연결 중이에요", teleop_unavailable: "이 서버는 조종을 지원하지 않아요" };
+  var ERR = { already_connecting_or_connected: "이미 연결 중이에요", teleop_unavailable: "이 서버는 조종을 지원하지 않아요" };
   function setTeleop(st) {
     var prev = teleop.state;
     teleop = st;
@@ -265,7 +264,7 @@
     s.className = "lv-status" + (st.state === "disconnected" && (st.reason || st.dropped) ? " error" : "");
     s.textContent = st.state === "connected" ? "조종 중 · 키가 로봇 teleop 으로 가요" : st.state === "connecting" ? "연결 중…" :
       st.dropped ? "연결이 끊겼어요" : st.label ? "연결 실패: " + st.label : "연결 안 됨";
-    $("btnCtrl").textContent = st.state === "disconnected" ? "조종 연결" : "조종 끊기";
+    $("btnCtrl").textContent = st.state === "disconnected" ? "조종 시작" : "조종 끊기";
     $("keyMode").textContent = st.state === "connected" ? "로봇으로 보냄" : "로봇에 안 보냄";
     if (st.state === "connected" && prev !== "connected") { cmd.v = cmd.w = 0; }
   }
@@ -273,13 +272,10 @@
     return fetch(BASE + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); });
   }
-  $("ctrlForm").addEventListener("submit", function (e) {
-    e.preventDefault();
+  $("btnCtrl").addEventListener("click", function () {
     if (teleop.state !== "disconnected") { post("/api/teleop/disconnect"); return; }
     setTeleop({ state: "connecting" });
-    var pass = $("cPass").value; $("cPass").value = "";        // 화면에도 남기지 않는다
-    post("/api/teleop/connect", { host: $("cHost").value.trim(), port: $("cPort").value.trim(), username: $("cUser").value.trim(),
-      password: pass, command: $("cCmd").value })
+    post("/api/teleop/connect", {})                            // 접속 정보는 서버 config.yaml
       .then(function (r) {
         if (!r.body.ok) setTeleop({ state: "disconnected", reason: r.body.reason || "other", label: r.body.label || ERR[r.body.error] || r.body.error });
       })

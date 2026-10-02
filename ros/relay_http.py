@@ -10,7 +10,7 @@ Hub 가 토픽마다 정한 주기(config.yaml rates)로 최신 메시지만 골
                                        event: teleop data: {"state","reason","label","dropped"}
   GET  /api/image?topic=/x          → multipart MJPEG (카메라는 raw 대신 JPEG 으로 줄여 보낸다)
   GET  /api/teleop                  → 조종 연결 상태
-  POST /api/teleop/connect          {host, port, username, password?, command?}
+  POST /api/teleop/connect          (본문 없음) config.yaml 의 teleop 으로 ssh 접속 + teleop 실행
   POST /api/teleop/key              {key: "i"}   글자 하나를 로봇 teleop 터미널에 넣는다
   POST /api/teleop/disconnect
   그 밖의 경로                       → --root 폴더의 정적 파일
@@ -222,20 +222,17 @@ class Hub:
         if path == "/api/teleop/disconnect":
             return tp.disconnect()
         if path == "/api/teleop/connect":
+            # 접속 정보는 config.yaml 의 teleop 만 쓴다(화면이 보낸 값은 받지 않는다). 인증은 ssh 키.
             d = self.cfg["teleop"]
-            host = (body.get("host") or d["host"] or "").strip()
-            user = (body.get("username") or d["username"] or "").strip()
-            if not host:
-                return 400, {"ok": False, "error": "invalid_field:host"}
-            if not user:
-                return 400, {"ok": False, "error": "invalid_field:username"}
+            host, user = str(d["host"] or "").strip(), str(d["username"] or "").strip()
+            if not host or not user:
+                return 400, {"ok": False, "error": "config_missing", "label": "config.yaml 의 teleop.host · username 이 비어 있음"}
             try:
-                port = int(body.get("port") or d["port"] or 22)
+                port = int(d["port"] or 22)
                 assert 1 <= port <= 65535
             except Exception:
-                return 400, {"ok": False, "error": "invalid_field:port"}
-            command = body.get("command") if body.get("command") is not None else d["command"]
-            return tp.connect(host, port, user, body.get("password") or "", command or "", d.get("key_file") or "")
+                return 400, {"ok": False, "error": "config_missing", "label": "config.yaml 의 teleop.port 가 올바르지 않음"}
+            return tp.connect(host, port, user, "", d["command"] or "", d.get("key_file") or "")
         return 404, {"ok": False, "error": "not_found"}
 
 

@@ -71,18 +71,10 @@
       <div class="lv-side">
         <section class="card" aria-labelledby="t-ctrl">
           <div class="card-head"><h2 id="t-ctrl">조종 연결</h2><span class="chip" id="srvChip">서버 확인 중</span></div>
-          <form class="lv-form" id="ctrlForm" autocomplete="off">
-            <div class="grid2">
-              <label class="f">호스트<input id="cHost" spellcheck="false"></label>
-              <label class="f">포트<input id="cPort" inputmode="numeric" spellcheck="false"></label>
-              <label class="f">계정<input id="cUser" spellcheck="false"></label>
-              <label class="f">비밀번호<input id="cPass" type="password" placeholder="비우면 ssh 키"></label>
-            </div>
-            <label class="f">teleop 명령<input id="cCmd" spellcheck="false"></label>
-            <button type="submit" class="btn primary" id="btnCtrl">조종 연결</button>
-          </form>
+          <dl class="lv-kv lv-target" id="ctrlTarget"><dt>로봇</dt><dd>서버 설정을 읽는 중</dd></dl>
+          <button type="button" class="btn primary lv-ctrl-btn" id="btnCtrl" disabled>조종 시작</button>
           <p class="lv-status" id="ctrlStatus" aria-live="polite">연결 안 됨</p>
-          <p class="lv-note">서버가 로봇에 ssh 로 들어가 터미널에서 teleop 을 켜고 키를 넣어요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요. 비밀번호는 저장하지 않아요.</p>
+          <p class="lv-note">접속 정보는 서버의 <code>ros/config.yaml</code>(teleop) 에서 정해요. 서버가 ssh 키로 로봇에 들어가 teleop 을 켜고 키를 넣어요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요.</p>
         </section>
 
         <section class="card" aria-labelledby="t-link">

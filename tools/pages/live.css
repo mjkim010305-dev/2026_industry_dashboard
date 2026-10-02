@@ -54,8 +54,9 @@
 .lk.on span { color: rgba(255, 255, 255, 0.9); }
 
 /* 폼 · 상태 */
-.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.lv-form { display: grid; gap: 10px; }
+.lv-target { margin: 0 0 12px; }
+.lv-target dd { overflow-wrap: anywhere; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.lv-ctrl-btn { width: 100%; }
 .f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); min-width: 0; }
 .f input, .f select {
   min-height: 40px; padding: 0 10px; font: inherit; font-size: 14px; color: var(--text);
