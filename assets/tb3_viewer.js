@@ -154,9 +154,9 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     held[k] = true;
     if (m.joint !== undefined) J[m.joint].target = null;
     if (m.grip) grip.target = null;
-    if (m.v) drive.v = Math.max(-0.26, Math.min(0.26, drive.v + m.v));
-    if (m.w) drive.w = Math.max(-1.82, Math.min(1.82, drive.w + m.w));
-    if (m.stop) { drive.v = 0; drive.w = 0; }
+    if (!ext && m.v) drive.v = Math.max(-0.26, Math.min(0.26, drive.v + m.v));
+    if (!ext && m.w) drive.w = Math.max(-1.82, Math.min(1.82, drive.w + m.w));
+    if (!ext && m.stop) { drive.v = 0; drive.w = 0; }
     if (m.v || m.w || m.stop) { flash = 0.35; flashParts = partsFor(k); }
   }
   function release(k) { delete held[k]; }
@@ -202,7 +202,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     if (!alive) return;
     var dt = last ? Math.min((t - last) / 1000, 0.05) : 0; last = t;
     idle += dt;
-    Object.keys(held).forEach(function (k) {
+    if (!ext) Object.keys(held).forEach(function (k) {     // external 모드에서 키는 강조만 한다(움직임은 setState)
       var m = KEYMAP[k];
       if (m.joint !== undefined) { var j = J[m.joint]; j.q = Math.max(j.lo, Math.min(j.hi, j.q + m.dir * 1.2 * dt)); }
       if (m.grip) grip.q = Math.max(grip.lo, Math.min(grip.hi, grip.q + m.grip * 0.03 * dt));

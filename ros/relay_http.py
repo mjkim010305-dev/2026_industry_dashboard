@@ -1,15 +1,19 @@
-"""ROS 토픽 → 브라우저 중계의 HTTP 부분 (ROS 없이도 동작한다).
+"""실시간 조종 서버의 HTTP 부분 (ROS 없이도 동작한다).
 
 토픽 소스(실제 rclpy 구독 또는 모의 데이터)가 Hub.offer() 로 메시지를 넘기면,
-Hub 가 토픽마다 정한 주기로 최신 메시지만 골라 브라우저에 보낸다. 늦게 받는 쪽이 있어도 밀리지 않는다.
+Hub 가 토픽마다 정한 주기(config.yaml rates)로 최신 메시지만 골라 브라우저에 보낸다. 늦게 받는 쪽이 있어도 밀리지 않는다.
 
-  GET /api/topics                 → 그래프에 보이는 토픽, 타입, 받은 주기(Hz), 구독 여부
-  GET /api/stream?topics=/a,/b    → Server-Sent Events. event: msg, data: {"topic","type","stamp","msg"}
-                                    msg 는 ROS 메시지 필드를 그대로 JSON 으로 옮긴 것(raw)
-  GET /api/image?topic=/x         → multipart MJPEG (카메라는 raw 대신 JPEG 으로 줄여 보낸다)
-  그 밖의 경로                    → --root 폴더의 정적 파일 (같은 주소에서 페이지를 열 수 있게)
-
-웹 → ROS 방향(발행)은 없다. 구독해서 보여주기만 한다.
+  GET  /api/config                  → 역할별 토픽 이름, 추정 값, teleop 기본값(비밀번호 없음)
+  GET  /api/topics                  → 그래프에 보이는 토픽, 타입, 받은 주기(Hz), 구독 여부
+  GET  /api/stream?topics=/a,/b     → Server-Sent Events
+                                       event: msg    data: {"topic","type","stamp","msg"}  (msg = ROS 필드 그대로)
+                                       event: teleop data: {"state","reason","label","dropped"}
+  GET  /api/image?topic=/x          → multipart MJPEG (카메라는 raw 대신 JPEG 으로 줄여 보낸다)
+  GET  /api/teleop                  → 조종 연결 상태
+  POST /api/teleop/connect          {host, port, username, password?, command?}
+  POST /api/teleop/key              {key: "i"}   글자 하나를 로봇 teleop 터미널에 넣는다
+  POST /api/teleop/disconnect
+  그 밖의 경로                       → --root 폴더의 정적 파일
 """
 import json
 import math
@@ -20,12 +24,8 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-# 토픽별 최대 전송 주기(Hz). 받는 주기가 더 빨라도 이 이상은 보내지 않는다.
-RATE = {"/joint_states": 30, "/tf": 30, "/odom": 20, "/scan": 10, "/plan": 4, "/local_plan": 4,
-        "/map": 1, "/global_costmap/costmap": 1, "/local_costmap/costmap": 2}
 DEFAULT_RATE = 10
-IMAGE_RATE = 10
-MERGED = ("/tf", "/tf_static")     # 여러 노드가 나눠 보내는 TF 는 child_frame_id 기준으로 합쳐서 보낸다
+MAX_BODY = 64 * 1024
 
 
 def clean(v):
@@ -41,10 +41,14 @@ def clean(v):
     return v
 
 
+def sse(event, obj):
+    return ("event: " + event + "\ndata: " + json.dumps(obj, ensure_ascii=False, separators=(",", ":")) + "\n\n").encode("utf-8")
+
+
 class Topic:
-    def __init__(self, name, type_name):
+    def __init__(self, name, type_name, rate):
         self.name, self.type = name, type_name
-        self.period = 1.0 / RATE.get(name, DEFAULT_RATE)
+        self.period = 1.0 / rate
         self.raw = None            # 아직 변환하지 않은 최신 메시지
         self.convert = None        # raw → dict
         self.dirty = False
@@ -66,26 +70,41 @@ class Client:
 
 
 class Hub:
-    def __init__(self, ensure=None, list_graph=None):
-        """ensure(topic) → 구독을 시작한다(없으면 무시). list_graph() → [(이름, 타입)]."""
+    def __init__(self, cfg, ensure=None, list_graph=None, mock=False):
+        """cfg: settings.load() 결과. ensure(topic) → 구독 시작. list_graph() → [(이름, 타입)]."""
+        from settings import public
+        self.cfg, self.mock = cfg, mock
+        self.public = public(cfg, mock)
+        roles = cfg["topics"]
+        self.rates = {roles[r]: hz for r, hz in cfg["rates"].items() if r in roles}
+        self.merged_topics = {roles.get("tf"), roles.get("tf_static")}
+        self.image_rate = cfg["rates"].get("camera", 10)
         self.lock = threading.Lock()
         self.topics = {}
         self.clients = []
-        self.images = {}           # topic → {"raw", "encode", "jpeg", "dirty", "last", "cond", "viewers"}
+        self.images = {}
         self.ensure = ensure or (lambda t: None)
         self.list_graph = list_graph or (lambda: [])
+        self.teleop = None         # Teleop (teleop_ssh.py) 또는 모의 조종
+        self.teleop_state = {"state": "disconnected", "reason": None, "label": None, "dropped": False}
+        self.routes = {}           # 추가 POST 경로: path → fn(body) → (status, obj)
+        self.net = {"drop": 0.0, "freeze": False}     # 모의 서버에서만 바꾼다(나쁜 네트워크 흉내)
         threading.Thread(target=self._flush_loop, daemon=True).start()
 
     # ---------- 소스 쪽 ----------
+    def _topic(self, name, type_name):
+        t = self.topics.get(name)
+        if t is None:
+            t = self.topics[name] = Topic(name, type_name, self.rates.get(name, DEFAULT_RATE))
+        return t
+
     def offer(self, name, type_name, raw, convert=None):
         """메시지 하나가 들어왔다. 변환은 실제로 보낼 때만 한다."""
         now = time.time()
         with self.lock:
-            t = self.topics.get(name)
-            if t is None:
-                t = self.topics[name] = Topic(name, type_name)
+            t = self._topic(name, type_name)
             t.recv.append(now)
-            if name in MERGED:
+            if name in self.merged_topics:
                 msg = convert(raw) if convert else raw
                 for tr in msg.get("transforms", []):
                     t.merged[tr["child_frame_id"]] = tr
@@ -98,35 +117,47 @@ class Hub:
         """encode(raw) → JPEG bytes. 보는 브라우저가 있을 때만 인코딩한다."""
         now = time.time()
         with self.lock:
-            t = self.topics.get(name)
-            if t is None:
-                t = self.topics[name] = Topic(name, type_name)
+            t = self._topic(name, type_name)
             t.recv.append(now)
-            im = self.images.setdefault(name, {"jpeg": None, "seq": 0, "dirty": False, "last": 0.0, "cond": threading.Condition(), "viewers": 0})
+            im = self.images.setdefault(name, {"jpeg": None, "seq": 0, "dirty": False, "last": 0.0,
+                                               "cond": threading.Condition(), "viewers": 0})
             im["raw"], im["encode"], im["dirty"] = raw, encode, True
+
+    def set_teleop_state(self, st):
+        self.teleop_state = st
+        self.broadcast("teleop", st)
+
+    def broadcast(self, event, obj):
+        chunk = sse(event, obj)
+        with self.lock:
+            for c in self.clients:
+                c.pending["@" + event] = chunk
+                c.event.set()
 
     # ---------- 보내기 ----------
     def _flush_loop(self):
+        import random
         while True:
             now = time.time()
             out = []
             with self.lock:
+                frozen = self.net["freeze"]
                 for t in self.topics.values():
                     if t.dirty and now - t.last_sent >= t.period and t.name not in self.images:
                         t.dirty, t.last_sent = False, now
+                        if frozen or random.random() < self.net["drop"]:
+                            continue           # 모의: 나쁜 네트워크(버림)
                         out.append((t, t.raw, t.convert))
                 imgs = [(n, im) for n, im in self.images.items()
-                        if im["dirty"] and im["viewers"] > 0 and now - im["last"] >= 1.0 / IMAGE_RATE]
+                        if im["dirty"] and im["viewers"] > 0 and now - im["last"] >= 1.0 / self.image_rate]
                 for _, im in imgs:
                     im["dirty"], im["last"] = False, now
             for t, raw, convert in out:
                 try:
                     msg = convert(raw) if convert else raw
-                    data = json.dumps({"topic": t.name, "type": t.type, "stamp": round(now, 3), "msg": clean(msg)},
-                                      ensure_ascii=False, separators=(",", ":"))
+                    chunk = sse("msg", {"topic": t.name, "type": t.type, "stamp": round(now, 3), "msg": clean(msg)})
                 except Exception as e:  # 변환 실패는 그 토픽만 건너뛴다
-                    data = json.dumps({"topic": t.name, "type": t.type, "stamp": round(now, 3), "error": str(e)})
-                chunk = ("event: msg\ndata: " + data + "\n\n").encode("utf-8")
+                    chunk = sse("msg", {"topic": t.name, "type": t.type, "stamp": round(now, 3), "error": str(e)})
                 with self.lock:
                     t.payload = chunk
                     for c in self.clients:
@@ -134,6 +165,8 @@ class Hub:
                             c.pending[t.name] = chunk
                             c.event.set()
             for name, im in imgs:
+                if frozen:
+                    continue
                 try:
                     jpeg = im["encode"](im["raw"])
                 except Exception:
@@ -153,7 +186,7 @@ class Hub:
                 graph.setdefault(n, t.type)
             return [{"name": n, "type": ty, "subscribed": n in self.topics,
                      "hz": self.topics[n].hz(now) if n in self.topics else 0.0,
-                     "image": n in self.images}
+                     "image": n in self.images or ty in ("sensor_msgs/msg/Image", "sensor_msgs/msg/CompressedImage")}
                     for n, ty in sorted(graph.items())]
 
     def add_client(self, topics):
@@ -165,6 +198,7 @@ class Hub:
                 tp = self.topics.get(t)
                 if tp is not None and tp.payload:
                     c.pending[t] = tp.payload
+            c.pending["@teleop"] = sse("teleop", self.teleop_state)
             self.clients.append(c)
         c.event.set()
         return c
@@ -173,6 +207,36 @@ class Hub:
         with self.lock:
             if c in self.clients:
                 self.clients.remove(c)
+            left = len(self.clients)
+        if left == 0 and self.teleop is not None:
+            # 보는 화면이 하나도 없으면 주행을 멈춘다(창을 닫았거나 네트워크가 끊김). 2초 안에 다시 붙으면 그대로
+            threading.Timer(2.0, lambda: (len(self.clients) == 0) and self.teleop.stop_motion()).start()
+
+    # ---------- 조종 ----------
+    def teleop_request(self, path, body):
+        tp = self.teleop
+        if tp is None:
+            return 503, {"ok": False, "error": "teleop_unavailable"}
+        if path == "/api/teleop/key":
+            return tp.send(str(body.get("key", "")))
+        if path == "/api/teleop/disconnect":
+            return tp.disconnect()
+        if path == "/api/teleop/connect":
+            d = self.cfg["teleop"]
+            host = (body.get("host") or d["host"] or "").strip()
+            user = (body.get("username") or d["username"] or "").strip()
+            if not host:
+                return 400, {"ok": False, "error": "invalid_field:host"}
+            if not user:
+                return 400, {"ok": False, "error": "invalid_field:username"}
+            try:
+                port = int(body.get("port") or d["port"] or 22)
+                assert 1 <= port <= 65535
+            except Exception:
+                return 400, {"ok": False, "error": "invalid_field:port"}
+            command = body.get("command") if body.get("command") is not None else d["command"]
+            return tp.connect(host, port, user, body.get("password") or "", command or "", d.get("key_file") or "")
+        return 404, {"ok": False, "error": "not_found"}
 
 
 def make_handler(hub, root):
@@ -182,19 +246,48 @@ def make_handler(hub, root):
 
         def end_headers(self):
             self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
             self.send_header("Cache-Control", "no-store")
             super().end_headers()
+
+        def _json(self, status, obj):
+            body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_OPTIONS(self):
+            self.send_response(204)
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.end_headers()
+
+        def do_POST(self):
+            path = urlparse(self.path).path
+            n = int(self.headers.get("Content-Length") or 0)
+            if n > MAX_BODY:
+                return self._json(400, {"ok": False, "error": "body_too_large"})
+            try:
+                body = json.loads(self.rfile.read(n) or b"{}")
+                assert isinstance(body, dict)
+            except Exception:
+                return self._json(400, {"ok": False, "error": "invalid_json"})
+            if path.startswith("/api/teleop/"):
+                return self._json(*hub.teleop_request(path, body))
+            if path in hub.routes:
+                return self._json(*hub.routes[path](body))
+            self._json(404, {"ok": False, "error": "not_found"})
 
         def do_GET(self):
             u = urlparse(self.path)
             q = parse_qs(u.query)
-            if u.path == "/api/topics":
-                body = json.dumps(hub.topics_info(), ensure_ascii=False).encode("utf-8")
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
+            if u.path == "/api/config":
+                self._json(200, hub.public)
+            elif u.path == "/api/topics":
+                self._json(200, hub.topics_info())
+            elif u.path == "/api/teleop":
+                self._json(200, dict(hub.teleop_state, available=hub.teleop is not None))
             elif u.path == "/api/stream":
                 topics = [t for t in ",".join(q.get("topics", [])).split(",") if t]
                 self._stream(topics)
@@ -266,5 +359,6 @@ def make_handler(hub, root):
 def serve(hub, root, host, port):
     httpd = ThreadingHTTPServer((host, port), make_handler(hub, root))
     httpd.daemon_threads = True
-    print(f"중계 서버: http://{'localhost' if host in ('127.0.0.1', '0.0.0.0') else host}:{port}/  (페이지 예: /redesign/live.html)")
+    shown = "localhost" if host in ("127.0.0.1", "0.0.0.0") else host
+    print(f"실시간 조종 서버: http://{shown}:{port}/redesign/live.html  (설정: {hub.cfg['_path']})", flush=True)
     httpd.serve_forever()

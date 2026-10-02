@@ -8,17 +8,15 @@ redesign/*.html 의 본문 마크업과 기능 스크립트를 그대로 쓰고,
 from pathlib import Path
 import re
 
-from inject_3d import inject_3d, strip_3d
 
 ROOT = Path(__file__).resolve().parent.parent
 THEMES = ROOT / "tools" / "themes"
-PAGES = ["demo-video", "teleop", "survey"]
+PAGES = ["demo-video", "survey"]   # teleop · 시나리오는 실시간 조종(live)으로 합쳤다
 ACCENT = {"samsung": "#1259C3", "lg": "#D0021B", "apple": "#0071E3", "microsoft": "#0067B8", "amazon": "#FF9900"}  # 3D 강조색
-NAV = [("demo-video.html", "시연 영상"), ("robot.html", "기체"), ("teleop.html", "teleop"), ("scenario.html", "시나리오"), ("live.html", "실시간"), ("survey.html", "설문")]
+NAV = [("demo-video.html", "시연 영상"), ("robot.html", "기체"), ("live.html", "실시간 조종"), ("survey.html", "설문")]
 NEW_PAGES = {  # 이름: (제목, 추가 스크립트)
     "robot": ("기체 소개 - ROS 2 + turtlebot3_manipulation", []),
-    "scenario": ("시나리오 시뮬레이터 - ROS 2 + turtlebot3_manipulation", ["../assets/tb3_map.js", "../assets/tb3_scenario.js"]),
-    "live": ("실시간 로봇 - ROS 2 + turtlebot3_manipulation", ["../assets/tb3_map.js", "../assets/ros_live.js"]),
+    "live": ("실시간 조종 - ROS 2 + turtlebot3_manipulation", ["../assets/tb3_map.js", "../assets/ros_live.js"]),
 }
 NL = "\n"
 SCRIPTS_3D = ('<script src="../assets/three.r128.min.js"></script>' + NL
@@ -102,7 +100,7 @@ def build_integrated_pages():
 
 
 def main():
-    for lib in ("tb3_viewer.js", "tb3_map.js", "tb3_scenario.js", "ros_live.js"):
+    for lib in ("tb3_viewer.js", "tb3_map.js", "ros_live.js"):
         (ROOT / "assets" / lib).write_text((ROOT / "tools" / lib).read_text(encoding="utf-8"), encoding="utf-8")
     update_integrated_nav()
     build_integrated_pages()
@@ -112,7 +110,7 @@ def main():
         out_dir = ROOT / brand
         out_dir.mkdir(exist_ok=True)
         for page in PAGES:
-            src = strip_3d((ROOT / "redesign" / f"{page}.html").read_text(encoding="utf-8"))
+            src = (ROOT / "redesign" / f"{page}.html").read_text(encoding="utf-8")
             head, body, tail = split_source(src)
             head = re.sub(r"<!-- 리뉴얼:.*?-->",
                           f"<!-- {label} 스타일: design-refs/{brand}.md 참고. 기능 스크립트는 원본(original/{page}.html)과 같다. -->",
@@ -120,8 +118,6 @@ def main():
             html = (head + "<style>\n" + base + "\n" + skin + "</style>\n</head>\n<body>\n"
                     + '<a class="skip" href="#main">본문 바로가기</a>\n'
                     + header.format(nav=nav_html(page)) + "\n\n" + body + tail)
-            if page == "teleop":
-                html = inject_3d(html, ACCENT[brand])
             (out_dir / f"{page}.html").write_text(html, encoding="utf-8")
             print(brand, page, len(html))
         for name, (title, extra) in NEW_PAGES.items():

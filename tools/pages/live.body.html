@@ -1,39 +1,109 @@
 <div class="page">
   <main id="main">
     <div class="page-head">
-      <p class="eyebrow">LIVE</p>
-      <h1>실시간 로봇</h1>
-      <p class="lead">로봇의 ROS 2 토픽을 구독해서 그대로 보여줘요. 팔·바퀴·위치는 /joint_states 와 /tf, 주변은 /map · /scan · /plan 으로 그려요. 로봇에 명령을 보내지는 않아요.</p>
+      <p class="eyebrow">LIVE · TELEOP</p>
+      <h1>실시간 조종</h1>
+      <p class="lead">키보드로 실제 로봇을 조종하고, ROS 2 토픽으로 받은 팔·바퀴·위치를 3D 에 그대로 맞춰 보여줘요. 통신이 나쁘면 지도와 보낸 키로 움직임을 추정해서 이어 그려요.</p>
     </div>
 
     <div class="lv-layout">
-      <section class="card" aria-labelledby="t-lv3d">
-        <div class="card-head">
-          <h2 id="t-lv3d">로봇이 보는 환경</h2>
-          <div class="lv-layers" role="group" aria-label="보이기">
-            <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
-            <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
-            <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
+      <div class="lv-main">
+        <section class="card" aria-labelledby="t-lv3d">
+          <div class="card-head">
+            <h2 id="t-lv3d">로봇이 보는 환경</h2>
+            <div class="lv-layers" role="group" aria-label="보이기">
+              <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
+              <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
+              <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
+            </div>
           </div>
-        </div>
-        <div class="lv-stage" id="lvStage">
-          <canvas id="lvCanvas" aria-hidden="true"></canvas>
-          <span class="lv-badge" id="lvBadge" data-state="closed">연결 안 됨</span>
-          <span class="v-hint">끌어서 회전 · 휠로 확대</span>
-          <div class="v-msg" id="lvMsg">3D 기체를 불러오는 중</div>
-        </div>
-        <dl class="lv-readout" id="lvReadout" aria-label="현재 상태"></dl>
-      </section>
+          <div class="lv-stage" id="lvStage">
+            <canvas id="lvCanvas" aria-hidden="true"></canvas>
+            <div class="lv-badges">
+              <span class="lv-badge" id="modeBadge" data-tone="off">연결 안 됨</span>
+              <span class="lv-badge" id="ctrlBadge" data-tone="off">조종 안 함</span>
+            </div>
+            <span class="v-hint">끌어서 회전 · 휠로 확대</span>
+            <div class="v-msg" id="lvMsg">3D 기체를 불러오는 중</div>
+            <p class="lv-warn" id="lvWarn" role="alert" hidden></p>
+          </div>
+          <dl class="lv-readout" id="lvReadout" aria-label="현재 상태"></dl>
+        </section>
+
+        <section class="card" aria-labelledby="t-keys">
+          <div class="card-head"><h2 id="t-keys">조종 키</h2><span class="chip" id="keyMode">로봇에 안 보냄</span></div>
+          <div class="lv-keys" id="lvKeys">
+            <div class="kgroup" aria-label="이동">
+              <p class="kg-title">이동 <span>한 번에 ±0.01 m/s · ±0.1 rad/s</span></p>
+              <div class="kgrid move">
+                <button type="button" class="lk" data-key="i"><b>i</b><span>앞으로</span></button>
+                <button type="button" class="lk" data-key="j"><b>j</b><span>왼쪽</span></button>
+                <button type="button" class="lk" data-key="k"><b>k</b><span>뒤로</span></button>
+                <button type="button" class="lk" data-key="l"><b>l</b><span>오른쪽</span></button>
+                <button type="button" class="lk wide" data-key=" "><b>space</b><span>정지</span></button>
+              </div>
+            </div>
+            <div class="kgroup" aria-label="팔">
+              <p class="kg-title">팔 <span>한 번에 한 칸</span></p>
+              <div class="kgrid arm">
+                <button type="button" class="lk" data-key="1"><b>1</b><span>joint1 +</span></button>
+                <button type="button" class="lk" data-key="2"><b>2</b><span>joint2 +</span></button>
+                <button type="button" class="lk" data-key="3"><b>3</b><span>joint3 +</span></button>
+                <button type="button" class="lk" data-key="4"><b>4</b><span>joint4 +</span></button>
+                <button type="button" class="lk" data-key="q"><b>q</b><span>joint1 −</span></button>
+                <button type="button" class="lk" data-key="w"><b>w</b><span>joint2 −</span></button>
+                <button type="button" class="lk" data-key="e"><b>e</b><span>joint3 −</span></button>
+                <button type="button" class="lk" data-key="r"><b>r</b><span>joint4 −</span></button>
+              </div>
+            </div>
+            <div class="kgroup" aria-label="그리퍼">
+              <p class="kg-title">그리퍼</p>
+              <div class="kgrid grip">
+                <button type="button" class="lk" data-key="o"><b>o</b><span>열기</span></button>
+                <button type="button" class="lk" data-key="p"><b>p</b><span>닫기</span></button>
+              </div>
+            </div>
+          </div>
+          <p class="lv-note" id="keyNote">키를 누르고 있으면 계속 들어가요(터미널 teleop 과 같음). 입력칸에 글자를 쓰는 동안은 보내지 않아요.</p>
+        </section>
+      </div>
 
       <div class="lv-side">
-        <section class="card" aria-labelledby="t-conn">
-          <div class="card-head"><h2 id="t-conn">중계 서버</h2></div>
-          <form class="lv-conn" id="connForm">
-            <label class="f">주소<input id="relayUrl" type="url" spellcheck="false" autocomplete="off"></label>
-            <button type="submit" class="btn primary" id="btnConn">연결</button>
+        <section class="card" aria-labelledby="t-ctrl">
+          <div class="card-head"><h2 id="t-ctrl">조종 연결</h2><span class="chip" id="srvChip">서버 확인 중</span></div>
+          <form class="lv-form" id="ctrlForm" autocomplete="off">
+            <div class="grid2">
+              <label class="f">호스트<input id="cHost" spellcheck="false"></label>
+              <label class="f">포트<input id="cPort" inputmode="numeric" spellcheck="false"></label>
+              <label class="f">계정<input id="cUser" spellcheck="false"></label>
+              <label class="f">비밀번호<input id="cPass" type="password" placeholder="비우면 ssh 키"></label>
+            </div>
+            <label class="f">teleop 명령<input id="cCmd" spellcheck="false"></label>
+            <button type="submit" class="btn primary" id="btnCtrl">조종 연결</button>
           </form>
-          <p class="lv-status" id="lvStatus" aria-live="polite">연결 안 됨</p>
-          <p class="lv-note">WSL 에서 <code>python3 ros/topic_relay.py</code> 를 켠 뒤 연결하세요. ROS 없이 시험할 때는 <code>python ros/mock_relay.py</code>.</p>
+          <p class="lv-status" id="ctrlStatus" aria-live="polite">연결 안 됨</p>
+          <p class="lv-note">서버가 로봇에 ssh 로 들어가 터미널에서 teleop 을 켜고 키를 넣어요. 로봇에서 hardware.launch.py 와 servo.launch.py 가 먼저 켜져 있어야 해요. 비밀번호는 저장하지 않아요.</p>
+        </section>
+
+        <section class="card" aria-labelledby="t-link">
+          <div class="card-head"><h2 id="t-link">통신 상태</h2><span class="chip" id="linkChip">—</span></div>
+          <table class="lv-link">
+            <thead><tr><th scope="col">받는 것</th><th scope="col">마지막</th><th scope="col">주기</th></tr></thead>
+            <tbody id="linkBody"></tbody>
+          </table>
+          <dl class="lv-kv" id="linkKv"></dl>
+          <p class="lv-note" id="srvNote">서버 주소: <code id="srvUrl"></code></p>
+        </section>
+
+        <section class="card" aria-labelledby="t-map">
+          <div class="card-head"><h2 id="t-map">지도</h2><span class="chip" id="mapChip">없음</span></div>
+          <label class="dropzone" id="dropzone">
+            <input type="file" id="mapFiles" multiple accept=".yaml,.yml,.pgm,.png,.jpg,.jpeg,.bmp">
+            <strong>map.yaml + map.pgm 올리기</strong>
+            <span>통신이 나빠 /map 을 못 받을 때 쓰세요. 올린 지도가 우선이에요</span>
+          </label>
+          <p class="map-info" id="mapInfo" aria-live="polite">/map 을 기다리는 중</p>
+          <button type="button" class="btn" id="btnMapClear" hidden>올린 지도 지우기 (/map 쓰기)</button>
         </section>
 
         <section class="card" aria-labelledby="t-cam">
@@ -50,11 +120,11 @@
       <div class="card-head"><h2 id="t-topics">토픽</h2><span class="chip" id="topicChip">0개</span></div>
       <div class="table-wrap">
         <table class="lv-table">
-          <thead><tr><th scope="col">토픽</th><th scope="col">타입</th><th scope="col">중계 서버 수신</th><th scope="col">브라우저 수신</th><th scope="col"><span class="vh">raw 보기</span></th></tr></thead>
+          <thead><tr><th scope="col">토픽</th><th scope="col">타입</th><th scope="col">서버 수신</th><th scope="col">브라우저 수신</th><th scope="col"><span class="vh">raw 보기</span></th></tr></thead>
           <tbody id="topicBody"></tbody>
         </table>
       </div>
-      <p class="empty-row" id="topicEmpty">연결하면 ROS 그래프의 토픽이 여기에 나와요.</p>
+      <p class="empty-row" id="topicEmpty">서버에 연결하면 ROS 그래프의 토픽이 여기에 나와요.</p>
       <div class="lv-raw" id="rawBox" hidden>
         <div class="lv-raw-head"><strong id="rawTitle"></strong><span id="rawMeta"></span></div>
         <pre id="rawPre" tabindex="0" aria-label="raw 메시지"></pre>

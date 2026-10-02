@@ -1,5 +1,5 @@
 // 중계 서버(ros/topic_relay.py 또는 ros/mock_relay.py)에서 raw ROS 메시지를 받는다. 구독 전용(로봇에 보내는 것 없음).
-// TB3Live.connect(base, topics, { message(d), status(s) }) → { close() }   d = { topic, type, stamp, msg }
+// TB3Live.connect(base, topics, { message(d), status(s), teleop(st) }) → { close() }   d = { topic, type, stamp, msg }
 // TB3Live.TFBuffer() · jointState(msg) · gridToMap(msg) · scanPoints(msg, pose) · pathPoints(msg) · imageUrl(base, topic)
 var TB3Live = (function () {
   function connect(base, topics, on) {
@@ -10,6 +10,11 @@ var TB3Live = (function () {
       var d;
       try { d = JSON.parse(e.data); } catch (err) { return; }
       on.message(d);
+    });
+    es.addEventListener("teleop", function (e) {     // 조종 연결 상태 {state, reason, label, dropped}
+      var d;
+      try { d = JSON.parse(e.data); } catch (err) { return; }
+      if (on.teleop) on.teleop(d);
     });
     return { close: function () { es.close(); on.status("closed"); } };
   }

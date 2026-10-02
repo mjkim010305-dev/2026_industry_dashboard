@@ -1,7 +1,7 @@
-/* ---------- 실시간 로봇 페이지 ---------- */
+/* ---------- 실시간 조종 페이지 ---------- */
 .lv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 @media (min-width: 1000px) { .lv-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
-.lv-side { display: grid; gap: 16px; }
+.lv-main, .lv-side { display: grid; gap: 16px; min-width: 0; }
 .lv-layers { display: flex; flex-wrap: wrap; gap: 12px; }
 .check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 14px; cursor: pointer; }
 .lv-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
@@ -12,19 +12,51 @@
 }
 .lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
 .lv-stage .v-msg[hidden] { display: none; }
+.lv-badges { position: absolute; left: 12px; top: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
 .lv-badge {
-  position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
-  background: rgba(0, 0, 0, 0.6); color: #E8ECF1; font-size: 13px; font-weight: 700; pointer-events: none;
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.62); color: #E8ECF1; font-size: 13px; font-weight: 700;
 }
-.lv-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #8A94A3; }
-.lv-badge[data-state="open"]::before { background: #3DDC84; box-shadow: 0 0 0 3px rgba(61, 220, 132, 0.25); }
-.lv-badge[data-state="stale"]::before, .lv-badge[data-state="retry"]::before { background: #F2B134; }
-.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 12px 0 0; }
+.lv-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #8A94A3; flex: 0 0 auto; }
+.lv-badge[data-tone="good"]::before { background: #3DDC84; box-shadow: 0 0 0 3px rgba(61, 220, 132, 0.25); }
+.lv-badge[data-tone="warn"]::before { background: #F2B134; box-shadow: 0 0 0 3px rgba(242, 177, 52, 0.25); }
+.lv-badge[data-tone="bad"]::before { background: #FF5A5A; box-shadow: 0 0 0 3px rgba(255, 90, 90, 0.25); }
+.lv-warn {
+  position: absolute; left: 12px; right: 12px; bottom: 52px; margin: 0; padding: 8px 12px; border-radius: 10px;
+  background: rgba(198, 40, 40, 0.92); color: #FFFFFF; font-size: 13px; font-weight: 600;
+}
+.lv-warn[hidden] { display: none; }
+.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; margin: 12px 0 0; }
 .lv-readout div { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+.lv-readout div.est { border-color: #F2B134; }
 .lv-readout dt { font-size: 12px; color: var(--text-2); }
 .lv-readout dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.lv-conn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
-.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); }
+
+/* 키 */
+.lv-keys { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.kg-title { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--text); }
+.kg-title span { margin-left: 6px; font-size: 12px; font-weight: 400; color: var(--text-2); }
+.kgrid { display: grid; gap: 6px; }
+.kgrid.move { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: ". i ." "j k l" "s s s"; }
+.kgrid.move [data-key="i"] { grid-area: i; } .kgrid.move [data-key="j"] { grid-area: j; }
+.kgrid.move [data-key="k"] { grid-area: k; } .kgrid.move [data-key="l"] { grid-area: l; }
+.kgrid.move [data-key=" "] { grid-area: s; }
+.kgrid.arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.kgrid.grip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lk {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 52px; padding: 4px;
+  border-radius: 10px; border: 1px solid var(--line); border-bottom-width: 3px; background: var(--surface); color: var(--text);
+  font: inherit; cursor: pointer; touch-action: manipulation;
+}
+.lk b { font-family: ui-monospace, Consolas, monospace; font-size: 16px; }
+.lk span { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+.lk.on { background: var(--robot-accent); border-color: var(--robot-accent); color: #FFFFFF; transform: translateY(1px); }
+.lk.on span { color: rgba(255, 255, 255, 0.9); }
+
+/* 폼 · 상태 */
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.lv-form { display: grid; gap: 10px; }
+.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); min-width: 0; }
 .f input, .f select {
   min-height: 40px; padding: 0 10px; font: inherit; font-size: 14px; color: var(--text);
   background: var(--surface); border: 1px solid var(--line); border-radius: 8px; width: 100%; min-width: 0;
@@ -32,12 +64,39 @@
 .lv-status { margin: 10px 0 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
 .lv-status.error { color: #C62828; font-weight: 600; }
 .lv-note { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
-.lv-note code, .lv-table code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.lv-note code, .lv-table code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.btn[aria-pressed="true"] { outline: 3px solid var(--robot-accent); outline-offset: 1px; }
+.lv-link { width: 100%; border-collapse: collapse; font-size: 13px; }
+.lv-link th, .lv-link td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.lv-link thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
+.lv-link tbody th { font-weight: 600; }
+.lv-link td.good { color: #1F7A45; font-weight: 700; } .lv-link td.warn { color: #B26A00; font-weight: 700; } .lv-link td.bad { color: #C62828; font-weight: 700; }
+.lv-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 12px 0 0; font-size: 13px; }
+.lv-kv dt { color: var(--text-2); }
+.lv-kv dd { margin: 0; color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 지도 */
+.dropzone {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 88px; padding: 14px; border-radius: 12px; text-align: center; cursor: pointer;
+  border: 2px dashed var(--line); background: var(--surface-2); color: var(--text);
+}
+.dropzone:hover, .dropzone.over { border-color: var(--text-2); }
+.dropzone:focus-within { outline: 3px solid var(--robot-accent); outline-offset: 2px; }
+.dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.dropzone strong { font-size: 15px; }
+.dropzone span { font-size: 13px; color: var(--text-2); }
+.map-info { margin: 10px 0; font-size: 13px; color: var(--text-2); overflow-wrap: anywhere; }
+.map-info.error { color: #C62828; font-weight: 600; }
+.btn[hidden] { display: none; }
+
+/* 카메라 */
 .lv-cam { position: relative; margin-top: 10px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #0E131A;
   display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
 .lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-.lv-cam img[hidden] { display: none; }
-.btn[aria-pressed="true"] { outline: 3px solid var(--robot-accent); outline-offset: 1px; }
+.lv-cam img[hidden], .lv-cam span[hidden] { display: none; }
+
+/* 토픽 */
 .lv-topics { margin-top: 16px; }
 .table-wrap { overflow-x: auto; }
 .lv-table { width: 100%; border-collapse: collapse; font-size: 14px; }

@@ -1,0 +1,56 @@
+# 실시간 조종 서버 설정 (ros/topic_relay.py, ros/mock_relay.py 가 읽는다)
+# 화면(HTML)은 이 값을 바꾸지 않는다. 바꾸면 서버를 다시 켠다.
+
+# ROS 2 도메인. 로봇 ~/.bashrc 의 ROS_DOMAIN_ID 와 같아야 토픽이 보인다.
+ros_domain_id: 30
+
+# 서버 주소. 127.0.0.1 = 이 PC 에서만 접속. 다른 PC 브라우저에서도 보려면 0.0.0.0 (인증 없음, 내부망에서만)
+server:
+  host: 127.0.0.1
+  port: 8765
+
+# 화면이 쓰는 역할 → 실제 토픽 이름. 로봇마다 이름이 다르면 여기만 고친다.
+topics:
+  joint_states: /joint_states                    # 팔 joint1~4, gripper_left_joint, 바퀴
+  tf: /tf                                        # map → odom → base_footprint
+  tf_static: /tf_static
+  odom: /odom                                    # 바퀴 속도
+  cmd_vel: /cmd_vel                              # teleop 이 내는 속도 명령(조종 반영 확인용)
+  scan: /scan                                    # LiDAR
+  map: /map                                      # Nav2 map_server
+  plan: /plan                                    # Nav2 경로
+  camera: /camera/camera/color/image_raw         # RealSense D555 컬러
+
+# 역할별 최대 전송 주기(Hz). 받는 주기가 더 빨라도 이 이상은 보내지 않는다(네트워크·브라우저 부담 줄이기).
+rates:
+  joint_states: 30
+  tf: 30
+  odom: 20
+  cmd_vel: 10
+  scan: 10
+  plan: 4
+  map: 1
+  camera: 10            # 카메라 JPEG 장수(fps)
+camera_max_width: 640   # 카메라 JPEG 최대 폭(px)
+
+# 실제 조종: 서버가 로봇에 ssh 로 들어가 터미널에서 teleop 을 실행하고, 화면의 키 글자를 그대로 넣는다.
+# 비밀번호는 여기에 쓰지 않는다. 화면에서 입력하거나(저장 안 함), 비우면 ssh 키(~/.ssh)로 접속한다.
+teleop:
+  host: 192.168.0.21
+  port: 22
+  username: ubuntu
+  key_file: ""          # 비우면 ~/.ssh 의 기본 키
+  # 로봇에서 먼저 실행돼 있어야 하는 것: hardware.launch.py, moveit_config servo.launch.py
+  command: "ros2 run turtlebot3_manipulation_teleop turtlebot3_manipulation_teleop"
+
+# 추정(네트워크가 나쁠 때 화면이 혼자 움직임을 이어 그리는 값). 실제 teleop 소스 값.
+predict:
+  linear_step: 0.01     # i/k 한 번에 m/s (BASE_LINEAR_VEL_STEP)
+  linear_max: 0.26
+  angular_step: 0.1     # j/l 한 번에 rad/s (BASE_ANGULAR_VEL_STEP)
+  angular_max: 1.8
+  arm_step: 0.05        # 1~4/q~r 한 번에 rad (처음 값. 실제 /joint_states 로 자동 보정)
+  gripper_open: 0.019   # o (teleop 은 0.025 를 보내지만 관절 한도 0.019)
+  gripper_close: -0.010 # p (teleop 은 -0.015)
+  fresh_sec: 0.5        # 이보다 오래 소식이 없으면 '느림', 추정 시작
+  lost_sec: 3.0         # 이보다 오래면 '끊김'

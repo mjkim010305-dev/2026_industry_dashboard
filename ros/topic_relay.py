@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""ROS 2 토픽을 구독해서 브라우저로 넘기는 중계 노드 (구독 전용, 발행하지 않는다).
+"""실시간 조종 서버: ROS 2 토픽 구독(화면 표시) + ssh teleop(실제 조종).
 
-실행 (ROS 2 Humble 이 있는 WSL/리눅스, 로봇과 같은 ROS_DOMAIN_ID):
+실행 (ROS 2 Humble 이 있는 WSL/리눅스):
     source /opt/ros/humble/setup.bash
-    export ROS_DOMAIN_ID=30
-    python3 ros/topic_relay.py                 # http://localhost:8765/redesign/live.html
-    python3 ros/topic_relay.py --host 0.0.0.0  # 다른 PC 브라우저에서도 보려면
+    python3 ros/topic_relay.py                  # http://localhost:8765/redesign/live.html
+    python3 ros/topic_relay.py --config 다른설정.yaml
 
-토픽은 브라우저가 요청할 때 처음 구독한다(타입은 ROS 그래프에서 찾는다). 카메라(sensor_msgs/Image)는
-보는 화면이 있을 때만 JPEG 으로 줄여 보내고, CompressedImage(jpeg)는 그대로 넘긴다.
+도메인·토픽 이름·주기·teleop 접속 기본값은 ros/config.yaml 에서 바꾼다(화면에서는 못 바꾼다).
+ROS 토픽은 구독만 한다(발행 없음). 조종은 ssh 로 로봇 터미널의 teleop 에 키 글자를 넣는 방식이다(teleop_ssh.py).
+카메라(sensor_msgs/Image)는 보는 화면이 있을 때만 JPEG 으로 줄여 보내고, CompressedImage(jpeg)는 그대로 넘긴다.
 HTTP 쪽 동작은 relay_http.py 에 있다.
 """
 import argparse
@@ -24,10 +24,12 @@ from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPo
 from rosidl_runtime_py.utilities import get_message
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import settings  # noqa: E402
 from relay_http import Hub, serve  # noqa: E402
+from teleop_ssh import Teleop  # noqa: E402
 
 IMAGE_TYPES = ("sensor_msgs/msg/Image", "sensor_msgs/msg/CompressedImage")
-MAX_IMAGE_WIDTH = 640
+MAX_IMAGE_WIDTH = 640      # config.yaml camera_max_width 로 바뀐다
 
 
 def to_dict(v):
@@ -134,27 +136,34 @@ class Relay(Node):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="ROS 2 토픽 → 브라우저 중계 (구독 전용)")
-    ap.add_argument("--host", default="127.0.0.1", help="기본 127.0.0.1 (이 PC 에서만 접속)")
-    ap.add_argument("--port", type=int, default=8765)
+    global MAX_IMAGE_WIDTH
+    ap = argparse.ArgumentParser(description="실시간 조종 서버 (ROS 2 토픽 구독 + ssh teleop)")
+    ap.add_argument("--config", default=str(settings.CONFIG_PATH), help="설정 파일 (기본 ros/config.yaml)")
+    ap.add_argument("--host", help="config 의 server.host 대신")
+    ap.add_argument("--port", type=int, help="config 의 server.port 대신")
     ap.add_argument("--root", default=str(Path(__file__).resolve().parent.parent), help="정적 파일 폴더(프로젝트 루트)")
-    ap.add_argument("--topics", default="", help="처음부터 구독할 토픽(쉼표로 구분). 비우면 브라우저가 요청할 때 구독")
     args = ap.parse_args()
+    cfg = settings.load(args.config)
+    MAX_IMAGE_WIDTH = int(cfg["camera_max_width"])
 
-    rclpy.init()
+    rclpy.init(domain_id=int(cfg["ros_domain_id"]))
     holder = {}
-    hub = Hub(ensure=lambda t: holder["node"].ensure(t), list_graph=lambda: holder["node"].graph())
+    hub = Hub(cfg, ensure=lambda t: holder["node"].ensure(t), list_graph=lambda: holder["node"].graph())
+    hub.teleop = Teleop(hub.set_teleop_state)
     node = holder["node"] = Relay(hub)
-    for t in filter(None, args.topics.split(",")):
-        node.ensure(t)
+    for role, topic in cfg["topics"].items():     # 카메라만 빼고 처음부터 구독(카메라는 화면이 켤 때)
+        if role != "camera" and topic:
+            node.ensure(topic)
     ex = MultiThreadedExecutor()
     ex.add_node(node)
     threading.Thread(target=ex.spin, daemon=True).start()
+    print(f"ROS_DOMAIN_ID={cfg['ros_domain_id']}", flush=True)
     try:
-        serve(hub, args.root, args.host, args.port)
+        serve(hub, args.root, args.host or cfg["server"]["host"], args.port or int(cfg["server"]["port"]))
     except KeyboardInterrupt:
         pass
     finally:
+        hub.teleop.disconnect()
         ex.shutdown()
         node.destroy_node()
         rclpy.shutdown()
