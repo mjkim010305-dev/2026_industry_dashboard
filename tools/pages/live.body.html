@@ -1,0 +1,65 @@
+<div class="page">
+  <main id="main">
+    <div class="page-head">
+      <p class="eyebrow">LIVE</p>
+      <h1>실시간 로봇</h1>
+      <p class="lead">로봇의 ROS 2 토픽을 구독해서 그대로 보여줘요. 팔·바퀴·위치는 /joint_states 와 /tf, 주변은 /map · /scan · /plan 으로 그려요. 로봇에 명령을 보내지는 않아요.</p>
+    </div>
+
+    <div class="lv-layout">
+      <section class="card" aria-labelledby="t-lv3d">
+        <div class="card-head">
+          <h2 id="t-lv3d">로봇이 보는 환경</h2>
+          <div class="lv-layers" role="group" aria-label="보이기">
+            <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
+            <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
+            <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
+          </div>
+        </div>
+        <div class="lv-stage" id="lvStage">
+          <canvas id="lvCanvas" aria-hidden="true"></canvas>
+          <span class="lv-badge" id="lvBadge" data-state="closed">연결 안 됨</span>
+          <span class="v-hint">끌어서 회전 · 휠로 확대</span>
+          <div class="v-msg" id="lvMsg">3D 기체를 불러오는 중</div>
+        </div>
+        <dl class="lv-readout" id="lvReadout" aria-label="현재 상태"></dl>
+      </section>
+
+      <div class="lv-side">
+        <section class="card" aria-labelledby="t-conn">
+          <div class="card-head"><h2 id="t-conn">중계 서버</h2></div>
+          <form class="lv-conn" id="connForm">
+            <label class="f">주소<input id="relayUrl" type="url" spellcheck="false" autocomplete="off"></label>
+            <button type="submit" class="btn primary" id="btnConn">연결</button>
+          </form>
+          <p class="lv-status" id="lvStatus" aria-live="polite">연결 안 됨</p>
+          <p class="lv-note">WSL 에서 <code>python3 ros/topic_relay.py</code> 를 켠 뒤 연결하세요. ROS 없이 시험할 때는 <code>python ros/mock_relay.py</code>.</p>
+        </section>
+
+        <section class="card" aria-labelledby="t-cam">
+          <div class="card-head"><h2 id="t-cam">카메라</h2>
+            <button type="button" class="btn" id="btnCam" aria-pressed="false" disabled>영상 켜기</button>
+          </div>
+          <label class="f">토픽<select id="camTopic" disabled><option value="">영상 토픽 없음</option></select></label>
+          <div class="lv-cam" id="lvCam"><img id="camImg" alt="로봇 카메라 영상" hidden><span id="camMsg">영상은 켤 때만 받아요 (로봇 부하를 줄이려고)</span></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card lv-topics" aria-labelledby="t-topics">
+      <div class="card-head"><h2 id="t-topics">토픽</h2><span class="chip" id="topicChip">0개</span></div>
+      <div class="table-wrap">
+        <table class="lv-table">
+          <thead><tr><th scope="col">토픽</th><th scope="col">타입</th><th scope="col">중계 서버 수신</th><th scope="col">브라우저 수신</th><th scope="col"><span class="vh">raw 보기</span></th></tr></thead>
+          <tbody id="topicBody"></tbody>
+        </table>
+      </div>
+      <p class="empty-row" id="topicEmpty">연결하면 ROS 그래프의 토픽이 여기에 나와요.</p>
+      <div class="lv-raw" id="rawBox" hidden>
+        <div class="lv-raw-head"><strong id="rawTitle"></strong><span id="rawMeta"></span></div>
+        <pre id="rawPre" tabindex="0" aria-label="raw 메시지"></pre>
+      </div>
+    </section>
+  </main>
+</div>
+

@@ -2,6 +2,7 @@
 // createTB3Viewer(THREE, canvas, data, theme) → { press, release, readout, dispose, select, setExplode, setPose, project, tip, world, drive }
 // theme 선택 항목: arena(기본 true) · floorGrid(arena 가 false 일 때 바닥 격자, 기본 true) · view("follow" | "showcase")
 //                  collide(nx, ny, x, y) → {x, y} · onFrame(dt) · onPick(part) · onFloorClick(x, y)
+//                  external(true 면 키·주행 계산을 끄고 setState 로 받은 실제 값만 그린다)
 function createTB3Viewer(THREE, canvas, data, theme) {
   var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -122,7 +123,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
   // 관절 상태 (OpenMANIPULATOR-X 기본 자세에서 시작) — 한도는 URDF 값
   var PI = Math.PI;
   var J = [
-    { g: j1, axis: "z", q: 0, lo: -PI * 0.9, hi: PI * 0.9, parts: [l2], target: null },
+    { g: j1, axis: "z", q: 0, lo: -PI * 175 / 180, hi: PI * 175 / 180, parts: [l2], target: null },   // 실기체 URDF 수정값 ±175°
     { g: j2, axis: "y", q: -1.05, lo: -PI * 0.57, hi: PI * 0.5, parts: [l3], target: null },
     { g: j3, axis: "y", q: 0.35, lo: -PI * 0.3, hi: PI * 0.44, parts: [l4], target: null },
     { g: j4, axis: "y", q: 0.70, lo: -PI * 0.57, hi: PI * 0.65, parts: [l5], target: null }
@@ -136,6 +137,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     o: { grip: 1 }, p: { grip: -1 }, i: { v: 0.05 }, k: { v: -0.05 }, j: { w: 0.3 }, l: { w: -0.3 }, " ": { stop: true }
   };
   var held = {};
+  var ext = theme.external ? { x: drive.x, y: drive.y, yaw: drive.yaw, joints: [], grip: null, wheels: null } : null;
   var flash = 0, flashParts = [], selected = null;
 
   function partsFor(k) {
@@ -208,6 +210,17 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     J.forEach(function (j) { if (j.target !== null) { j.q = approach(j.q, j.target, 1.5 * dt); if (j.q === j.target) j.target = null; } });
     if (grip.target !== null) { grip.q = approach(grip.q, grip.target, 0.04 * dt); if (grip.q === grip.target) grip.target = null; }
 
+    if (ext) {
+      // 받은 값을 부드럽게 따라간다(메시지 사이를 메움). 0.5 m 넘게 튀면 바로 옮긴다.
+      var kk = 1 - Math.exp(-dt * 18);
+      if (Math.hypot(ext.x - drive.x, ext.y - drive.y) > 0.5) { drive.x = ext.x; drive.y = ext.y; drive.yaw = ext.yaw; }
+      drive.x += (ext.x - drive.x) * kk; drive.y += (ext.y - drive.y) * kk;
+      drive.yaw += Math.atan2(Math.sin(ext.yaw - drive.yaw), Math.cos(ext.yaw - drive.yaw)) * kk;
+      J.forEach(function (j, n) { var v = ext.joints[n]; if (v !== null && v !== undefined) j.q += (v - j.q) * kk; });
+      if (ext.grip !== null && ext.grip !== undefined) grip.q += (ext.grip - grip.q) * kk;
+      if (ext.wheels) { wl.spin.rotation.z = ext.wheels[0]; wr.spin.rotation.z = ext.wheels[1]; }   // URDF 바퀴 관절 각도 그대로
+      footprint.position.set(drive.x, drive.y, 0); footprint.rotation.z = drive.yaw;
+    } else {
     drive.yaw += drive.w * dt;
     var nx = drive.x + Math.cos(drive.yaw) * drive.v * dt, ny = drive.y + Math.sin(drive.yaw) * drive.v * dt;
     if (theme.collide) {
@@ -223,7 +236,8 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     }
     footprint.position.set(drive.x, drive.y, 0); footprint.rotation.z = drive.yaw;
     var spinL = (drive.v - drive.w * 0.144) / 0.033 * dt, spinR = (drive.v + drive.w * 0.144) / 0.033 * dt;
-    wl.spin.rotation.z -= spinL; wr.spin.rotation.z -= spinR;
+    wl.spin.rotation.z += spinL; wr.spin.rotation.z += spinR;      // 바퀴 관절 축은 +y(왼쪽): 전진이면 + 방향
+    }
     J.forEach(function (j) { j.g.rotation.set(0, 0, 0); j.g.rotation[j.axis] = j.q; });
 
     explode.e = approach(explode.e, explode.target, 2.5 * dt);
@@ -276,6 +290,17 @@ function createTB3Viewer(THREE, canvas, data, theme) {
     setPose: function (joints, g) {
       joints.forEach(function (q, n) { var j = J[n]; j.target = Math.max(j.lo, Math.min(j.hi, q)); });
       if (g !== undefined && g !== null) grip.target = Math.max(grip.lo, Math.min(grip.hi, g));
+    },
+    // external 모드: 실제 로봇 상태. 모든 항목은 선택(주어진 것만 바꾼다)
+    // { x, y, yaw (지도 좌표), joints: [joint1..4] (rad), grip: gripper_left_joint (m), wheels: [왼쪽, 오른쪽] (rad), v, w }
+    setState: function (s) {
+      if (!ext) return;
+      if (s.x !== undefined) { ext.x = s.x; ext.y = s.y; ext.yaw = s.yaw; }
+      if (s.joints) s.joints.forEach(function (q, n) { if (q !== null && q !== undefined) ext.joints[n] = q; });
+      if (s.grip !== undefined) ext.grip = s.grip;
+      if (s.wheels) ext.wheels = s.wheels;
+      if (s.v !== undefined) drive.v = s.v;
+      if (s.w !== undefined) drive.w = s.w;
     },
     // 부품 중심의 화면 좌표(캔버스 기준 px). 뒤쪽에 있으면 visible=false
     project: function (part) {

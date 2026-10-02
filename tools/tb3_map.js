@@ -251,5 +251,5 @@ var TB3Map = (function () {
   }
 
   return { FREE: FREE, OCC: OCC, UNKNOWN: UNKNOWN, parseYaml: parseYaml, parsePGM: parsePGM, fromImage: fromImage,
-    fromFiles: fromFiles, defaultArena: defaultArena, build3D: build3D, minimapBase: minimapBase };
+    fromFiles: fromFiles, defaultArena: defaultArena, make: make, build3D: build3D, minimapBase: minimapBase };
 })();

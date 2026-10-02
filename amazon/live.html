@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>실시간 로봇 - ROS 2 + turtlebot3_manipulation</title>
+<!-- 아마존 스타일: design-refs/amazon.md 참고. 만든 방법: tools/build_styles.py (tools/pages/live.*) -->
+<style>
+/* ---------- 공통 구조 (기업 스타일은 변수와 덮어쓰기로만 바꾼다) ---------- */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font); font-size: var(--body-size); line-height: 1.5; -webkit-font-smoothing: antialiased; word-break: keep-all;
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+a { color: var(--accent); }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip {
+  position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px; border-radius: 8px;
+  background: var(--surface); color: var(--text); font-weight: 700; text-decoration: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.skip:focus { top: 10px; }
+
+/* 페이지 · 머리 · 카드 */
+.page { max-width: var(--page-max); margin: 0 auto; padding: 32px 24px 56px; }
+.page-head { margin: 0 0 24px; }
+.eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--eyebrow); }
+.page-head h1, .survey-card h1 {
+  margin: 0 0 8px; font-size: var(--h1-size); line-height: var(--h1-lh); font-weight: var(--h1-weight); letter-spacing: var(--h1-ls);
+}
+.lead { margin: 0; color: var(--text-2); font-size: var(--lead-size); }
+.card {
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card);
+  box-shadow: var(--shadow); padding: var(--card-pad);
+}
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+.card-head h2, .list-section h2 {
+  margin: 0; font-size: var(--h2-size); line-height: 1.4; font-weight: var(--h2-weight); letter-spacing: var(--h2-ls);
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 7.5em; padding: 0 22px; border-radius: var(--r-btn); cursor: pointer;
+  font: inherit; font-size: var(--btn-size); font-weight: var(--btn-weight);
+  color: var(--btn2-fg); background: var(--btn2-bg); border: 1px solid var(--btn2-border); box-shadow: var(--btn2-shadow);
+  transition: background-color 0.2s, border-color 0.2s, filter 0.2s;
+}
+.btn:hover { filter: brightness(0.96); }
+.btn.primary { color: var(--btn-fg); background: var(--btn-bg); border-color: var(--btn-border); box-shadow: var(--btn-shadow); }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--chip-bg); color: var(--text-2); font-size: 14px; font-weight: 500; border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .page { padding: 24px 16px 40px; }
+  .page-head h1, .survey-card h1 { font-size: calc(var(--h1-size) * 0.72); line-height: 1.25; }
+  .card { padding: 16px; }
+}
+
+/* ---------- 시연 영상 ---------- */
+.desc p { margin: 0; font-size: var(--lead-size); max-width: 72ch; }
+.desc p.sub { margin-top: 4px; color: var(--text-2); font-size: 15px; }
+.player { margin-top: 8px; }
+.main-wrap { padding: 12px; }
+.frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--stage); border-radius: var(--r-stage); }
+.tile { position: absolute; inset: 0; background: #000; overflow: hidden; will-change: transform; transform-origin: top left; border-radius: var(--r-stage); }
+.tile video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.tile .fail {
+  display: none; position: absolute; inset: 0; background: var(--stage); color: var(--stage-text);
+  align-items: center; justify-content: center; flex-direction: column; gap: 4px; text-align: center; padding: 12px;
+  font-size: 14px; overflow-wrap: anywhere;
+}
+.tile .fail span { color: var(--stage-text-2); font-size: 13px; }
+.tile.failed video { visibility: hidden; }
+.tile.failed .fail { display: flex; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 8px 4px; }
+.bar .state {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--chip-bg); border: 1px solid var(--line); color: var(--text-2); font-size: 14px; font-weight: 500;
+}
+.bar .state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--text-2); }
+.now { font-weight: 700; }
+.live { color: var(--text-2); font-size: 14px; margin-left: auto; }
+.list-section { margin-top: 32px; }
+.list-section h2 { margin-bottom: 12px; }
+.list { list-style: none; margin: 0; padding: 4px 4px 16px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x proximity; }
+.list li { flex: 0 0 240px; scroll-snap-align: start; }
+.cell {
+  display: block; width: 100%; padding: 8px; font: inherit; color: var(--text); text-align: left; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.cell:hover { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--focus), var(--shadow); }
+.cell .frame, .cell .tile { border-radius: var(--r-thumb); }
+.cell .frame { pointer-events: none; }
+.cell .name { display: flex; align-items: center; gap: 8px; padding: 10px 4px 4px; font-weight: 700; font-size: 15px; }
+.cell .name::before {
+  content: ""; width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent var(--accent);
+}
+/* intro 구간: 누르면 intro 영상의 재생 위치만 옮긴다 */
+.chapters .cell.is-on { box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
+.cell .stamp {
+  position: absolute; right: 8px; bottom: 10px; z-index: 1; padding: 2px 6px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.75); color: #FFFFFF; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.cell .seg { position: absolute; left: 0; bottom: 0; z-index: 1; height: 4px; width: 0; background: var(--accent); }
+.empty { color: var(--text-2); }
+p.empty { background: var(--surface); border-radius: var(--r-card); padding: 24px; box-shadow: var(--shadow); }
+
+/* ---------- teleop ---------- */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1100px) {
+  .layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; }
+  .layout .conn { grid-column: 1 / -1; }
+}
+.conn form {
+  display: grid; gap: 16px; align-items: end;
+  grid-template-columns: minmax(0, 2fr) minmax(76px, 0.7fr) minmax(0, 1.5fr) minmax(0, 2.2fr);
+}
+.f-cmd { grid-column: span 2; }
+@media (max-width: 900px) {
+  .conn form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .f-cmd { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .conn form { grid-template-columns: minmax(0, 1fr); }
+  .f-cmd { grid-column: auto; }
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 14px; font-weight: var(--label-weight); color: var(--label-color); }
+.field input {
+  min-height: 44px; padding: 0 14px; font: inherit; color: var(--text);
+  background: var(--field-bg); border: 1px solid var(--field-border); border-radius: var(--r-field); width: 100%;
+  box-shadow: var(--field-shadow);
+}
+.field input:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; border-color: var(--focus); }
+.pass-wrap {
+  display: flex; align-items: stretch; background: var(--field-bg);
+  border: 1px solid var(--field-border); border-radius: var(--r-field); overflow: hidden; box-shadow: var(--field-shadow);
+}
+.pass-wrap:focus-within { border-color: var(--focus); }
+.pass-wrap input { border: 0; border-radius: 0; background: transparent; box-shadow: none; flex: 1 1 auto; min-width: 0; width: auto; }
+.pass-wrap input:focus-visible { outline-offset: -3px; }
+.eye {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; min-width: 7.6em;
+  padding: 0 12px; font: inherit; font-size: 13px; font-weight: 500; color: var(--text-2); background: transparent;
+  border: 0; border-left: 1px solid var(--field-border); cursor: pointer; white-space: nowrap;
+}
+.eye svg { flex: 0 0 auto; }
+.end { display: flex; align-items: center; }
+.end .btn { width: 100%; }
+.statusbox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.st, .reason {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 4px 14px 4px 8px;
+  border-radius: 999px; font-size: 14px; font-weight: 700;
+  background: var(--chip-bg); color: var(--text-2); border: 1px solid var(--line);
+}
+.st:empty { display: none; }
+.st[data-sig="connected"] { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+.st[data-sig="connecting"] { background: var(--busy-bg); color: var(--busy); border-color: transparent; }
+.st svg, .reason svg { flex: 0 0 auto; }
+.ico-ok { color: var(--ok); }
+.ico-off { color: var(--text-2); }
+.ico-busy { color: var(--busy); animation: spin 1.5s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.reason { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+.reason .ico-off { color: var(--danger); }
+.reason[hidden] { display: none; }
+#frame { overflow: hidden; }
+.frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#camCanvas { object-fit: contain; }
+.center-msg {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  text-align: center; padding: 12px; background: var(--stage); color: var(--stage-text); overflow-wrap: anywhere;
+}
+.center-msg[hidden], canvas[hidden] { display: none; }
+.center-msg .path { color: var(--stage-text-2); font-size: 14px; }
+#loading::before {
+  content: ""; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25); border-top-color: var(--stage-accent); animation: spin 1s linear infinite;
+}
+#viewLabel::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.hint-row {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 16px; padding: 10px 14px; border-radius: var(--r-field);
+  background: var(--hint-bg); color: var(--hint-fg); font-size: 14px; border: 1px solid var(--hint-border);
+}
+.hint-row[hidden] { display: none; }
+.kbd { display: grid; gap: 12px; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); grid-template-areas: "move grip" "arm arm"; }
+.kbd > .group:nth-child(1) { grid-area: move; }
+.kbd > .group:nth-child(2) { grid-area: arm; }
+.kbd > .group:nth-child(3) { grid-area: grip; }
+@media (max-width: 420px) { .kbd { grid-template-columns: minmax(0, 1fr); grid-template-areas: "move" "arm" "grip"; } }
+.group { background: var(--group-bg); border: 1px solid var(--group-border); border-radius: var(--r-group); padding: 14px; }
+.group h3 { margin: 0 0 10px; font-size: 14px; color: var(--text-2); font-weight: 700; }
+.keys { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.keys.move { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 300px; }
+.keys.arm { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.keys.grip { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 200px; }
+.key {
+  min-height: 60px; min-width: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 6px 4px; background: var(--key-bg); color: var(--text);
+  border: 1px solid var(--key-border); border-bottom-width: var(--key-depth); border-radius: var(--r-key); line-height: 1.2;
+}
+.key .k { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.key .n { margin-top: 4px; font-size: 12px; color: var(--text-2); }
+.key.on { background: var(--key-on-bg); color: var(--key-on-fg); border-color: var(--key-on-bg); border-bottom-width: 1px; transform: translateY(2px); }
+.key.on .n { color: var(--key-on-fg); }
+.keys.move .k-i { grid-column: 2; }
+.keys.move .k-i + .key { grid-column: 1; }
+.keys.move .k-space { grid-column: 1 / span 3; }
+
+/* ---------- 설문 ---------- */
+.survey-card {
+  max-width: 640px; margin: 0 auto; padding: 32px 24px 36px; text-align: center;
+  background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--r-card); box-shadow: var(--shadow);
+}
+.guide { margin: 0 0 24px; font-size: var(--lead-size); color: var(--text-2); }
+.slot { width: var(--qr); height: var(--qr); margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.qrcard {
+  width: 100%; height: 100%; background: #FFFFFF; border: 1px solid #DEE1E5; border-radius: var(--r-qr);
+  padding: 5%; display: flex; align-items: center; justify-content: center; transition: box-shadow 0.2s;
+}
+.qrcard:hover { box-shadow: 0 0 0 2px var(--focus); }
+.qrcard img, .zoomcard img { width: 100%; height: 100%; object-fit: contain; display: block; image-rendering: pixelated; }
+#qrImg { cursor: zoom-in; }
+.zoom-hint { margin: 16px 0 0; font-size: 14px; color: var(--text-2); }
+.slot:has(#qrCard[hidden]) + .zoom-hint { display: none; }
+.slot .empty {
+  width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 16px; overflow-wrap: anywhere;
+  background: var(--surface-2); border: 2px dashed var(--line); border-radius: var(--r-qr);
+}
+.empty .path { font-size: 13px; margin: 8px 0 0; font-family: var(--mono); }
+[hidden] { display: none !important; }
+.overlay {
+  position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); display: flex; align-items: center; justify-content: center; z-index: 30;
+}
+.zoomcard {
+  width: min(88vh, calc(100vw - 24px)); height: min(88vh, calc(100vw - 24px));
+  background: #FFFFFF; border-radius: var(--r-qr); padding: 5%;
+}
+.closebtn {
+  position: absolute; top: 12px; right: 12px; z-index: 31; min-width: 44px; min-height: 44px; padding: 0 20px;
+  font: inherit; font-weight: 700; color: #111111; background: #FFFFFF; border: 0; border-radius: var(--r-btn); cursor: pointer;
+}
+.closebtn:focus-visible { outline: 3px solid #8AB4FF; outline-offset: 2px; }
+
+/* ---------- 아마존 스타일: 짙은 남색 2단 머리, 회색 바탕 + 흰 카드, 노랑 행동 버튼, 파랑 링크, 고밀도 (design-refs/amazon.md) ---------- */
+:root {
+  --font: Arial, "Helvetica Neue", "Malgun Gothic", sans-serif;
+  --mono: "Courier New", Consolas, ui-monospace, monospace;
+  --bg: #E3E6E6; --surface: #FFFFFF; --surface-2: #F7FAFA; --chip-bg: #F7FAFA;
+  --text: #0F1111; --text-2: #565959; --line: #D5D9D9; --card-border: transparent; --shadow: none;
+  --accent: #2162A1; --focus: #007185; --eyebrow: #565959;
+  --btn-bg: #FFD814; --btn-fg: #0F1111; --btn-border: #FCD200; --btn-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+  --btn2-bg: #FFFFFF; --btn2-fg: #0F1111; --btn2-border: #D5D9D9; --btn2-shadow: 0 2px 5px rgba(213, 217, 217, 0.5);
+  --btn-size: 14px; --btn-weight: 400;
+  --r-card: 8px; --r-btn: 100px; --r-field: 8px; --r-stage: 4px; --r-thumb: 4px; --r-key: 8px; --r-group: 8px; --r-qr: 8px;
+  --card-pad: 20px; --page-max: 1500px;
+  --h1-size: 28px; --h1-lh: 36px; --h1-weight: 700; --h1-ls: 0;
+  --h2-size: 21px; --h2-weight: 700; --h2-ls: 0;
+  --body-size: 15px; --lead-size: 15px; --label-weight: 700; --label-color: #0F1111;
+  --field-bg: #FFFFFF; --field-border: #888C8C; --field-shadow: inset 0 1px 2px rgba(15, 17, 17, 0.15);
+  --stage: #0F1111; --stage-text: #FFFFFF; --stage-text-2: #BBBFBF; --stage-accent: #FFD814;
+  --ok: #067D62; --ok-bg: #E9F6F2; --busy: #2162A1; --busy-bg: #EDF4FB; --danger: #B12704; --danger-bg: #FCF1EE;
+  --hint-bg: #F7FAFA; --hint-fg: #0F1111; --hint-border: #D5D9D9;
+  --group-bg: #F7FAFA; --group-border: #D5D9D9;
+  --key-bg: #FFFFFF; --key-border: #D5D9D9; --key-depth: 2px; --key-on-bg: #FFD814; --key-on-fg: #0F1111;
+  --qr: min(52vh, calc(100vw - 96px), 480px);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F1111; --surface: #1B1F23; --surface-2: #232F3E; --chip-bg: #232F3E;
+    --text: #F2F2F2; --text-2: #BBBFBF; --line: #3A4553; --label-color: #F2F2F2;
+    --accent: #6FB1F0; --focus: #4FC3D1; --eyebrow: #BBBFBF;
+    --btn2-bg: #232F3E; --btn2-fg: #F2F2F2; --btn2-border: #3A4553; --btn2-shadow: none; --btn-shadow: none;
+    --field-bg: #0F1111; --field-border: #6A7380; --field-shadow: none;
+    --ok: #4CC9A6; --ok-bg: rgba(76, 201, 166, 0.14); --busy: #6FB1F0; --busy-bg: rgba(111, 177, 240, 0.14);
+    --danger: #FF7A59; --danger-bg: rgba(255, 122, 89, 0.14);
+    --hint-bg: #232F3E; --hint-fg: #F2F2F2; --hint-border: #3A4553;
+    --group-bg: #232F3E; --group-border: #3A4553; --key-bg: #1B1F23; --key-border: #3A4553;
+  }
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; box-shadow: 0 0 0 4px rgba(0, 113, 133, 0.25); }
+
+/* 머리: 위 #131921 (워드마크), 아래 #232F3E (메뉴) */
+.az { position: sticky; top: 0; z-index: 20; color: #FFFFFF; }
+.az-top { background: #131921; }
+.az-top .in, .az-sub .in { max-width: 1500px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 16px; }
+.az-top .in { min-height: 60px; }
+.wordmark { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; padding: 6px 8px; border: 1px solid transparent; border-radius: 2px; }
+.az-msg { margin-left: auto; font-size: 13px; color: #CCCCCC; }
+.az-sub { background: #232F3E; }
+.az-sub ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 2px; }
+.az-sub a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 10px; color: #FFFFFF; text-decoration: none; font-size: 14px;
+  border: 1px solid transparent; border-radius: 2px;
+}
+.az-sub a:hover { border-color: #FFFFFF; }
+.az-sub a[aria-current="page"] { font-weight: 700; border-color: #FFFFFF; }
+.az a:focus-visible { outline-color: #FFD814; box-shadow: none; }
+
+/* 라벨 없이 바로 제목, 고밀도 카드 */
+.page { padding-top: 20px; }
+.page-head { background: var(--surface); border-radius: var(--r-card); padding: 20px; margin-bottom: 16px; }
+.page-head .eyebrow { display: none; }
+.survey-card .eyebrow { display: none; }
+.layout { gap: 12px; }
+.cell .name { color: var(--accent); font-weight: 400; }
+.cell .name::before { display: none; }
+.cell:hover .name { color: #C7511F; text-decoration: underline; }
+.btn.primary:hover { background: #F7CA00; filter: none; }
+
+/* ---------- 실시간 로봇 페이지 ---------- */
+.lv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1000px) { .lv-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
+.lv-side { display: grid; gap: 16px; }
+.lv-layers { display: flex; flex-wrap: wrap; gap: 12px; }
+.check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 14px; cursor: pointer; }
+.lv-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.lv-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.lv-stage .v-hint {
+  position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 13px; pointer-events: none;
+}
+.lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
+.lv-stage .v-msg[hidden] { display: none; }
+.lv-badge {
+  position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6); color: #E8ECF1; font-size: 13px; font-weight: 700; pointer-events: none;
+}
+.lv-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #8A94A3; }
+.lv-badge[data-state="open"]::before { background: #3DDC84; box-shadow: 0 0 0 3px rgba(61, 220, 132, 0.25); }
+.lv-badge[data-state="stale"]::before, .lv-badge[data-state="retry"]::before { background: #F2B134; }
+.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 12px 0 0; }
+.lv-readout div { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+.lv-readout dt { font-size: 12px; color: var(--text-2); }
+.lv-readout dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lv-conn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); }
+.f input, .f select {
+  min-height: 40px; padding: 0 10px; font: inherit; font-size: 14px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; width: 100%; min-width: 0;
+}
+.lv-status { margin: 10px 0 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+.lv-status.error { color: #C62828; font-weight: 600; }
+.lv-note { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+.lv-note code, .lv-table code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.lv-cam { position: relative; margin-top: 10px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #0E131A;
+  display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
+.lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.lv-cam img[hidden] { display: none; }
+.btn[aria-pressed="true"] { outline: 3px solid var(--robot-accent); outline-offset: 1px; }
+.lv-topics { margin-top: 16px; }
+.table-wrap { overflow-x: auto; }
+.lv-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.lv-table th, .lv-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.lv-table thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
+.lv-table tbody th { font-family: ui-monospace, Consolas, monospace; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.lv-table td { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.lv-table tr.on th { color: var(--text); }
+.lv-table tr.sel { background: var(--surface-2); }
+.lv-table .raw { min-height: 32px; padding: 0 12px; border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer;
+  background: transparent; color: var(--text); border: 1px solid var(--line); white-space: nowrap; }
+.empty-row { margin: 12px 0 0; color: var(--text-2); font-size: 14px; }
+.empty-row[hidden] { display: none; }
+.lv-raw { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.lv-raw[hidden] { display: none; }
+.lv-raw-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 12px; background: var(--surface-2); font-size: 13px; color: var(--text-2); }
+.lv-raw-head strong { font-family: ui-monospace, Consolas, monospace; color: var(--text); font-size: 14px; }
+.lv-raw pre { margin: 0; padding: 12px; max-height: 420px; overflow: auto; font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+  line-height: 1.5; background: #0E131A; color: #D7DEE8; white-space: pre; }
+
+:root { --robot-accent: #FF9900; }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="az"><div class="az-top"><div class="in"><span class="wordmark">turtlebot3</span><span class="az-msg">ROS 2 · turtlebot3_manipulation</span></div></div><nav class="az-sub" aria-label="화면 이동"><div class="in"><ul><li><a href="demo-video.html">시연 영상</a></li><li><a href="robot.html">기체</a></li><li><a href="teleop.html">teleop</a></li><li><a href="scenario.html">시나리오</a></li><li><a href="live.html" aria-current="page">실시간<span class="vh"> (현재 탭)</span></a></li><li><a href="survey.html">설문</a></li></ul></div></nav></header>
+
+<div class="page">
+  <main id="main">
+    <div class="page-head">
+      <p class="eyebrow">LIVE</p>
+      <h1>실시간 로봇</h1>
+      <p class="lead">로봇의 ROS 2 토픽을 구독해서 그대로 보여줘요. 팔·바퀴·위치는 /joint_states 와 /tf, 주변은 /map · /scan · /plan 으로 그려요. 로봇에 명령을 보내지는 않아요.</p>
+    </div>
+
+    <div class="lv-layout">
+      <section class="card" aria-labelledby="t-lv3d">
+        <div class="card-head">
+          <h2 id="t-lv3d">로봇이 보는 환경</h2>
+          <div class="lv-layers" role="group" aria-label="보이기">
+            <label class="check"><input type="checkbox" id="lyMap" checked> 지도</label>
+            <label class="check"><input type="checkbox" id="lyScan" checked> LiDAR</label>
+            <label class="check"><input type="checkbox" id="lyPlan" checked> 경로</label>
+          </div>
+        </div>
+        <div class="lv-stage" id="lvStage">
+          <canvas id="lvCanvas" aria-hidden="true"></canvas>
+          <span class="lv-badge" id="lvBadge" data-state="closed">연결 안 됨</span>
+          <span class="v-hint">끌어서 회전 · 휠로 확대</span>
+          <div class="v-msg" id="lvMsg">3D 기체를 불러오는 중</div>
+        </div>
+        <dl class="lv-readout" id="lvReadout" aria-label="현재 상태"></dl>
+      </section>
+
+      <div class="lv-side">
+        <section class="card" aria-labelledby="t-conn">
+          <div class="card-head"><h2 id="t-conn">중계 서버</h2></div>
+          <form class="lv-conn" id="connForm">
+            <label class="f">주소<input id="relayUrl" type="url" spellcheck="false" autocomplete="off"></label>
+            <button type="submit" class="btn primary" id="btnConn">연결</button>
+          </form>
+          <p class="lv-status" id="lvStatus" aria-live="polite">연결 안 됨</p>
+          <p class="lv-note">WSL 에서 <code>python3 ros/topic_relay.py</code> 를 켠 뒤 연결하세요. ROS 없이 시험할 때는 <code>python ros/mock_relay.py</code>.</p>
+        </section>
+
+        <section class="card" aria-labelledby="t-cam">
+          <div class="card-head"><h2 id="t-cam">카메라</h2>
+            <button type="button" class="btn" id="btnCam" aria-pressed="false" disabled>영상 켜기</button>
+          </div>
+          <label class="f">토픽<select id="camTopic" disabled><option value="">영상 토픽 없음</option></select></label>
+          <div class="lv-cam" id="lvCam"><img id="camImg" alt="로봇 카메라 영상" hidden><span id="camMsg">영상은 켤 때만 받아요 (로봇 부하를 줄이려고)</span></div>
+        </section>
+      </div>
+    </div>
+
+    <section class="card lv-topics" aria-labelledby="t-topics">
+      <div class="card-head"><h2 id="t-topics">토픽</h2><span class="chip" id="topicChip">0개</span></div>
+      <div class="table-wrap">
+        <table class="lv-table">
+          <thead><tr><th scope="col">토픽</th><th scope="col">타입</th><th scope="col">중계 서버 수신</th><th scope="col">브라우저 수신</th><th scope="col"><span class="vh">raw 보기</span></th></tr></thead>
+          <tbody id="topicBody"></tbody>
+        </table>
+      </div>
+      <p class="empty-row" id="topicEmpty">연결하면 ROS 그래프의 토픽이 여기에 나와요.</p>
+      <div class="lv-raw" id="rawBox" hidden>
+        <div class="lv-raw-head"><strong id="rawTitle"></strong><span id="rawMeta"></span></div>
+        <pre id="rawPre" tabindex="0" aria-label="raw 메시지"></pre>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="../assets/three.r128.min.js"></script>
+<script src="../assets/tb3_viewer.js"></script>
+<script src="../assets/robot/tb3_meshes.js"></script>
+<script src="../assets/tb3_map.js"></script>
+<script src="../assets/ros_live.js"></script>
+<script>
+// 실시간 로봇: 중계 서버(ros/topic_relay.py)에서 받은 raw 토픽으로 3D 기체·지도·LiDAR·경로를 그린다. 구독 전용.
+(function () {
+  var BASE_TOPICS = ["/tf", "/tf_static", "/joint_states", "/odom", "/scan", "/map", "/plan"];
+  var $ = function (id) { return document.getElementById(id); };
+  var msgEl = $("lvMsg"), statusEl = $("lvStatus"), badge = $("lvBadge");
+  if (!window.THREE || !window.TB3_MESHES || !window.createTB3Viewer || !window.TB3Map || !window.TB3Live) {
+    msgEl.textContent = "3D 기체를 불러오지 못했습니다"; return;
+  }
+  var accent = getComputedStyle(document.documentElement).getPropertyValue("--robot-accent").trim() || "#FF9900";
+  var viewer = createTB3Viewer(THREE, $("lvCanvas"), TB3_MESHES, {
+    accent: accent, body: "#3A3F47", arm: "#D9DCE1", tire: "#222428", grip: "#9AA0A8",
+    ground: 0x223344, grid: 0x2A3442, gridMajor: 0x4A5666, arena: false, floorGrid: false, maxDist: 30, external: true
+  });
+  msgEl.textContent = "중계 서버에 연결하면 로봇을 그려요";
+
+  // ---------- 3D 층: 지도 · LiDAR 점 · 경로 ----------
+  var world = viewer.world, mapGroup = null, mapKey = "";
+  var MAXP = 4096;
+  var scanGeo = new THREE.BufferGeometry();
+  scanGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(MAXP * 3), 3));
+  scanGeo.setDrawRange(0, 0);
+  var scanPts = new THREE.Points(scanGeo, new THREE.PointsMaterial({ color: 0xFF4D4D, size: 0.035 }));
+  scanPts.frustumCulled = false; world.add(scanPts);
+  var planGeo = new THREE.BufferGeometry();
+  planGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(MAXP * 3), 3));
+  planGeo.setDrawRange(0, 0);
+  var planLine = new THREE.Line(planGeo, new THREE.LineBasicMaterial({ color: 0x5FD08A }));
+  planLine.frustumCulled = false; world.add(planLine);
+  function fill(geo, pts, z) {
+    var a = geo.attributes.position.array, n = Math.min(pts.length / 2, MAXP);
+    for (var i = 0; i < n; i++) { a[i * 3] = pts[i * 2]; a[i * 3 + 1] = pts[i * 2 + 1]; a[i * 3 + 2] = z; }
+    geo.attributes.position.needsUpdate = true; geo.setDrawRange(0, n);
+  }
+  function layers() {
+    if (mapGroup) mapGroup.visible = $("lyMap").checked;
+    scanPts.visible = $("lyScan").checked; planLine.visible = $("lyPlan").checked;
+  }
+  ["lyMap", "lyScan", "lyPlan"].forEach(function (id) { $(id).addEventListener("change", layers); });
+
+  // ---------- 받은 메시지 처리 ----------
+  var tf = TB3Live.TFBuffer(), fixed = "map", last = {}, recvTimes = {}, odom = null, twist = { v: 0, w: 0 };
+  var seen = { pose: false, joints: false };
+  function poseOf(frame) {
+    var fx = tf.fixedFor(frame);
+    fixed = fx;
+    return tf.lookup(frame, fx);
+  }
+  function toFixed(pts, frame) {
+    var f = (frame || "").replace(/^\//, "");
+    if (!f || f === fixed) return pts;
+    var p = tf.lookup(f, fixed);
+    if (!p) return pts;
+    var c = Math.cos(p.yaw), s = Math.sin(p.yaw), out = [];
+    for (var i = 0; i < pts.length; i += 2) out.push(p.x + c * pts[i] - s * pts[i + 1], p.y + s * pts[i] + c * pts[i + 1]);
+    return out;
+  }
+  var HANDLERS = {
+    "/tf": function (m) { tf.update(m); },
+    "/tf_static": function (m) { tf.update(m); },
+    "/joint_states": function (m) { var j = TB3Live.jointState(m); viewer.setState(j); seen.joints = true; },
+    "/odom": function (m) {
+      var p = m.pose.pose;
+      odom = { x: p.position.x, y: p.position.y, yaw: TB3Live.yawOf(p.orientation) };
+      twist = { v: m.twist.twist.linear.x, w: m.twist.twist.angular.z };
+    },
+    "/scan": function (m) {
+      var lp = poseOf(m.header.frame_id);
+      if (lp) fill(scanGeo, TB3Live.scanPoints(m, lp), 0.13);
+    },
+    "/map": function (m) {
+      var key = TB3Live.gridKey(m);
+      if (key === mapKey) return;
+      var map = TB3Live.gridToMap(m, "/map");
+      mapKey = key;
+      if (mapGroup) { world.remove(mapGroup); mapGroup.traverse(function (o) { if (o.geometry) o.geometry.dispose(); }); }
+      mapGroup = TB3Map.build3D(THREE, map, { wallHeight: 0.15 });
+      mapGroup.position.z = -0.002;
+      world.add(mapGroup); layers();
+    },
+    "/plan": function (m) { fill(planGeo, toFixed(TB3Live.pathPoints(m), m.header.frame_id), 0.015); }
+  };
+  function onMessage(d) {
+    var now = performance.now();
+    (recvTimes[d.topic] = recvTimes[d.topic] || []).push(now);
+    if (recvTimes[d.topic].length > 60) recvTimes[d.topic].shift();
+    last[d.topic] = { at: now, d: d };
+    if (d.error || !d.msg) return;
+    var h = HANDLERS[d.topic];
+    if (h) { try { h(d.msg); } catch (e) { console.warn(d.topic, e); } }
+  }
+
+  // 로봇 자세는 매 프레임 TF 에서 다시 계산한다(map→odom 과 odom→base_footprint 가 따로 오기 때문)
+  setInterval(function () {
+    var p = poseOf("base_footprint") || poseOf("base_link");
+    if (!p && odom) { p = odom; fixed = "odom"; }
+    if (p) { viewer.setState({ x: p.x, y: p.y, yaw: p.yaw, v: twist.v, w: twist.w }); seen.pose = true; }
+    msgEl.hidden = seen.pose || seen.joints;
+  }, 33);
+
+  // ---------- 연결 ----------
+  var conn = null, wanted = BASE_TOPICS.slice(), state = "closed";
+  var urlInput = $("relayUrl");
+  urlInput.value = /^https?:$/.test(location.protocol) && location.port === "8765" ? location.origin : "http://localhost:8765";
+  function base() { return urlInput.value.trim().replace(/\/$/, ""); }
+  function setState(s) {
+    state = s;
+    $("btnConn").textContent = conn ? "끊기" : "연결";
+    var label = { open: "연결됨", retry: "다시 연결하는 중", closed: "연결 안 됨", stale: "수신 끊김" }[s];
+    badge.dataset.state = s; badge.textContent = label;
+  }
+  function connect() {
+    if (conn) conn.close();
+    statusEl.className = "lv-status";
+    conn = TB3Live.connect(base(), wanted, { message: onMessage, status: setState });
+    setState("retry");
+    refreshTopics();
+  }
+  function disconnect() {
+    if (conn) { var c = conn; conn = null; c.close(); }
+    stopCam(); setState("closed");
+  }
+  $("connForm").addEventListener("submit", function (e) { e.preventDefault(); if (conn) disconnect(); else connect(); });
+
+  // ---------- 토픽 목록 ----------
+  var tbody = $("topicBody"), rows = {}, rawTopic = null, graph = [];
+  function hzOf(t) {
+    var ts = recvTimes[t];
+    if (!ts || ts.length < 3 || performance.now() - ts[ts.length - 1] > 3000) return 0;
+    return (ts.length - 1) / ((ts[ts.length - 1] - ts[0]) / 1000);
+  }
+  function refreshTopics() {
+    if (!conn) return;
+    TB3Live.listTopics(base()).then(function (list) {
+      graph = list;
+      $("topicChip").textContent = list.length + "개";
+      $("topicEmpty").hidden = list.length > 0;
+      var keep = {};
+      list.forEach(function (t) {
+        keep[t.name] = true;
+        var r = rows[t.name];
+        if (!r) {
+          var tr = document.createElement("tr"), th = document.createElement("th"), ty = document.createElement("td"),
+              hz = document.createElement("td"), br = document.createElement("td"), tb = document.createElement("td"), b = document.createElement("button");
+          th.scope = "row"; th.textContent = t.name; ty.innerHTML = "<code></code>"; ty.firstChild.textContent = t.type;
+          b.type = "button"; b.className = "raw"; b.textContent = t.image ? "영상" : "raw 보기";
+          b.setAttribute("aria-label", t.name + (t.image ? " 영상 보기" : " raw 메시지 보기"));
+          b.addEventListener("click", function () { t.image ? pickCam(t.name) : showRaw(t.name); });
+          tb.appendChild(b); tr.append(th, ty, hz, br, tb); tbody.appendChild(tr);
+          r = rows[t.name] = { tr: tr, hz: hz, br: br };
+        }
+        r.hz.textContent = !t.subscribed ? "구독 안 함" : t.hz > 0 ? t.hz.toFixed(1) + " Hz" : "가끔 옴";   // /map, /tf_static 처럼 한 번만 오는 토픽
+        r.tr.classList.toggle("on", !!t.subscribed);
+      });
+      Object.keys(rows).forEach(function (n) { if (!keep[n]) { rows[n].tr.remove(); delete rows[n]; } });
+      syncCamTopics();
+    }).catch(function (e) {
+      statusEl.className = "lv-status error";
+      statusEl.textContent = base() + " 에 연결하지 못했어요 (" + e.message + "). 중계 서버가 켜져 있는지 확인하세요.";
+    });
+  }
+  setInterval(refreshTopics, 2000);
+
+  // ---------- raw 보기 ----------
+  function shorten(v, depth) {          // 긴 배열은 앞부분만 (전체 길이 표시)
+    if (Array.isArray(v)) {
+      var head = v.slice(0, 24).map(function (x) { return shorten(x, depth + 1); });
+      if (v.length > 24) head.push("… 총 " + v.length + "개");
+      return head;
+    }
+    if (v && typeof v === "object") { var o = {}; Object.keys(v).forEach(function (k) { o[k] = shorten(v[k], depth + 1); }); return o; }
+    return typeof v === "number" && !Number.isInteger(v) ? +v.toFixed(5) : v;
+  }
+  function showRaw(topic) {
+    rawTopic = topic;
+    if (wanted.indexOf(topic) < 0) { wanted.push(topic); if (conn) connect(); }   // 새 토픽은 구독 목록에 넣고 다시 연결
+    Object.keys(rows).forEach(function (n) { rows[n].tr.classList.toggle("sel", n === topic); });
+    $("rawBox").hidden = false; $("rawTitle").textContent = topic;
+    drawRaw();
+  }
+  function drawRaw() {
+    if (!rawTopic) return;
+    var l = last[rawTopic];
+    $("rawMeta").textContent = l ? l.d.type + " · " + hzOf(rawTopic).toFixed(1) + " Hz · " + ((performance.now() - l.at) / 1000).toFixed(1) + " 초 전" : "메시지를 기다리는 중";
+    if (l) $("rawPre").textContent = JSON.stringify(l.d.error ? { error: l.d.error } : shorten(l.d.msg, 0), null, 2);
+  }
+
+  // ---------- 상태 표시 (4 Hz) ----------
+  var DEG = 180 / Math.PI;
+  function cell(k, v) { return "<div><dt>" + k + "</dt><dd>" + v + "</dd></div>"; }
+  setInterval(function () {
+    var r = viewer.readout(), now = performance.now(), newest = 0;
+    Object.keys(last).forEach(function (t) { newest = Math.max(newest, last[t].at); });
+    if (conn && state === "open" && newest && now - newest > 3000) setState("stale");
+    else if (conn && state === "stale" && now - newest < 3000) setState("open");
+    $("lvReadout").innerHTML =
+      cell("프레임", fixed) + cell("x", r.x.toFixed(2) + " m") + cell("y", r.y.toFixed(2) + " m") + cell("yaw", (r.yaw * DEG).toFixed(0) + "°") +
+      cell("v", twist.v.toFixed(2) + " m/s") + cell("ω", twist.w.toFixed(2) + " rad/s") +
+      r.joints.map(function (q, n) { return cell("joint" + (n + 1), (q * DEG).toFixed(1) + "°"); }).join("") +
+      cell("gripper", (r.grip * 1000).toFixed(1) + " mm");
+    if (conn) {
+      var total = 0; Object.keys(recvTimes).forEach(function (t) { total += hzOf(t); });
+      if (statusEl.className.indexOf("error") < 0 || state === "open") {
+        statusEl.className = "lv-status";
+        statusEl.textContent = badge.textContent + " · " + base() + " · 초당 메시지 " + total.toFixed(0) + "개";
+      }
+    }
+    Object.keys(rows).forEach(function (n) {
+      var l = last[n];
+      var hz = hzOf(n);
+      rows[n].br.textContent = !l ? "—" : hz > 0 ? hz.toFixed(1) + " Hz" : ((performance.now() - l.at) / 1000).toFixed(0) + "초 전";
+    });
+    drawRaw();
+  }, 250);
+
+  // ---------- 카메라 (켤 때만 받는다) ----------
+  var camSel = $("camTopic"), camBtn = $("btnCam"), camImg = $("camImg"), camMsg = $("camMsg"), camOn = false;
+  function syncCamTopics() {
+    var imgs = graph.filter(function (t) { return t.image || /Image$/.test(t.type); }).map(function (t) { return t.name; });
+    var cur = camSel.value, have = Array.prototype.map.call(camSel.options, function (o) { return o.value; }).join(",");
+    if (have === imgs.join(",")) return;
+    camSel.textContent = "";
+    if (!imgs.length) { camSel.innerHTML = '<option value="">영상 토픽 없음</option>'; }
+    imgs.forEach(function (n) { var o = document.createElement("option"); o.value = o.textContent = n; camSel.appendChild(o); });
+    camSel.value = imgs.indexOf(cur) >= 0 ? cur : (imgs.filter(function (n) { return /color/.test(n); })[0] || imgs[0] || "");
+    camSel.disabled = camBtn.disabled = !imgs.length;
+  }
+  function startCam() {
+    if (!camSel.value) return;
+    camOn = true; camBtn.setAttribute("aria-pressed", "true"); camBtn.textContent = "영상 끄기";
+    camMsg.textContent = "영상을 기다리는 중"; camMsg.hidden = false;
+    camImg.onload = function () { camImg.hidden = false; camMsg.hidden = true; };
+    camImg.onerror = function () { camImg.hidden = true; camMsg.hidden = false; camMsg.textContent = "영상을 받지 못했어요 (JPEG 으로 바꿀 수 없는 형식이거나 토픽이 없어요)"; };
+    camImg.src = TB3Live.imageUrl(base(), camSel.value);
+  }
+  function stopCam() {
+    camOn = false; camBtn.setAttribute("aria-pressed", "false"); camBtn.textContent = "영상 켜기";
+    camImg.removeAttribute("src"); camImg.hidden = true; camMsg.hidden = false; camMsg.textContent = "영상은 켤 때만 받아요 (로봇 부하를 줄이려고)";
+  }
+  function pickCam(n) { camSel.value = n; startCam(); $("t-cam").scrollIntoView({ block: "nearest" }); }
+  camBtn.addEventListener("click", function () { if (camOn) stopCam(); else startCam(); });
+  camSel.addEventListener("change", function () { if (camOn) startCam(); });
+
+  connect();
+})();
+</script>
+</body>
+</html>

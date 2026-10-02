@@ -1,0 +1,59 @@
+/* ---------- 실시간 로봇 페이지 ---------- */
+.lv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1000px) { .lv-layout { grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr); align-items: start; } }
+.lv-side { display: grid; gap: 16px; }
+.lv-layers { display: flex; flex-wrap: wrap; gap: 12px; }
+.check { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 14px; cursor: pointer; }
+.lv-stage { position: relative; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; overflow: hidden; background: #0E131A; cursor: grab; }
+.lv-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.lv-stage .v-hint {
+  position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 0, 0, 0.55);
+  color: #E8ECF1; font-size: 13px; pointer-events: none;
+}
+.lv-stage .v-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #E8ECF1; font-size: 14px; pointer-events: none; }
+.lv-stage .v-msg[hidden] { display: none; }
+.lv-badge {
+  position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6); color: #E8ECF1; font-size: 13px; font-weight: 700; pointer-events: none;
+}
+.lv-badge::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: #8A94A3; }
+.lv-badge[data-state="open"]::before { background: #3DDC84; box-shadow: 0 0 0 3px rgba(61, 220, 132, 0.25); }
+.lv-badge[data-state="stale"]::before, .lv-badge[data-state="retry"]::before { background: #F2B134; }
+.lv-readout { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin: 12px 0 0; }
+.lv-readout div { padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+.lv-readout dt { font-size: 12px; color: var(--text-2); }
+.lv-readout dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lv-conn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text-2); }
+.f input, .f select {
+  min-height: 40px; padding: 0 10px; font: inherit; font-size: 14px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; width: 100%; min-width: 0;
+}
+.lv-status { margin: 10px 0 0; font-size: 14px; color: var(--text); overflow-wrap: anywhere; }
+.lv-status.error { color: #C62828; font-weight: 600; }
+.lv-note { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+.lv-note code, .lv-table code { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.lv-cam { position: relative; margin-top: 10px; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #0E131A;
+  display: flex; align-items: center; justify-content: center; color: #C9CED6; font-size: 13px; text-align: center; padding: 12px; }
+.lv-cam img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.lv-cam img[hidden] { display: none; }
+.btn[aria-pressed="true"] { outline: 3px solid var(--robot-accent); outline-offset: 1px; }
+.lv-topics { margin-top: 16px; }
+.table-wrap { overflow-x: auto; }
+.lv-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.lv-table th, .lv-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.lv-table thead th { color: var(--text-2); font-size: 12px; font-weight: 700; }
+.lv-table tbody th { font-family: ui-monospace, Consolas, monospace; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.lv-table td { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.lv-table tr.on th { color: var(--text); }
+.lv-table tr.sel { background: var(--surface-2); }
+.lv-table .raw { min-height: 32px; padding: 0 12px; border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer;
+  background: transparent; color: var(--text); border: 1px solid var(--line); white-space: nowrap; }
+.empty-row { margin: 12px 0 0; color: var(--text-2); font-size: 14px; }
+.empty-row[hidden] { display: none; }
+.lv-raw { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.lv-raw[hidden] { display: none; }
+.lv-raw-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; padding: 10px 12px; background: var(--surface-2); font-size: 13px; color: var(--text-2); }
+.lv-raw-head strong { font-family: ui-monospace, Consolas, monospace; color: var(--text); font-size: 14px; }
+.lv-raw pre { margin: 0; padding: 12px; max-height: 420px; overflow: auto; font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+  line-height: 1.5; background: #0E131A; color: #D7DEE8; white-space: pre; }

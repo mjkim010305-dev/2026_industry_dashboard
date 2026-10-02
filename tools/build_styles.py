@@ -14,10 +14,11 @@ ROOT = Path(__file__).resolve().parent.parent
 THEMES = ROOT / "tools" / "themes"
 PAGES = ["demo-video", "teleop", "survey"]
 ACCENT = {"samsung": "#1259C3", "lg": "#D0021B", "apple": "#0071E3", "microsoft": "#0067B8", "amazon": "#FF9900"}  # 3D 강조색
-NAV = [("demo-video.html", "시연 영상"), ("robot.html", "기체"), ("teleop.html", "teleop"), ("scenario.html", "시나리오"), ("survey.html", "설문")]
+NAV = [("demo-video.html", "시연 영상"), ("robot.html", "기체"), ("teleop.html", "teleop"), ("scenario.html", "시나리오"), ("live.html", "실시간"), ("survey.html", "설문")]
 NEW_PAGES = {  # 이름: (제목, 추가 스크립트)
     "robot": ("기체 소개 - ROS 2 + turtlebot3_manipulation", []),
     "scenario": ("시나리오 시뮬레이터 - ROS 2 + turtlebot3_manipulation", ["../assets/tb3_map.js", "../assets/tb3_scenario.js"]),
+    "live": ("실시간 로봇 - ROS 2 + turtlebot3_manipulation", ["../assets/tb3_map.js", "../assets/ros_live.js"]),
 }
 NL = "\n"
 SCRIPTS_3D = ('<script src="../assets/three.r128.min.js"></script>' + NL
@@ -101,7 +102,7 @@ def build_integrated_pages():
 
 
 def main():
-    for lib in ("tb3_viewer.js", "tb3_map.js", "tb3_scenario.js"):
+    for lib in ("tb3_viewer.js", "tb3_map.js", "tb3_scenario.js", "ros_live.js"):
         (ROOT / "assets" / lib).write_text((ROOT / "tools" / lib).read_text(encoding="utf-8"), encoding="utf-8")
     update_integrated_nav()
     build_integrated_pages()
