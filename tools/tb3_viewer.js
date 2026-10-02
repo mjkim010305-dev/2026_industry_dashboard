@@ -3,7 +3,7 @@
 // theme 선택 항목: arena(기본 true) · floorGrid(arena 가 false 일 때 바닥 격자, 기본 true) · view("follow" | "showcase")
 //                  collide(nx, ny, x, y) → {x, y} · onFrame(dt) · onPick(part) · onFloorClick(x, y)
 //                  external(true 면 키·주행 계산을 끄고 setState 로 받은 실제 값만 그린다)
-//                  viewYaw · viewDist(처음 시점) · followPitch(rad, 주면 내려다보는 각도로 따라감) · lookAhead(m, 기체 앞쪽을 봄)
+//                  viewDist(처음 카메라 거리, m)
 function createTB3Viewer(THREE, canvas, data, theme) {
   var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -163,9 +163,7 @@ function createTB3Viewer(THREE, canvas, data, theme) {
   function release(k) { delete held[k]; }
 
   var yawView = theme.view === "showcase" ? 0.9 : 2.2, dist = theme.view === "showcase" ? 0.78 : 1.6;
-  if (theme.viewYaw !== undefined) yawView = theme.viewYaw;     // 처음 시점(선택): 회전 · 거리
-  if (theme.viewDist) dist = theme.viewDist;
-  var look = { x: 0, z: 0, init: false };
+  if (theme.viewDist) dist = theme.viewDist;                    // 처음 거리(선택). 각도는 그대로
   var dragging = null, idle = 0;
   var ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   canvas.addEventListener("pointerdown", function (e) { dragging = { x: e.clientX, y: e.clientY, yaw: yawView, moved: false }; idle = 0; canvas.setPointerCapture(e.pointerId); });
@@ -268,15 +266,6 @@ function createTB3Viewer(THREE, canvas, data, theme) {
       if (idle > 4 && !dragging) yawView += 0.25 * dt;                 // 가만두면 천천히 돈다
       camera.position.set(cx + Math.cos(yawView) * dist, 0.16 + dist * 0.45, cz + Math.sin(yawView) * dist);
       camera.lookAt(cx - 0.02, 0.17 + 0.06 * e, cz);
-    } else if (theme.followPitch) {
-      // 기체와 주변을 함께: 기체가 향한 쪽으로 lookAhead 만큼 앞을 보고, followPitch(rad) 각도로 내려다본다(방향은 지도 기준 고정)
-      var ah = theme.lookAhead || 0, kl = look.init ? 1 - Math.exp(-dt * 4) : 1;
-      look.x += (cx + Math.cos(drive.yaw) * ah - look.x) * kl;
-      look.z += (cz - Math.sin(drive.yaw) * ah - look.z) * kl;
-      look.init = true;
-      var ph = theme.followPitch;
-      camera.position.set(look.x + Math.cos(yawView) * Math.cos(ph) * dist, Math.sin(ph) * dist, look.z + Math.sin(yawView) * Math.cos(ph) * dist);
-      camera.lookAt(look.x, 0, look.z);
     } else {
       camera.position.set(cx + Math.cos(yawView) * dist, 0.25 + dist * 0.55, cz + Math.sin(yawView) * dist);
       camera.lookAt(cx, 0.12, cz);
